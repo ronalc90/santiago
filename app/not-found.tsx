@@ -1,14 +1,23 @@
-import Link from 'next/link';
-
-/** Página 404 propia (App Router). Evita el fallback a pages/_document en el build. */
+/** Página 404 propia (App Router), sin dependencias de cliente para no romper el prerender. */
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-4 text-center">
-      <h1 className="text-4xl font-bold">404</h1>
-      <p className="text-muted-foreground">La página que buscas no existe.</p>
-      <Link href="/dashboard" className="text-primary underline underline-offset-4">
-        Volver al dashboard
-      </Link>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1rem',
+        textAlign: 'center',
+        fontFamily: 'system-ui, sans-serif',
+      }}
+    >
+      <h1 style={{ fontSize: '2.25rem', fontWeight: 700 }}>404</h1>
+      <p>La página que buscas no existe.</p>
+      <a href="/" style={{ textDecoration: 'underline' }}>
+        Volver al inicio
+      </a>
     </div>
   );
 }

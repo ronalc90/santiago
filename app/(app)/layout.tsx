@@ -1,5 +1,6 @@
 import { requireUser } from '@/lib/auth/guard';
 import { Sidebar } from '@/components/layout/sidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -9,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-6">{children}</div>
       </main>
+      <Toaster />
     </div>
   );
 }
