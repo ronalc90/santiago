@@ -15,8 +15,16 @@ const MAX_RETRIES = 3;
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const REQUEST_TIMEOUT_MS = 120_000;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type GenerateContentBody = Record<string, any>;
+type GenerateContentBody = Record<string, unknown>;
+
+/** Forma parcial de la respuesta de generateContent que consumimos. */
+interface GeminiPart {
+  text?: string;
+  inlineData?: { mimeType: string; data: string };
+}
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
+}
 
 export class GeminiImageGenerator implements ImageGenerator {
   private apiKey: string;
@@ -31,8 +39,7 @@ export class GeminiImageGenerator implements ImageGenerator {
   }
 
   /** Llama a generateContent con reintentos y backoff ante errores transitorios. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async generateContent(model: string, body: GenerateContentBody): Promise<any> {
+  private async generateContent(model: string, body: GenerateContentBody): Promise<GeminiResponse> {
     let lastError = '';
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
       const controller = new AbortController();
@@ -84,8 +91,7 @@ export class GeminiImageGenerator implements ImageGenerator {
       ],
     });
     const text: string =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('') ?? '';
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('') ?? '';
     const jsonStr = text.replace(/```json|```/g, '').trim();
     try {
       const parsed = JSON.parse(jsonStr);
@@ -105,8 +111,7 @@ export class GeminiImageGenerator implements ImageGenerator {
   }
 
   async generateImage(prompt: string, refs?: RefImage[]): Promise<Buffer> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parts: any[] = [{ text: prompt }];
+    const parts: GeminiPart[] = [{ text: prompt }];
     for (const ref of refs ?? []) {
       parts.push({ inlineData: { mimeType: ref.mimeType, data: ref.data.toString('base64') } });
     }
@@ -114,8 +119,7 @@ export class GeminiImageGenerator implements ImageGenerator {
       contents: [{ role: 'user', parts }],
       generationConfig: { responseModalities: ['IMAGE'] },
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const partsOut: any[] = data?.candidates?.[0]?.content?.parts ?? [];
+    const partsOut: GeminiPart[] = data?.candidates?.[0]?.content?.parts ?? [];
     const imgPart = partsOut.find((p) => p.inlineData?.data);
     if (!imgPart) {
       throw new Error('Gemini no devolvió ninguna imagen.');
@@ -123,6 +127,7 @@ export class GeminiImageGenerator implements ImageGenerator {
     return Buffer.from(imgPart.inlineData.data, 'base64');
   }
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
