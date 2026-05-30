@@ -56,6 +56,9 @@ const envSchema = z.object({
   // más baja a propósito para acotar costo de Apify y carga sobre el CDN.
   WORKER_CONCURRENCY: z.coerce.number().int().positive().default(2),
   AD_WORKER_CONCURRENCY: z.coerce.number().int().positive().default(1),
+
+  // Tasa de cambio USD→COP para la página de Costos (configurable; cambia seguido).
+  USD_COP_RATE: z.coerce.number().positive().default(4100),
 });
 
 export type Env = z.infer<typeof envSchema>;

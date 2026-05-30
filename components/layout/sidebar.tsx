@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Telescope, Package, ImageIcon, Store, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Telescope, Package, ImageIcon, Store, Settings, DollarSign, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/landings', label: 'Landings', icon: ImageIcon },
   { href: '/stores', label: 'Tiendas', icon: Store },
   { href: '/settings', label: 'Ajustes', icon: Settings },
+  { href: '/costos', label: 'Costos', icon: DollarSign },
 ];
 
 export function Sidebar({ userName }: { userName: string }) {
