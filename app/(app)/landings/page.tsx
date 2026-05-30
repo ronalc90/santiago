@@ -1,0 +1,56 @@
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { prisma } from '@/lib/db';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+export const dynamic = 'force-dynamic';
+
+const STATUS: Record<string, { label: string; variant: 'green' | 'destructive' | 'secondary' }> = {
+  DRAFT: { label: 'Borrador', variant: 'secondary' },
+  QUEUED: { label: 'En cola', variant: 'secondary' },
+  PROCESSING: { label: 'Generando', variant: 'secondary' },
+  COMPLETED: { label: 'Completada', variant: 'green' },
+  FAILED: { label: 'Fallida', variant: 'destructive' },
+};
+
+export default async function LandingsPage() {
+  const landings = await prisma.landingProject.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { product: true, _count: { select: { images: true } } },
+  });
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Landings</h1>
+          <p className="text-sm text-muted-foreground">Proyectos de páginas de venta generadas con IA (9 imágenes c/u).</p>
+        </div>
+        <Link href="/landings/new"><Button><Plus className="h-4 w-4" /> Nueva landing</Button></Link>
+      </div>
+      {landings.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Sin landings todavía.</CardContent></Card>
+      ) : (
+        <div className="grid gap-3">
+          {landings.map((l) => {
+            const st = STATUS[l.status];
+            return (
+              <Link key={l.id} href={`/landings/${l.id}`}>
+                <Card className="transition-colors hover:bg-secondary/30">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="font-medium">{l.name}</p>
+                      <p className="text-xs text-muted-foreground">{l.product.name} · {l._count.images} imágenes</p>
+                    </div>
+                    <Badge variant={st.variant}>{st.label}</Badge>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,40 @@
+# Levanta Postgres y Redis para desarrollo local.
+#   docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: winspy_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: winspy
+      POSTGRES_PASSWORD: winspy
+      POSTGRES_DB: winspy
+    # Mapeado a 5433 en el host para no chocar con un PostgreSQL local (p.ej. Postgres.app) en 5432.
+    ports:
+      - "5433:5432"
+    volumes:
+      - winspy_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U winspy -d winspy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: winspy_redis
+    restart: unless-stopped
+    # Mapeado a 6380 en el host para no chocar con un Redis local en 6379.
+    ports:
+      - "6380:6379"
+    volumes:
+      - winspy_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  winspy_pgdata:
+  winspy_redisdata:

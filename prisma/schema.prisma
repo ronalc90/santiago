@@ -1,0 +1,290 @@
+// Esquema de datos de WinSpy.
+// Capa de acceso a datos: PostgreSQL + Prisma.
+// Diseñado para multiusuario desde el día 1 (User.role) aunque hoy lo usen 2 socios.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// AUTENTICACIÓN Y USUARIOS
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         Role      @default(MEMBER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions     Session[]
+  products     Product[] @relation("ProductOwner")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ---------------------------------------------------------------------------
+// MÓDULO 1 — SPY DE ANUNCIOS
+// ---------------------------------------------------------------------------
+
+/// Tienda competidora monitoreada en Meta Ad Library.
+model Store {
+  id             String   @id @default(cuid())
+  name           String
+  adLibraryUrl   String?
+  country        String   @default("CO")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  ads            Ad[]
+
+  @@unique([name, country])
+  @@map("stores")
+}
+
+/// Clasificación automática del anuncio según el Winner Score y reglas.
+enum AdClassification {
+  LANZAR // 🔴 alta señal: lanzar ya
+  CONSIDERAR // 🟡 buena señal: evaluar
+  MONITOREAR // 🟢 señal temprana: vigilar
+  SATURADO // ⚪ demasiado tiempo activo / saturado
+}
+
+/// Anuncio detectado por el spy. La deduplicación se hace por adId.
+model Ad {
+  id             String           @id @default(cuid())
+  adId           String           @unique // id del anuncio en Meta Ad Library (clave de dedup)
+  storeId        String?
+  store          Store?           @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  storeName      String // copia del nombre por si no hay Store ligada
+  country        String           @default("CO")
+  adLibraryUrl   String
+  copyText       String?
+  creativeUrl    String?
+  daysActive     Int              @default(0)
+  estimatedSpend Float            @default(0)
+
+  // Métrica y clasificación calculadas por la capa de negocio
+  winnerScore    Float            @default(0)
+  classification AdClassification @default(MONITOREAR)
+
+  // Señales del negocio
+  isNew          Boolean          @default(true) // nuevo vs histórico
+  sellsInColombia Boolean         @default(false)
+  hasUnusedForeignCreative Boolean @default(false)
+
+  detectedAt     DateTime         @default(now())
+  firstSeenAt    DateTime         @default(now())
+  lastSeenAt     DateTime         @default(now())
+  raw            Json? // payload original del spy para auditoría
+
+  productId      String?
+  product        Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([storeId])
+  @@index([classification])
+  @@index([winnerScore])
+  @@index([country])
+  @@map("ads")
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTOS Y PIPELINE
+// ---------------------------------------------------------------------------
+
+/// Etapas del pipeline del producto.
+enum ProductStatus {
+  DETECTADO
+  VALIDADO
+  LANDING_CREADA
+  LANZADO
+  ESCALANDO
+}
+
+/// Disponibilidad logística del producto.
+enum DropiAvailability {
+  DISPONIBLE
+  NO_DISPONIBLE
+  A_IMPORTAR
+  DESCONOCIDO
+}
+
+model Product {
+  id                String            @id @default(cuid())
+  name              String
+  description       String?
+  status            ProductStatus     @default(DETECTADO)
+  market            String            @default("CO") // país/mercado objetivo
+  currency          String            @default("COP")
+
+  sellsInColombia   Boolean           @default(false)
+  hasUnusedForeignCreative Boolean    @default(false)
+  dropiAvailability DropiAvailability @default(DESCONOCIDO)
+
+  notes             String?
+
+  ownerId           String?
+  owner             User?             @relation("ProductOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  ads               Ad[]
+  landings          LandingProject[]
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([status])
+  @@index([market])
+  @@map("products")
+}
+
+// ---------------------------------------------------------------------------
+// MÓDULO 2 — GENERADOR DE LANDINGS
+// ---------------------------------------------------------------------------
+
+enum LandingStatus {
+  DRAFT
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ImageStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+/// Proyecto de landing asociado a un producto. Guarda los inputs y el resultado.
+model LandingProject {
+  id               String         @id @default(cuid())
+  productId        String
+  product          Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name             String
+
+  // Inputs del formulario (nombre, precios, público, ángulo, etc.)
+  inputs           Json
+  // Referencia analizada: 8 elementos extraídos de la imagen de estilo
+  styleAnalysis    Json?
+  // Foto del producto e imagen de referencia (claves de almacenamiento)
+  productPhotoKey  String?
+  referenceImageKey String?
+
+  complianceTiktok Boolean        @default(false)
+  status           LandingStatus  @default(DRAFT)
+  error            String?
+
+  images           LandingImage[]
+  jobs             Job[]
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([productId])
+  @@index([status])
+  @@map("landing_projects")
+}
+
+/// Una de las 9 imágenes de la landing.
+model LandingImage {
+  id          String         @id @default(cuid())
+  projectId   String
+  project     LandingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  slot        Int // 1..9
+  type        String // hero, precio, antes_despues, modo_uso, beneficios, ficha, garantia, urgencia, testimonios
+  promptEn    String? // prompt en inglés usado para generar
+  storageKey  String? // clave del WebP en el almacenamiento
+  url         String? // url pública
+  width       Int?
+  height      Int?
+  bytes       Int?
+  status      ImageStatus    @default(PENDING)
+  error       String?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([projectId, slot])
+  @@index([projectId])
+  @@map("landing_images")
+}
+
+// ---------------------------------------------------------------------------
+// COLA DE TRABAJOS (registro persistente, espejo de BullMQ)
+// ---------------------------------------------------------------------------
+
+enum JobType {
+  GENERATE_LANDING
+  GENERATE_IMAGE
+}
+
+enum JobStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+model Job {
+  id         String         @id @default(cuid())
+  type       JobType
+  status     JobStatus      @default(PENDING)
+  progress   Int            @default(0) // 0..100
+  payload    Json?
+  result     Json?
+  error      String?
+
+  projectId  String?
+  project    LandingProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  bullJobId  String? // id del job en BullMQ
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([status])
+  @@index([projectId])
+  @@map("jobs")
+}
+
+// ---------------------------------------------------------------------------
+// CONFIGURACIÓN (reglas de negocio editables desde la UI)
+// ---------------------------------------------------------------------------
+
+/// Almacén clave-valor para reglas configurables (umbrales del Winner Score, etc.).
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
