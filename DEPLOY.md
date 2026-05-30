@@ -34,8 +34,37 @@ Aplicar el esquema a producción (desde tu máquina, con la cadena *direct*):
 
 ```bash
 DATABASE_URL="postgresql://...direct...?sslmode=require" npm run db:deploy
-# opcional: sembrar usuarios/ajustes iniciales
-DATABASE_URL="postgresql://...direct...?sslmode=require" npm run db:seed
+```
+
+> **No corras `npm run db:seed` contra producción.** El seed carga datos DEMO
+> (tiendas, anuncios y una landing de ejemplo con placeholders) pensados solo para
+> desarrollo. En producción quieres la BD limpia.
+
+### Crear el usuario admin (producción)
+
+El primer usuario admin se crea con las variables `ADMIN_EMAIL` y `ADMIN_PASSWORD`,
+**no** con el seed demo:
+
+- Define `ADMIN_EMAIL` y una `ADMIN_PASSWORD` **fuerte** (gestor de contraseñas o
+  `openssl rand -base64 24`). Nunca uses la clave demo.
+- Si `ADMIN_PASSWORD` no se define al crear el admin, se genera una clave aleatoria
+  fuerte y se imprime **una sola vez** por consola: cópiala de inmediato.
+
+```bash
+DATABASE_URL="postgresql://...direct...?sslmode=require" \
+ADMIN_EMAIL="admin@tudominio.com" \
+ADMIN_PASSWORD="UNA_CLAVE_FUERTE" \
+  npm run create-admin
+```
+
+> El bootstrap **no** crea datos demo. Los anuncios reales se traen luego con el
+> botón **«Sincronizar reales»** (o `POST /api/ads/sync`) usando Apify.
+
+**Si tu base ya tiene datos de demostración** (de un seed antiguo: tiendas
+GadgetPro/HogarSmart/FitLife, anuncios `AD-*`/`MOCK-*`), límpialos una vez:
+
+```bash
+DATABASE_URL="postgresql://...direct...?sslmode=require" npm run db:purge-demo
 ```
 
 ## 2) Redis — Upstash
@@ -64,26 +93,72 @@ DATABASE_URL="postgresql://...direct...?sslmode=require" npm run db:seed
 
 1. https://railway.app → New Project → Deploy from GitHub → `ronalc90/santiago`.
 2. **Start command**: `npm run worker`.
-3. Variables de entorno: las MISMAS `DATABASE_URL` (pooled o direct), `REDIS_URL`,
-   `IMAGE_PROVIDER`, `GEMINI_*`, `STORAGE_*` que en Vercel.
-4. Deploy. El worker se conecta a la cola y procesa las landings.
+3. Variables de entorno (ver detalle abajo). El worker **carga `lib/config/env.ts`
+   al importar**, así que faltar una variable obligatoria hace que el worker crashee
+   al arrancar.
+4. Deploy. El worker se conecta a la cola y procesa tanto la ingesta de anuncios
+   reales como la generación de las 9 imágenes de cada landing.
 
 > `postinstall` ejecuta `prisma generate` automáticamente en ambos servicios.
 > `tsx` y `prisma` están en `dependencies` para que el worker arranque en prod.
 
-## 6) Prueba de humo en producción
+### Variables que el Worker NECESITA (Railway)
+
+El worker es quien llama a `getAdSource().fetchAds()` (Apify) y a Gemini; **no** es
+Vercel. Por eso muchas variables que parecen "de la app" tienen que estar también
+(o sobre todo) aquí. Define en Railway:
+
+| Variable | Obligatoria | Notas |
+|---|---|---|
+| `DATABASE_URL` | Sí | La MISMA que Vercel (pooled o direct). |
+| `REDIS_URL` | Sí | La MISMA cola que Vercel (Upstash, `rediss://`). |
+| `AUTH_SECRET` | Sí | **Sin esto el worker crashea al arrancar** (mín. 16 chars). |
+| `INGEST_API_TOKEN` | Sí | **Sin esto el worker crashea al arrancar** (mín. 8 chars). |
+| `AD_SOURCE_PROVIDER` | Sí (reales) | `"apify"` para anuncios reales. Con `"mock"` trae datos **demo**. |
+| `APIFY_TOKEN` | Sí si `apify` | Sin el token con provider `apify`, `env.ts` lanza y el worker crashea. **Sin Apify la ingesta devuelve datos demo (mock).** |
+| `APIFY_ACTOR_ID` | Recomendada | Default: `curious_coder~facebook-ads-library-scraper`. |
+| `AD_SOURCE_COUNTRY` | Recomendada | País ISO-2 por defecto (ej. `CO`). |
+| `AD_SOURCE_KEYWORDS` | Recomendada | CSV de nichos. Vacío = la ingesta automática no encola nada. |
+| `AD_SOURCE_LIMIT` | Opcional | Máx. resultados por job (controla el costo de Apify). |
+| `AD_SOURCE_CRON` | Opcional | Patrón BullMQ para ingesta automática; vacío = desactivado. |
+| `WORKER_CONCURRENCY` | Opcional | Concurrencia del worker de imágenes (default 2). |
+| `AD_WORKER_CONCURRENCY` | Opcional | Concurrencia del worker de ingesta (default 1). |
+| `IMAGE_PROVIDER` + `GEMINI_API_KEY` | Sí (imágenes) | El worker genera las 9 imágenes; con `gemini` exige la key. |
+| `GEMINI_IMAGE_MODEL`, `GEMINI_TEXT_MODEL` | Recomendada | Mismos valores que Vercel. |
+| `STORAGE_DRIVER="s3"` + `S3_*` | Sí (prod) | El worker **sube** las imágenes generadas al bucket. |
+
+> Resumen: el worker necesita TODAS estas, no solo las "de cola". Si faltan
+> `AUTH_SECRET` o `INGEST_API_TOKEN`, el proceso ni siquiera arranca.
+
+## 6) Disparar la ingesta de anuncios REALES
+
+La ingesta real la ejecuta el **worker** (Apify). Hay dos formas de dispararla:
+
+- **Desde la UI**: Spy → botón **«Sincronizar reales»** (arriba de la tabla). Encola
+  trabajos con `AD_SOURCE_COUNTRY` / `AD_SOURCE_KEYWORDS` / `AD_SOURCE_LIMIT`.
+- **Por API** (cron o externos): `POST /api/ads/sync`. Autenticación por sesión ADMIN
+  o por header `x-ingest-token`. Cuerpo opcional `{ country, keywords[], pageUrl, limit }`;
+  si no se envía, usa los `AD_SOURCE_*` del entorno del worker.
 
 ```bash
-# login
-curl -i -c ck.txt -X POST https://TU-APP.vercel.app/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"socio1@winspy.local","password":"changeme123"}'
-
-# ingesta (usa tu INGEST_API_TOKEN de prod)
-curl -X POST https://TU-APP.vercel.app/api/ads/ingest \
+# Disparar la ingesta real (usa tu INGEST_API_TOKEN de prod)
+curl -X POST https://TU-APP.vercel.app/api/ads/sync \
   -H 'Content-Type: application/json' -H 'x-ingest-token: TU_TOKEN' \
-  -d '{"ads":[{"store_name":"Demo","country":"CO","ad_id":"PROD-1","ad_library_url":"https://www.facebook.com/ads/library/?id=PROD-1","days_active":10,"estimated_spend":20000}]}'
+  -d '{"country":"CO","keywords":["nicho1","nicho2"],"limit":50}'
 ```
 
-Luego, en la UI: crea producto → nueva landing → verifica que el worker genera las
-9 imágenes y que el `.zip` descarga.
+> Si en el worker `AD_SOURCE_PROVIDER` no es `"apify"` (o falta `APIFY_TOKEN`), la
+> ingesta devuelve datos **demo (mock)**, no anuncios reales.
+
+## 7) Prueba de humo en producción
+
+```bash
+# login (usa el admin creado con ADMIN_EMAIL/ADMIN_PASSWORD)
+curl -i -c ck.txt -X POST https://TU-APP.vercel.app/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"<ADMIN_EMAIL>","password":"<ADMIN_PASSWORD>"}'
+```
+
+Luego, en la UI: pulsa **«Sincronizar reales»** y espera a que el worker traiga los
+anuncios → crea producto → nueva landing → verifica que el worker genera las 9
+imágenes y que el `.zip` descarga.

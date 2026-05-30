@@ -6,16 +6,21 @@
 docker compose up -d           # Postgres + Redis
 npm install
 npm run db:migrate             # escribe "init" como nombre de migración
-npm run db:seed                # datos de ejemplo
+npm run db:seed                # datos de ejemplo (solo desarrollo)
 npm run dev                    # http://localhost:3000  (terminal 1)
 npm run worker                 # worker de imágenes      (terminal 2)
 ```
 
-Entra con **socio1@winspy.local / changeme123**.
+Entra con el admin creado por **`ADMIN_EMAIL` / `ADMIN_PASSWORD`**. En desarrollo,
+`ADMIN_EMAIL` trae un default; si no defines `ADMIN_PASSWORD`, se genera una clave
+aleatoria fuerte y se imprime por consola al crear el admin (cópiala de ahí).
 
 ## Flujo de trabajo diario
 
-1. **Spy → Importar resultados del spy.** Pega el JSON/CSV que produjo la skill de Claude in Chrome (o usa el endpoint `/api/ads/ingest`). Se deduplica por `ad_id`.
+1. **Spy → traer anuncios reales.** Dos caminos:
+   - **Sincronizar reales** (botón arriba de la tabla, o `POST /api/ads/sync`): el worker consulta el Meta Ad Library vía Apify usando `AD_SOURCE_COUNTRY`/`AD_SOURCE_KEYWORDS`/`AD_SOURCE_LIMIT`. Requiere `AD_SOURCE_PROVIDER="apify"` + `APIFY_TOKEN` en el worker; si no, devuelve datos demo.
+   - **Importar resultados del spy**: pega el JSON/CSV de la skill de Claude in Chrome (o usa el endpoint `/api/ads/ingest`).
+   En ambos casos se deduplica por `ad_id`.
 2. **Spy.** Revisa la tabla ordenada por **Winner Score**. Filtra por clasificación (🔴🟡🟢⚪), por “+días activos”, por “creativo extranjero sin usar en CO”, o por “no se vende en CO”. Cambia entre **Históricos** y **Solo nuevos**.
 3. **Detalle de un anuncio.** Revisa copy, creativo, link directo a la Ad Library e historial. Marca las señales del negocio y pulsa **Crear producto desde este anuncio**.
 4. **Producto.** Ajusta etapa del pipeline, disponibilidad en Dropi, notas. Desde aquí lanza **Nueva landing**.

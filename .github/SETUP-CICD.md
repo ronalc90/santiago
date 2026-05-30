@@ -49,9 +49,13 @@ Estas NO van en GitHub; viven en cada plataforma y se inyectan en runtime:
 
 - **Vercel** (Web/API): todas las de `.env.production.example` (`APP_URL`, `DATABASE_URL`
   *pooled*, `REDIS_URL`, `AUTH_SECRET`, `INGEST_API_TOKEN`, `IMAGE_PROVIDER`, `GEMINI_*`,
-  `STORAGE_*`, …). Ver `DEPLOY.md`.
-- **Railway** (Worker): las MISMAS `DATABASE_URL`, `REDIS_URL`, `IMAGE_PROVIDER`,
-  `GEMINI_*`, `STORAGE_*`.
+  `TEXT_PROVIDER`/`OPENAI_*`, `STORAGE_*`, `USD_COP_RATE`, …). Ver `DEPLOY.md`.
+- **Railway** (Worker): `DATABASE_URL`, `REDIS_URL`, `AUTH_SECRET`, `INGEST_API_TOKEN`
+  (sin estas dos últimas el worker **crashea al arrancar**), el bloque de anuncios
+  reales (`AD_SOURCE_PROVIDER="apify"`, `APIFY_TOKEN`, `APIFY_ACTOR_ID`,
+  `AD_SOURCE_COUNTRY`, `AD_SOURCE_KEYWORDS`, `AD_SOURCE_LIMIT`, `AD_SOURCE_CRON`),
+  `IMAGE_PROVIDER`/`GEMINI_*` y `STORAGE_DRIVER="s3"`+`S3_*`. El worker es quien llama
+  a Apify y a Gemini, así que estas vars van EN EL WORKER. Detalle completo en `DEPLOY.md`.
 
 ## 5) Probar
 

@@ -19,17 +19,19 @@ export function SyncButton() {
     try {
       const res = await fetch('/api/ads/sync', { method: 'POST' });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
+      if (res.status === 202) {
+        const enqueued = typeof data.enqueued === 'number' ? data.enqueued : 0;
         toast({
           title: 'Sincronización en cola',
-          description: `${data.enqueued ?? 0} búsqueda(s) encoladas para ${data.country ?? ''}. El worker traerá los anuncios reales en breve; recarga en unos segundos.`,
+          description: `Encolado: ${enqueued} búsqueda(s). El worker traerá los anuncios; recarga en ~30s.`,
         });
         setTimeout(() => router.refresh(), 4000);
       } else {
+        // 400 (sin keywords), 403 (no admin), 401, 422, 500… mostramos el mensaje tal cual.
         toast({
           variant: 'destructive',
           title: 'No se pudo sincronizar',
-          description: data.error ?? `Error ${res.status}`,
+          description: typeof data.error === 'string' ? data.error : `Error ${res.status}`,
         });
       }
     } catch (err) {

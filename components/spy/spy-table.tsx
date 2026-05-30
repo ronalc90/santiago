@@ -135,11 +135,18 @@ export function SpyTable() {
             {loading ? (
               <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></TableCell></TableRow>
             ) : ads.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">Sin anuncios. Importa resultados del spy.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">Aún no hay anuncios reales. Pulsa &quot;Sincronizar reales&quot; arriba para traerlos del Meta Ad Library, o importa un export.</TableCell></TableRow>
             ) : (
-              ads.map((ad) => (
+              ads.map((ad) => {
+                const normalizedUrl = normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country });
+                const isDemo = !normalizedUrl.includes('id=');
+                return (
                 <TableRow key={ad.id}>
-                  <TableCell className="font-medium">{ad.storeName}{ad.isNew && <Badge variant="secondary" className="ml-2">nuevo</Badge>}</TableCell>
+                  <TableCell className="font-medium">
+                    {ad.storeName}
+                    {ad.isNew && <Badge variant="secondary" className="ml-2">nuevo</Badge>}
+                    {isDemo && <Badge variant="gray" className="ml-2" title="Anuncio de demostración: el enlace abre una búsqueda, no un anuncio real">demo</Badge>}
+                  </TableCell>
                   <TableCell><Badge variant="outline">{ad.country}</Badge></TableCell>
                   <TableCell className="max-w-[260px] truncate text-muted-foreground" title={ad.copyText ?? ''}>{ad.copyText}</TableCell>
                   <TableCell>{ad.daysActive}</TableCell>
@@ -154,14 +161,15 @@ export function SpyTable() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground" title="Ver en Ad Library">
+                      <a href={normalizedUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground" title={isDemo ? 'Búsqueda en Ad Library (anuncio de demostración)' : 'Ver en Ad Library'}>
                         <ExternalLink className="h-4 w-4" />
                       </a>
                       <Link href={`/spy/${ad.id}`} className="text-sky-400 hover:underline text-xs">Detalle</Link>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

@@ -15,6 +15,11 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(16, 'AUTH_SECRET debe tener al menos 16 caracteres'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
+  // --- Credenciales del admin que crea el seed ---
+  // Si ADMIN_PASSWORD queda vacía, el seed genera una aleatoria fuerte.
+  ADMIN_EMAIL: z.string().default('socio1@winspy.local'),
+  ADMIN_PASSWORD: z.string().optional().default(''),
+
   // --- Imágenes (Gemini) ---
   IMAGE_PROVIDER: z.enum(['mock', 'gemini']).default('mock'),
   GEMINI_API_KEY: z.string().optional().default(''),
@@ -89,6 +94,36 @@ export function getEnv(): Env {
   if (e.AD_SOURCE_PROVIDER === 'apify' && !e.APIFY_TOKEN) {
     throw new Error('AD_SOURCE_PROVIDER="apify" requiere APIFY_TOKEN.');
   }
+
+  // --- Guardas de PRODUCCIÓN ------------------------------------------------
+  // Avisos (no bloqueantes) cuando la configuración delataría datos demo o un
+  // almacenamiento no compartido entre Vercel y Railway.
+  if (e.NODE_ENV === 'production') {
+    if (e.AD_SOURCE_PROVIDER === 'mock') {
+      console.warn(
+        '⚠️  AD_SOURCE_PROVIDER="mock" en PRODUCCIÓN: se servirán anuncios DEMO (fixtures). ' +
+          'Configura AD_SOURCE_PROVIDER="apify" + APIFY_TOKEN en el worker (Railway) para datos reales.',
+      );
+    }
+    if (e.STORAGE_DRIVER === 'local') {
+      console.warn(
+        '⚠️  STORAGE_DRIVER="local" en PRODUCCIÓN: los creativos NO se compartirán entre Vercel y Railway. ' +
+          'Usa STORAGE_DRIVER="s3" para un almacenamiento común.',
+      );
+    }
+  }
+
+  // S3 exige bucket y URL pública en cualquier entorno; sin ellos el driver no
+  // puede subir ni servir creativos.
+  if (e.STORAGE_DRIVER === 's3') {
+    if (!e.S3_BUCKET) {
+      throw new Error('STORAGE_DRIVER="s3" requiere S3_BUCKET.');
+    }
+    if (!e.S3_PUBLIC_BASE_URL) {
+      throw new Error('STORAGE_DRIVER="s3" requiere S3_PUBLIC_BASE_URL.');
+    }
+  }
+
   cached = e;
   return cached;
 }

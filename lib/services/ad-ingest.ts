@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { getEnv } from '@/lib/config/env';
 import { getAdSource, FetchAdsInput, RawAd } from '@/lib/ad-sources';
 import { persistCreative, PersistedCreative, CreativeKind } from '@/lib/services/creative';
 import { ingestAds, IngestResult } from '@/lib/services/ads';
@@ -23,6 +24,16 @@ export interface AdIngestSummary {
 }
 
 export async function runAdIngest(input: FetchAdsInput): Promise<AdIngestSummary> {
+  // En producción NUNCA insertamos datos demo: si el provider quedó en "mock",
+  // abortamos en vez de poblar la BD con anuncios ficticios.
+  const env = getEnv();
+  if (env.NODE_ENV === 'production' && env.AD_SOURCE_PROVIDER === 'mock') {
+    throw new Error(
+      'Ingesta abortada: AD_SOURCE_PROVIDER="mock" en producción insertaría datos demo. ' +
+        'Configura AD_SOURCE_PROVIDER="apify" + APIFY_TOKEN en el worker.',
+    );
+  }
+
   const rawAds = await getAdSource().fetchAds(input);
 
   // Anuncios que YA tienen creativo hospedado: no re-descargar ni re-comprimir

@@ -16,6 +16,9 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
   const ad = await prisma.ad.findUnique({ where: { id: params.id }, include: { store: true, product: true } });
   if (!ad) notFound();
 
+  const normalizedUrl = normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country });
+  const isDemo = !normalizedUrl.includes('id=');
+
   return (
     <div className="space-y-6">
       <Link href="/spy" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -27,7 +30,10 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>{ad.storeName}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>{ad.storeName}</CardTitle>
+                  {isDemo && <Badge variant="gray" title="Anuncio de demostración: el enlace abre una búsqueda, no un anuncio real">demo</Badge>}
+                </div>
                 <ClassificationBadge value={ad.classification} />
               </div>
             </CardHeader>
@@ -42,9 +48,14 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Copy del anuncio</p>
                 <p className="rounded-md border bg-muted/30 p-3 text-sm">{ad.copyText || '—'}</p>
               </div>
-              <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-sky-400 hover:underline">
-                <ExternalLink className="h-4 w-4" /> Ver en Meta Ad Library
+              <a href={normalizedUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-sky-400 hover:underline">
+                <ExternalLink className="h-4 w-4" /> {isDemo ? 'Buscar en Meta Ad Library' : 'Ver en Meta Ad Library'}
               </a>
+              {isDemo && (
+                <p className="text-xs text-muted-foreground">
+                  Este es un anuncio de demostración: el enlace abre una búsqueda en la Ad Library, no un anuncio real. Sincroniza anuncios reales para ver enlaces directos.
+                </p>
+              )}
             </CardContent>
           </Card>
 

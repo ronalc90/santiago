@@ -71,12 +71,24 @@ export async function persistCreative(
 
 /** Descarga con timeout, reintentos, tope de tamaño y protección SSRF. */
 async function download(url: string): Promise<{ buffer: Buffer; contentType: string }> {
+  // Validación inicial: rechaza esquemas y hosts privados antes de tocar la red.
   await assertPublicHttpUrl(url);
   let lastError = '';
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
     try {
+      // Mitigación TOCTOU (DNS rebinding): el fetch resuelve el host por nombre,
+      // así que un atacante podría rebindear el DNS entre la validación previa y
+      // este fetch. Re-validamos el host EN CADA intento (justo antes de la
+      // petición) para reducir la ventana de tiempo en que un cambio de DNS
+      // pasaría inadvertido; combinado con redirect:'manual' (un 30x no salta la
+      // validación), esto endurece la protección anti-SSRF sin romper hosts
+      // públicos legítimos (fbcdn, placehold.co).
+      // Nota: persiste una ventana mínima entre esta resolución y la del fetch
+      // que solo se cerraría conectando por IP fija; no se hace porque los CDN
+      // de Meta exigen SNI/TLS por nombre de host.
+      await assertPublicHttpUrl(url);
       // redirect:'manual' evita que un 30x salte la validación anti-SSRF.
       const res = await fetch(url, { signal: controller.signal, redirect: 'manual' });
       if (res.status >= 300 && res.status < 400) {

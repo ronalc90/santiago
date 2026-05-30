@@ -64,7 +64,7 @@ npm install
 
 # 4) Migraciones + cliente Prisma + datos de ejemplo
 npm run db:migrate         # crea las tablas (primera vez: nombra la migración, p.ej. "init")
-npm run db:seed            # carga usuarios, tiendas, anuncios y una landing demo
+npm run db:seed            # SOLO desarrollo: carga tiendas, anuncios y una landing demo
 
 # 5) Levantar la app (terminal 1)
 npm run dev                # http://localhost:3000
@@ -73,12 +73,18 @@ npm run dev                # http://localhost:3000
 npm run worker
 ```
 
-### Usuarios de ejemplo (seed)
+### Usuario admin
 
-| Email | Clave | Rol |
-|-------|-------|-----|
-| `socio1@winspy.local` | `changeme123` | ADMIN |
-| `socio2@winspy.local` | `changeme123` | MEMBER |
+El usuario admin se crea con las variables `ADMIN_EMAIL` y `ADMIN_PASSWORD` (no hay
+credenciales fijas en el repo):
+
+- En **desarrollo**, `ADMIN_EMAIL` tiene un default (`socio1@winspy.local`).
+- `ADMIN_PASSWORD` **no** tiene default: si no la defines, se genera una clave aleatoria
+  fuerte y se imprime **una sola vez** por consola.
+- En **producción**, define ambas y usa una `ADMIN_PASSWORD` fuerte. Detalle en `DEPLOY.md`.
+
+> El seed (`npm run db:seed`) es solo para desarrollo: carga datos demo. No lo corras
+> contra producción.
 
 ---
 
@@ -182,9 +188,9 @@ Cubren la lógica crítica: cálculo del Winner Score, clasificación por reglas
 Vercel corre en serverless y **no puede ejecutar el worker persistente** de BullMQ. Por eso:
 
 1. **Web/API → Vercel.** Importa el repo, define las variables de entorno (usa Postgres gestionado tipo Neon y Redis tipo Upstash). Vercel ejecuta `npm run build`.
-2. **Worker → Railway/Render.** Despliega el mismo repo como servicio con comando de inicio `npm run worker`, apuntando al **mismo** `DATABASE_URL` y `REDIS_URL`.
+2. **Worker → Railway/Render.** Despliega el mismo repo como servicio con comando de inicio `npm run worker`, apuntando al **mismo** `DATABASE_URL` y `REDIS_URL`. El worker llama a Apify y a Gemini, así que necesita además `AUTH_SECRET`, `INGEST_API_TOKEN` (sin estas dos **crashea al arrancar**), el bloque `AD_SOURCE_*`/`APIFY_*`, `GEMINI_*` y `S3_*`. Ver la tabla completa en `DEPLOY.md`.
 3. **Almacenamiento → S3/R2.** Pon `STORAGE_DRIVER=s3`, instala `@aws-sdk/client-s3` y rellena las `S3_*`. (El adaptador local solo sirve para dev.)
-4. Migraciones en prod: `npm run db:deploy`.
+4. Migraciones en prod: `npm run db:deploy`. El admin se crea con `ADMIN_EMAIL`/`ADMIN_PASSWORD`; el seed demo (`npm run db:seed`) **no** se corre en producción.
 
 La cola está detrás de una abstracción (`lib/queue`), así que se puede cambiar el destino sin tocar la lógica de negocio.
 

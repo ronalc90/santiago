@@ -1,202 +1,56 @@
 /**
- * Seed de datos de ejemplo para probar toda la plataforma sin datos reales.
- * Crea: 2 usuarios (socios), tiendas competidoras, anuncios detectados (con
- * Winner Score y clasificación calculados), productos en distintas etapas del
- * pipeline, y un proyecto de landing de ejemplo.
+ * Bootstrap de PRODUCCIÓN. NO crea datos de demostración: solo lo imprescindible
+ * para arrancar.
+ *   - Reglas de scoring por defecto.
+ *   - Usuario admin leído de ADMIN_EMAIL / ADMIN_PASSWORD.
  *
- * Ejecutar:  npm run db:seed
+ * Si ADMIN_PASSWORD no está definida, genera una contraseña aleatoria fuerte y
+ * la imprime UNA sola vez (nunca se hardcodea). Es idempotente (upsert).
+ *
+ * Ejecutar:  npm run db:seed   (o  npm run create-admin)
+ * Los anuncios reales se traen luego con «Sincronizar reales» (Apify), no aquí.
  */
-import { PrismaClient, Role, DropiAvailability, ProductStatus, LandingStatus, ImageStatus, Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
+import { PrismaClient, Role, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import {
-  computeWinnerScore,
-  classifyAd,
-  DEFAULT_SCORING_RULES,
-  SETTING_KEYS,
-} from '../lib/services/scoring';
-import { LANDING_SLOTS } from '../lib/services/landing-spec';
-import { buildAdLibraryUrl } from '../lib/ad-library';
+import { DEFAULT_SCORING_RULES, SETTING_KEYS } from '../lib/services/scoring';
 
 const prisma = new PrismaClient();
 
-/**
- * Creativo de DEMO: placeholder que muestra el copy del anuncio, no una foto
- * aleatoria. Los creativos reales llegan vía la ingesta (AD_SOURCE_PROVIDER) o
- * el import (`creative_url`).
- */
-function demoCreativeUrl(copy: string): string {
-  const label = copy.split('—')[0].trim().slice(0, 40);
-  return `https://placehold.co/600x600/0f172a/f8fafc/png?text=${encodeURIComponent(label)}`;
-}
-
 async function main() {
-  console.log('🌱  Sembrando datos de ejemplo...');
+  console.log('🌱  Bootstrap de producción (sin datos demo)...');
 
-  // --- Reglas configurables por defecto -----------------------------------
-  // Las reglas son un objeto plano serializable; lo afirmamos para el campo Json de Prisma.
+  // Reglas de scoring por defecto (idempotente; no pisa reglas ya ajustadas).
   const scoringRulesJson = DEFAULT_SCORING_RULES as unknown as Prisma.InputJsonObject;
   await prisma.setting.upsert({
     where: { key: SETTING_KEYS.SCORING_RULES },
     create: { key: SETTING_KEYS.SCORING_RULES, value: scoringRulesJson },
-    update: { value: scoringRulesJson },
-  });
-
-  // --- Usuarios (los 2 socios) --------------------------------------------
-  const passwordHash = await bcrypt.hash('changeme123', 10);
-  const admin = await prisma.user.upsert({
-    where: { email: 'socio1@winspy.local' },
-    create: { email: 'socio1@winspy.local', name: 'Socio 1', passwordHash, role: Role.ADMIN },
     update: {},
   });
+
+  // Admin desde el entorno; clave generada si no se define ADMIN_PASSWORD.
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'socio1@winspy.local';
+  let adminPassword = process.env.ADMIN_PASSWORD ?? '';
+  let generated = false;
+  if (!adminPassword) {
+    adminPassword = randomBytes(24).toString('base64url');
+    generated = true;
+  }
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
   await prisma.user.upsert({
-    where: { email: 'socio2@winspy.local' },
-    create: { email: 'socio2@winspy.local', name: 'Socio 2', passwordHash, role: Role.MEMBER },
-    update: {},
+    where: { email: adminEmail },
+    create: { email: adminEmail, name: 'Admin', passwordHash, role: Role.ADMIN },
+    update: {}, // no pisa la clave de un usuario existente
   });
 
-  // --- Tiendas competidoras ------------------------------------------------
-  const tiendas = [
-    { name: 'GadgetPro CO', country: 'CO', adLibraryUrl: buildAdLibraryUrl({ query: 'GadgetPro CO', country: 'CO' }) },
-    { name: 'HogarSmart', country: 'MX', adLibraryUrl: buildAdLibraryUrl({ query: 'HogarSmart', country: 'MX' }) },
-    { name: 'FitLife Store', country: 'US', adLibraryUrl: buildAdLibraryUrl({ query: 'FitLife Store', country: 'US' }) },
-  ];
-  const stores = [];
-  for (const t of tiendas) {
-    const s = await prisma.store.upsert({
-      where: { name_country: { name: t.name, country: t.country } },
-      create: t,
-      update: {},
-    });
-    stores.push(s);
+  console.log('✅  Listo.');
+  if (generated) {
+    console.log(`    Admin: ${adminEmail} / ${adminPassword}`);
+    console.log('    ⚠️  Guarda esta clave: define ADMIN_PASSWORD para fijarla.');
+  } else {
+    console.log(`    Admin: ${adminEmail} (clave de ADMIN_PASSWORD)`);
   }
-
-  // --- Anuncios detectados -------------------------------------------------
-  // (store, adId, country, daysActive, estimatedSpend, copy, sellsCO, unusedForeign)
-  const adsSeed = [
-    { store: stores[0], adId: 'AD-CO-1001', country: 'CO', daysActive: 12, spend: 18000, copy: 'Masajeador cervical recargable — alivia el dolor en minutos.', sellsCO: true, unused: false },
-    { store: stores[1], adId: 'AD-MX-2001', country: 'MX', daysActive: 40, spend: 32000, copy: 'Organizador de cocina plegable — espacio infinito.', sellsCO: false, unused: true },
-    { store: stores[2], adId: 'AD-US-3001', country: 'US', daysActive: 8, spend: 9000, copy: 'Posture corrector belt — feel taller instantly.', sellsCO: false, unused: true },
-    { store: stores[0], adId: 'AD-CO-1002', country: 'CO', daysActive: 120, spend: 60000, copy: 'Lámpara de luna 3D — regalo perfecto.', sellsCO: true, unused: false },
-    { store: stores[1], adId: 'AD-MX-2002', country: 'MX', daysActive: 6, spend: 2500, copy: 'Mini proyector portátil — cine en casa.', sellsCO: false, unused: true },
-    { store: stores[2], adId: 'AD-US-3002', country: 'US', daysActive: 22, spend: 44000, copy: 'Electric callus remover — salon results at home.', sellsCO: false, unused: true },
-  ];
-
-  for (const a of adsSeed) {
-    const winnerScore = computeWinnerScore(a.spend, a.daysActive);
-    const classification = classifyAd(winnerScore, a.daysActive, DEFAULT_SCORING_RULES);
-    await prisma.ad.upsert({
-      where: { adId: a.adId },
-      create: {
-        adId: a.adId,
-        storeId: a.store.id,
-        storeName: a.store.name,
-        country: a.country,
-        adLibraryUrl: buildAdLibraryUrl({ query: a.store.name, country: a.country }),
-        copyText: a.copy,
-        creativeUrl: demoCreativeUrl(a.copy),
-        daysActive: a.daysActive,
-        estimatedSpend: a.spend,
-        winnerScore,
-        classification,
-        isNew: true,
-        sellsInColombia: a.sellsCO,
-        hasUnusedForeignCreative: a.unused,
-      },
-      // Reparamos también URL y creativo de las filas demo ya sembradas.
-      update: {
-        winnerScore,
-        classification,
-        adLibraryUrl: buildAdLibraryUrl({ query: a.store.name, country: a.country }),
-        creativeUrl: demoCreativeUrl(a.copy),
-      },
-    });
-  }
-
-  // --- Productos en el pipeline -------------------------------------------
-  const prodMasajeador = await prisma.product.create({
-    data: {
-      name: 'Masajeador cervical recargable',
-      description: 'Masajeador de cuello con calor y EMS, recargable por USB.',
-      status: ProductStatus.VALIDADO,
-      market: 'CO',
-      currency: 'COP',
-      sellsInColombia: true,
-      hasUnusedForeignCreative: false,
-      dropiAvailability: DropiAvailability.DISPONIBLE,
-      ownerId: admin.id,
-      notes: 'Buen margen. Validado por demanda en CO.',
-    },
-  });
-
-  await prisma.product.create({
-    data: {
-      name: 'Organizador de cocina plegable',
-      description: 'Estante plegable multinivel para cocina.',
-      status: ProductStatus.DETECTADO,
-      market: 'MX',
-      currency: 'MXN',
-      sellsInColombia: false,
-      hasUnusedForeignCreative: true,
-      dropiAvailability: DropiAvailability.A_IMPORTAR,
-      notes: 'Ángulo de ahorro de espacio sin usar en CO.',
-    },
-  });
-
-  // Ligar el anuncio CO al producto
-  await prisma.ad.update({
-    where: { adId: 'AD-CO-1001' },
-    data: { productId: prodMasajeador.id },
-  });
-
-  // --- Landing de ejemplo (demo, ya "completada" con placeholders) ---------
-  const landing = await prisma.landingProject.create({
-    data: {
-      productId: prodMasajeador.id,
-      name: 'Landing — Masajeador cervical (CO)',
-      status: LandingStatus.COMPLETED,
-      complianceTiktok: true,
-      inputs: {
-        productName: 'Masajeador cervical recargable',
-        offerPrice: 89900,
-        regularPrice: 159900,
-        country: 'CO',
-        currency: 'COP',
-        audience: 'Adultos 30-55 con dolor de cuello por trabajo de oficina',
-        description: 'Masajeador de cuello con calor y EMS, recargable por USB.',
-        offerType: '2x1',
-        angle: 'Alivio rápido del dolor sin ir al fisioterapeuta',
-      },
-      styleAnalysis: {
-        visualStyle: 'minimalista premium',
-        palette: ['#0F172A', '#22D3EE', '#F8FAFC'],
-        atmosphere: 'luz suave de estudio',
-        typography: 'sans-serif geométrica',
-        iconStyle: 'líneas finas',
-        effects: 'sombras suaves, gradientes sutiles',
-        layout: 'centrado con jerarquía clara',
-        editorialDetails: 'badges de oferta, sellos de garantía',
-      },
-    },
-  });
-
-  for (const slot of LANDING_SLOTS) {
-    await prisma.landingImage.create({
-      data: {
-        projectId: landing.id,
-        slot: slot.slot,
-        type: slot.type,
-        promptEn: `[demo] ${slot.type} image for the product, Spanish on-image copy.`,
-        status: ImageStatus.COMPLETED,
-        url: `https://picsum.photos/seed/landing-${slot.slot}/1000/1200`,
-        width: 1000,
-        height: 1200,
-        bytes: 180000,
-      },
-    });
-  }
-
-  console.log('✅  Seed completado.');
-  console.log('    Usuarios:  socio1@winspy.local / socio2@winspy.local  (clave: changeme123)');
 }
 
 main()
