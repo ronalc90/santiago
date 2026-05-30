@@ -91,9 +91,10 @@ function toIngestAd(raw: RawAd, persisted: PersistedCreative | null): IngestAd {
     copy_text: raw.copyText ?? '',
     // days_active REAL calculado de las fechas del anuncio.
     days_active: daysBetween(raw.startDate, raw.endDate),
-    // estimated_spend NO es oficial para anuncios comerciales en CO; usamos el
-    // punto medio del rango de impresiones como proxy de magnitud (o 0).
-    estimated_spend: spendProxy(raw.impressionsRange),
+    // Meta NO expone gasto real para anuncios comerciales en CO → 0. El Winner
+    // Score usa impresiones/longevidad cuando no hay gasto (no confundir con $).
+    estimated_spend: 0,
+    estimated_impressions: impressionsMid(raw.impressionsRange),
     creative_url: persisted?.url ?? '',
     detected_at: undefined,
     cta_text: raw.ctaText,
@@ -111,8 +112,9 @@ function daysBetween(start?: Date, end?: Date): number {
   return Math.max(0, Math.floor((endMs - start.getTime()) / 86_400_000));
 }
 
-function spendProxy(range?: [number, number]): number {
-  if (!range) return 0;
+/** Punto medio del rango de impresiones (no es gasto), o undefined si no hay. */
+function impressionsMid(range?: [number, number]): number | undefined {
+  if (!range) return undefined;
   return Math.round((range[0] + range[1]) / 2);
 }
 

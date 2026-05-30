@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeWinnerScore,
+  computeWinnerScoreFromSignals,
   classifyAd,
   isForeignDemandSignal,
   DEFAULT_SCORING_RULES,
@@ -24,6 +25,32 @@ describe('computeWinnerScore', () => {
 
   it('redondea a 2 decimales', () => {
     expect(computeWinnerScore(1000, 3)).toBe(333.33);
+  });
+});
+
+describe('computeWinnerScoreFromSignals', () => {
+  it('usa gasto/día cuando hay gasto real (igual que la fórmula clásica)', () => {
+    expect(computeWinnerScoreFromSignals({ estimatedSpend: 10000, daysActive: 10 })).toBe(1000);
+  });
+
+  it('sin gasto pero con impresiones, ordena por impresiones/día', () => {
+    const pocas = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 10, estimatedImpressions: 50000 });
+    const muchas = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 10, estimatedImpressions: 200000 });
+    expect(muchas).toBeGreaterThan(pocas);
+    expect(pocas).toBeGreaterThan(0);
+  });
+
+  it('sin gasto ni impresiones, ordena por longevidad (más días = más score)', () => {
+    const nuevo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 3 });
+    const viejo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 45 });
+    expect(viejo).toBeGreaterThan(nuevo);
+    expect(nuevo).toBeGreaterThan(0); // ya no colapsa a 0
+  });
+
+  it('acota la longevidad por debajo del umbral de SATURADO', () => {
+    const cap = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 500 });
+    const justoAntes = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: DEFAULT_SCORING_RULES.saturadoDias - 1 });
+    expect(cap).toBe(justoAntes);
   });
 });
 

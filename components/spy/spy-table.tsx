@@ -143,7 +143,7 @@ export function SpyTable() {
                   <TableCell><Badge variant="outline">{ad.country}</Badge></TableCell>
                   <TableCell className="max-w-[260px] truncate text-muted-foreground" title={ad.copyText ?? ''}>{ad.copyText}</TableCell>
                   <TableCell>{ad.daysActive}</TableCell>
-                  <TableCell>${ad.estimatedSpend.toLocaleString()}</TableCell>
+                  <TableCell>{ad.estimatedSpend > 0 ? `$${ad.estimatedSpend.toLocaleString()}` : '—'}</TableCell>
                   <TableCell className="font-semibold">{ad.winnerScore.toLocaleString()}</TableCell>
                   <TableCell><ClassificationBadge value={ad.classification} /></TableCell>
                   <TableCell>

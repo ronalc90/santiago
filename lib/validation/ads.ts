@@ -13,6 +13,9 @@ export const ingestAdSchema = z.object({
   days_active: z.coerce.number().int().nonnegative().default(0),
   estimated_spend: z.coerce.number().nonnegative().default(0),
   creative_url: z.string().url().optional().or(z.literal('')).default(''),
+  // Magnitud de exposición (no es gasto): punto medio del rango de impresiones
+  // cuando la fuente lo expone. Alimenta el Winner Score cuando no hay gasto.
+  estimated_impressions: z.coerce.number().nonnegative().optional(),
   detected_at: z.coerce.date().optional(),
   // Señales opcionales que el spy puede marcar
   sells_in_colombia: z.coerce.boolean().optional(),

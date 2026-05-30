@@ -35,7 +35,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
               <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                 <Metric label="País" value={ad.country} />
                 <Metric label="Días activos" value={String(ad.daysActive)} />
-                <Metric label="Gasto est." value={`$${ad.estimatedSpend.toLocaleString()}`} />
+                <Metric label="Gasto est." value={ad.estimatedSpend > 0 ? `$${ad.estimatedSpend.toLocaleString()}` : '—'} />
                 <Metric label="Winner Score" value={ad.winnerScore.toLocaleString()} />
               </div>
               <div>
