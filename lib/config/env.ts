@@ -38,6 +38,24 @@ const envSchema = z.object({
   S3_PUBLIC_BASE_URL: z.string().optional().default(''),
 
   INGEST_API_TOKEN: z.string().min(8, 'INGEST_API_TOKEN debe tener al menos 8 caracteres'),
+
+  // --- Fuente de anuncios reales (Meta Ad Library vía scraper gestionado) ---
+  // "mock" devuelve fixtures (no gasta). "apify" usa un actor real de Apify.
+  AD_SOURCE_PROVIDER: z.enum(['mock', 'apify']).default('mock'),
+  APIFY_TOKEN: z.string().optional().default(''),
+  // Actor de Apify; por defecto el más barato/usado (curious_coder).
+  APIFY_ACTOR_ID: z.string().default('curious_coder~facebook-ads-library-scraper'),
+  // País ISO-2 a vigilar por defecto y lista CSV de keywords/nichos.
+  AD_SOURCE_COUNTRY: z.string().default('CO'),
+  AD_SOURCE_KEYWORDS: z.string().default(''),
+  AD_SOURCE_LIMIT: z.coerce.number().int().positive().default(100),
+  // Cron (patrón BullMQ) para la ingesta automática; vacío = desactivado.
+  AD_SOURCE_CRON: z.string().default(''),
+
+  // Concurrencia de los workers BullMQ (proceso separado). La de ingesta es
+  // más baja a propósito para acotar costo de Apify y carga sobre el CDN.
+  WORKER_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  AD_WORKER_CONCURRENCY: z.coerce.number().int().positive().default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -64,6 +82,9 @@ export function getEnv(): Env {
   }
   if (e.TEXT_PROVIDER === 'gemini' && !e.GEMINI_API_KEY) {
     throw new Error('TEXT_PROVIDER="gemini" requiere GEMINI_API_KEY.');
+  }
+  if (e.AD_SOURCE_PROVIDER === 'apify' && !e.APIFY_TOKEN) {
+    throw new Error('AD_SOURCE_PROVIDER="apify" requiere APIFY_TOKEN.');
   }
   cached = e;
   return cached;

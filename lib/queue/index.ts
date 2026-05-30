@@ -27,3 +27,41 @@ export async function enqueueLandingJob(data: LandingJobData): Promise<string> {
   });
   return job.id ?? '';
 }
+
+// ---------------------------------------------------------------------------
+// Cola de ingesta de anuncios reales (Meta Ad Library vía fuente configurada).
+// ---------------------------------------------------------------------------
+
+export const AD_INGEST_QUEUE = 'ad-ingestion';
+
+export interface AdIngestJobData {
+  /** País ISO-2 a buscar (CO, MX…). */
+  country: string;
+  /** Texto de búsqueda (nicho/keyword). */
+  query?: string;
+  /** URL de página de competidor (alternativa a query). */
+  pageUrl?: string;
+  /** Máximo de anuncios a traer. */
+  limit: number;
+}
+
+let adQueue: Queue<AdIngestJobData> | null = null;
+
+/** Cola de ingesta de anuncios (productor). El worker la consume aparte. */
+export function getAdIngestQueue(): Queue<AdIngestJobData> {
+  if (adQueue) return adQueue;
+  adQueue = new Queue<AdIngestJobData>(AD_INGEST_QUEUE, { connection: getRedis() });
+  return adQueue;
+}
+
+/** Encola un trabajo de ingesta de anuncios. */
+export async function enqueueAdIngestJob(data: AdIngestJobData): Promise<string> {
+  const job = await getAdIngestQueue().add('ingest', data, {
+    removeOnComplete: 100,
+    removeOnFail: 200,
+    // attempts:1 — un reintento re-ejecutaría (y re-pagaría) el scrape de Apify.
+    // runActor() y download() ya tienen sus propios reintentos internos.
+    attempts: 1,
+  });
+  return job.id ?? '';
+}

@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { AdActions } from '@/components/spy/ad-actions';
+import { CreativeImage } from '@/components/spy/creative-image';
 import { formatDate } from '@/lib/utils';
+import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +42,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Copy del anuncio</p>
                 <p className="rounded-md border bg-muted/30 p-3 text-sm">{ad.copyText || '—'}</p>
               </div>
-              <a href={ad.adLibraryUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-sky-400 hover:underline">
+              <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-sky-400 hover:underline">
                 <ExternalLink className="h-4 w-4" /> Ver en Meta Ad Library
               </a>
             </CardContent>
@@ -50,7 +52,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
             <Card>
               <CardHeader><CardTitle>Creativo</CardTitle></CardHeader>
               <CardContent>
-                <img src={ad.creativeUrl} alt="Creativo del anuncio" className="max-h-96 rounded-md border" />
+                <CreativeImage src={ad.creativeUrl} alt={`Creativo de ${ad.storeName}`} />
               </CardContent>
             </Card>
           )}

@@ -13,7 +13,7 @@ const JSON_EXAMPLE = `{
       "store_name": "GadgetPro CO",
       "country": "CO",
       "ad_id": "AD-CO-9001",
-      "ad_library_url": "https://www.facebook.com/ads/library/?id=AD-CO-9001",
+      "ad_library_url": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=CO&q=GadgetPro%20CO&search_type=keyword_unordered",
       "copy_text": "Producto ganador…",
       "days_active": 12,
       "estimated_spend": 18000,

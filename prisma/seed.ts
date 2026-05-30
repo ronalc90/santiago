@@ -15,8 +15,19 @@ import {
   SETTING_KEYS,
 } from '../lib/services/scoring';
 import { LANDING_SLOTS } from '../lib/services/landing-spec';
+import { buildAdLibraryUrl } from '../lib/ad-library';
 
 const prisma = new PrismaClient();
+
+/**
+ * Creativo de DEMO: placeholder que muestra el copy del anuncio, no una foto
+ * aleatoria. Los creativos reales llegan vía la ingesta (AD_SOURCE_PROVIDER) o
+ * el import (`creative_url`).
+ */
+function demoCreativeUrl(copy: string): string {
+  const label = copy.split('—')[0].trim().slice(0, 40);
+  return `https://placehold.co/600x600/0f172a/f8fafc/png?text=${encodeURIComponent(label)}`;
+}
 
 async function main() {
   console.log('🌱  Sembrando datos de ejemplo...');
@@ -45,9 +56,9 @@ async function main() {
 
   // --- Tiendas competidoras ------------------------------------------------
   const tiendas = [
-    { name: 'GadgetPro CO', country: 'CO', adLibraryUrl: 'https://www.facebook.com/ads/library/?id=gadgetpro' },
-    { name: 'HogarSmart', country: 'MX', adLibraryUrl: 'https://www.facebook.com/ads/library/?id=hogarsmart' },
-    { name: 'FitLife Store', country: 'US', adLibraryUrl: 'https://www.facebook.com/ads/library/?id=fitlife' },
+    { name: 'GadgetPro CO', country: 'CO', adLibraryUrl: buildAdLibraryUrl({ query: 'GadgetPro CO', country: 'CO' }) },
+    { name: 'HogarSmart', country: 'MX', adLibraryUrl: buildAdLibraryUrl({ query: 'HogarSmart', country: 'MX' }) },
+    { name: 'FitLife Store', country: 'US', adLibraryUrl: buildAdLibraryUrl({ query: 'FitLife Store', country: 'US' }) },
   ];
   const stores = [];
   for (const t of tiendas) {
@@ -80,9 +91,9 @@ async function main() {
         storeId: a.store.id,
         storeName: a.store.name,
         country: a.country,
-        adLibraryUrl: `https://www.facebook.com/ads/library/?id=${a.adId}`,
+        adLibraryUrl: buildAdLibraryUrl({ query: a.store.name, country: a.country }),
         copyText: a.copy,
-        creativeUrl: `https://picsum.photos/seed/${a.adId}/600/600`,
+        creativeUrl: demoCreativeUrl(a.copy),
         daysActive: a.daysActive,
         estimatedSpend: a.spend,
         winnerScore,
@@ -91,7 +102,13 @@ async function main() {
         sellsInColombia: a.sellsCO,
         hasUnusedForeignCreative: a.unused,
       },
-      update: { winnerScore, classification },
+      // Reparamos también URL y creativo de las filas demo ya sembradas.
+      update: {
+        winnerScore,
+        classification,
+        adLibraryUrl: buildAdLibraryUrl({ query: a.store.name, country: a.country }),
+        creativeUrl: demoCreativeUrl(a.copy),
+      },
     });
   }
 

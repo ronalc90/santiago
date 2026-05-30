@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { ProductManager } from '@/components/products/product-manager';
+import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                   </div>
                   <div className="flex items-center gap-2">
                     <ClassificationBadge value={ad.classification} />
-                    <a href={ad.adLibraryUrl} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 text-muted-foreground" /></a>
+                    <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 text-muted-foreground" /></a>
                   </div>
                 </div>
               ))}

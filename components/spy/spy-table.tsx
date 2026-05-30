@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
+import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 
 interface Ad {
   id: string;
@@ -153,7 +154,7 @@ export function SpyTable() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <a href={ad.adLibraryUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground" title="Ver en Ad Library">
+                      <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground" title="Ver en Ad Library">
                         <ExternalLink className="h-4 w-4" />
                       </a>
                       <Link href={`/spy/${ad.id}`} className="text-sky-400 hover:underline text-xs">Detalle</Link>
