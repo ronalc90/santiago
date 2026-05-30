@@ -18,6 +18,25 @@ const inputsSchema = z.object({
   angle: z.string().min(1),
 });
 
+const sectionsCopySchema = z.array(
+  z.object({
+    slot: z.number().int().min(1).max(9),
+    headline: z.string(),
+    bullets: z.array(z.string()),
+  }),
+);
+
+/** Parsea el copy de secciones (JSON en el form); devuelve undefined si falta o es inválido. */
+function parseSectionsCopy(raw: unknown) {
+  if (typeof raw !== 'string' || !raw.trim()) return undefined;
+  try {
+    const parsed = sectionsCopySchema.safeParse(JSON.parse(raw));
+    return parsed.success && parsed.data.length > 0 ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Crea un proyecto de landing (multipart/form-data con archivos opcionales). */
 export async function POST(req: Request) {
   const auth = await requireApiUser();
@@ -45,11 +64,12 @@ export async function POST(req: Request) {
     const name = String(form.get('name') ?? `Landing — ${parsed.data.productName}`);
     const productPhoto = await fileToBuffer(form.get('productPhoto'));
     const referenceImage = await fileToBuffer(form.get('referenceImage'));
+    const sectionsCopy = parseSectionsCopy(form.get('sectionsCopy'));
 
     const project = await createLandingProject({
       productId,
       name,
-      inputs: parsed.data,
+      inputs: { ...parsed.data, ...(sectionsCopy ? { sectionsCopy } : {}) },
       complianceTiktok,
       productPhoto,
       referenceImage,

@@ -11,6 +11,13 @@
  * de referencia) para mantener coherencia visual entre las 9 piezas.
  */
 
+/** Copy por sección (1..9) generado por IA, para alinear el texto de cada imagen. */
+export interface LandingSectionCopy {
+  slot: number; // 1..9
+  headline: string;
+  bullets: string[];
+}
+
 export interface LandingInputs {
   productName: string;
   offerPrice: number;
@@ -21,6 +28,8 @@ export interface LandingInputs {
   description: string;
   offerType: string; // p.ej. "2x1", "envío gratis", "50% OFF"
   angle: string; // ángulo de venta
+  /** Copy por sección generado por IA (opcional): se inyecta en el prompt del slot. */
+  sectionsCopy?: LandingSectionCopy[];
 }
 
 /** Los 8 elementos que se extraen de la imagen de referencia de estilo. */
@@ -89,6 +98,14 @@ VISUAL STYLE (keep consistent across all images):
 - Editorial details: ${style.editorialDetails}`
     : '\nVISUAL STYLE: clean modern e-commerce, premium, high contrast.';
 
+  const sectionCopy = inputs.sectionsCopy?.find((s) => s.slot === slot.slot);
+  const copyBlock = sectionCopy && (sectionCopy.headline || sectionCopy.bullets.length)
+    ? `
+SECTION COPY (use this exact Spanish text as the basis for the visible copy):
+- Headline: ${sectionCopy.headline}
+- Bullets: ${sectionCopy.bullets.join(' | ')}`
+    : '';
+
   return `You are designing image ${slot.slot} of 9 for a Spanish-language e-commerce sales page (landing).
 IMAGE PURPOSE: ${slot.intent}
 
@@ -101,7 +118,7 @@ PRODUCT CONTEXT:
 - Offer price: ${inputs.offerPrice} ${inputs.currency}
 - Regular price: ${inputs.regularPrice} ${inputs.currency}
 - Country/market: ${inputs.country}
-${styleBlock}
+${styleBlock}${copyBlock}
 
 REQUIREMENTS:
 - ALL visible text on the image MUST be in SPANISH (es).
