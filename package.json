@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Plataforma interna de e-commerce/dropshipping: Spy de anuncios, generador de landings con IA y dashboard.",
+  "engines": {
+    "node": ">=20.0.0 <21"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
