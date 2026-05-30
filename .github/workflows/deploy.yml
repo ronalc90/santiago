@@ -1,0 +1,95 @@
+name: Deploy
+
+# Despliegue automático de producción en cada push a main.
+# Orquestado 100% por GitHub Actions:
+#   typecheck -> build (Vercel) -> migraciones (Neon) -> Web (Vercel) -> Worker (Railway)
+# Si cualquier paso falla, los siguientes NO se ejecutan: la BD y los servicios
+# solo se tocan cuando el código compila.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # permite lanzarlo a mano desde la pestaña Actions
+
+# Un despliegue a la vez. No cancelamos el que está en curso: lo dejamos terminar
+# y encolamos el siguiente para no dejar la BD/servicios a medias.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  # IDs del proyecto en Vercel. No son secretos (sin el token son inútiles);
+  # van aquí para que solo tengas que crear UN secreto (VERCEL_TOKEN).
+  VERCEL_ORG_ID: team_U5NeRsXpAhCrcNg1rhaxKJuK
+  VERCEL_PROJECT_ID: prj_ggLV1l1FxRw8i4iXcn9rN0o2N69Z
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  deploy:
+    name: Build, migrate & deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      # --- GATE 1: tipos ---
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      # Trae la configuración y las variables de entorno de producción del proyecto Vercel.
+      - name: Pull Vercel env (production)
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # --- GATE 2: build (corre `prisma generate && next build` con el env real de prod) ---
+      - name: Build (Vercel)
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # --- Migraciones: solo después de que el código compila ---
+      # DATABASE_URL debe ser la conexión DIRECTA de Neon (sin -pooler).
+      - name: Apply database migrations (Neon)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # --- Deploy Web/API en Vercel (sube el build ya hecho) ---
+      - name: Deploy Web to Vercel
+        run: |
+          url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          echo "Web desplegada: $url"
+          echo "### ✅ Web desplegada en Vercel" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # --- Deploy Worker en Railway ---
+      # RAILWAY_TOKEN = project token (Railway -> proyecto -> Settings -> Tokens).
+      # RAILWAY_SERVICE = nombre del servicio del worker (variable de repo, opcional
+      # si el proyecto tiene un solo servicio).
+      - name: Deploy Worker to Railway
+        run: |
+          npm i -g @railway/cli
+          railway up --ci ${RAILWAY_SERVICE:+--service "$RAILWAY_SERVICE"}
+          echo "### ✅ Worker desplegado en Railway" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}

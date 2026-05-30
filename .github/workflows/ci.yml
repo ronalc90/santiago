@@ -1,0 +1,46 @@
+name: CI
+
+# Validación en Pull Requests y en ramas que NO son main.
+# No despliega ni toca la base de datos: solo comprueba que el código compila.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  validate:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Variables ficticias: el build no se conecta a la BD (todas las páginas son
+    # `force-dynamic`), pero satisfacen la validación de entorno si llegara a correr.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+      AUTH_SECRET: ci_placeholder_secret_0123456789
+      INGEST_API_TOKEN: ci_placeholder_token
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

@@ -15,12 +15,22 @@ const MAX_RETRIES = 3;
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const REQUEST_TIMEOUT_MS = 120_000;
 
-type GenerateContentBody = Record<string, unknown>;
-
-/** Forma parcial de la respuesta de generateContent que consumimos. */
+/** Partes y respuesta parcial de generateContent que consumimos. */
+interface GeminiInlineData {
+  mimeType: string;
+  data: string;
+}
 interface GeminiPart {
   text?: string;
-  inlineData?: { mimeType: string; data: string };
+  inlineData?: GeminiInlineData;
+}
+interface GeminiContent {
+  role?: string;
+  parts: GeminiPart[];
+}
+interface GeminiRequestBody {
+  contents: GeminiContent[];
+  generationConfig?: { responseModalities?: string[] };
 }
 interface GeminiResponse {
   candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
@@ -39,7 +49,7 @@ export class GeminiImageGenerator implements ImageGenerator {
   }
 
   /** Llama a generateContent con reintentos y backoff ante errores transitorios. */
-  private async generateContent(model: string, body: GenerateContentBody): Promise<GeminiResponse> {
+  private async generateContent(model: string, body: GeminiRequestBody): Promise<GeminiResponse> {
     let lastError = '';
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
       const controller = new AbortController();
@@ -51,7 +61,7 @@ export class GeminiImageGenerator implements ImageGenerator {
           body: JSON.stringify(body),
           signal: controller.signal,
         });
-        if (res.ok) return res.json();
+        if (res.ok) return (await res.json()) as GeminiResponse;
 
         const text = await res.text().catch(() => '');
         lastError = `Gemini ${model} respondió ${res.status}: ${text.slice(0, 300)}`;
@@ -91,7 +101,10 @@ export class GeminiImageGenerator implements ImageGenerator {
       ],
     });
     const text: string =
-      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('') ?? '';
+      data.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text)
+        .filter(Boolean)
+        .join('') ?? '';
     const jsonStr = text.replace(/```json|```/g, '').trim();
     try {
       const parsed = JSON.parse(jsonStr);
@@ -119,15 +132,14 @@ export class GeminiImageGenerator implements ImageGenerator {
       contents: [{ role: 'user', parts }],
       generationConfig: { responseModalities: ['IMAGE'] },
     });
-    const partsOut: GeminiPart[] = data?.candidates?.[0]?.content?.parts ?? [];
-    const imgPart = partsOut.find((p) => p.inlineData?.data);
-    if (!imgPart) {
+    const partsOut: GeminiPart[] = data.candidates?.[0]?.content?.parts ?? [];
+    const inline = partsOut.find((p) => p.inlineData?.data)?.inlineData;
+    if (!inline) {
       throw new Error('Gemini no devolvió ninguna imagen.');
     }
-    return Buffer.from(imgPart.inlineData.data, 'base64');
+    return Buffer.from(inline.data, 'base64');
   }
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
