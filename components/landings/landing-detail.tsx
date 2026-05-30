@@ -1,9 +1,10 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Download, RefreshCw, Loader2, AlertTriangle } from 'lucide-react';
+import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { toast } from '@/components/ui/use-toast';
 
 interface Img { id: string; slot: number; type: string; status: string; url: string | null; error: string | null; }
@@ -16,6 +17,7 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
   const [status, setStatus] = useState(initialStatus);
   const [images, setImages] = useState<Img[]>(initialImages);
   const [progress, setProgress] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
@@ -44,6 +46,16 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
 
   const completed = images.filter((i) => i.status === 'COMPLETED').length;
   const isActive = status === 'QUEUED' || status === 'PROCESSING';
+
+  // Solo las imágenes generadas se pueden visualizar en el visor.
+  const gallery = images.filter(
+    (i): i is Img & { url: string } => i.status === 'COMPLETED' && Boolean(i.url),
+  );
+  const lightboxImages = gallery.map((i) => ({ url: i.url, alt: TITLES[i.type] ?? i.type }));
+  const openLightbox = (slot: number) => {
+    const position = gallery.findIndex((i) => i.slot === slot);
+    if (position >= 0) setActiveIndex(position);
+  };
 
   return (
     <div className="space-y-4">
@@ -76,7 +88,17 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
           <Card key={img.slot} className="overflow-hidden">
             <div className="relative flex aspect-[5/6] items-center justify-center bg-muted/30">
               {img.status === 'COMPLETED' && img.url ? (
-                <img src={img.url} alt={img.type} className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => openLightbox(img.slot)}
+                  aria-label={`Ampliar ${TITLES[img.type] ?? img.type}`}
+                  className="group absolute inset-0 cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <img src={img.url} alt={img.type} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+                    <ZoomIn className="h-7 w-7 text-white drop-shadow" />
+                  </span>
+                </button>
               ) : img.status === 'FAILED' ? (
                 <div className="p-3 text-center text-xs text-destructive"><AlertTriangle className="mx-auto mb-1 h-5 w-5" />{img.error ?? 'Error'}</div>
               ) : (
@@ -93,6 +115,13 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
           </Card>
         ))}
       </div>
+
+      <ImageLightbox
+        images={lightboxImages}
+        index={activeIndex}
+        onClose={() => setActiveIndex(null)}
+        onNavigate={setActiveIndex}
+      />
     </div>
   );
 }
