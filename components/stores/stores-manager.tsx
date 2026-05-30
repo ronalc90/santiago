@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
+import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 
 interface StoreRow { id: string; name: string; country: string; adLibraryUrl: string; notes: string; adsCount: number; }
 
@@ -53,7 +54,7 @@ export function StoresManager({ initial }: { initial: StoreRow[] }) {
                 <p className="text-xs text-muted-foreground">{s.adsCount} anuncio(s)</p>
               </div>
               <div className="flex items-center gap-3">
-                {s.adLibraryUrl && <a href={s.adLibraryUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><ExternalLink className="h-4 w-4" /></a>}
+                <a href={normalizeAdLibraryUrl(s.adLibraryUrl, { query: s.name, country: s.country })} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><ExternalLink className="h-4 w-4" /></a>
                 <Button variant="ghost" size="icon" onClick={() => remove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </CardContent>

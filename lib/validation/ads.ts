@@ -17,6 +17,15 @@ export const ingestAdSchema = z.object({
   // Señales opcionales que el spy puede marcar
   sells_in_colombia: z.coerce.boolean().optional(),
   has_unused_foreign_creative: z.coerce.boolean().optional(),
+  // Metadatos reales opcionales (Ad Library). Se conservan en `raw` para
+  // auditoría; no requieren columnas en la base de datos.
+  cta_text: z.string().optional(),
+  link_url: z.string().url().optional().or(z.literal('')),
+  publisher_platforms: z.array(z.string()).optional(),
+  is_active: z.coerce.boolean().optional(),
+  creative_type: z.enum(['image', 'video']).optional(),
+  // URL original (efímera) del CDN de Meta, antes de re-hospedar.
+  original_creative_url: z.string().url().optional().or(z.literal('')),
 });
 
 export type IngestAd = z.infer<typeof ingestAdSchema>;
