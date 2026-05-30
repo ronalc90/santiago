@@ -15,10 +15,17 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(16, 'AUTH_SECRET debe tener al menos 16 caracteres'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
+  // --- Imágenes (Gemini) ---
   IMAGE_PROVIDER: z.enum(['mock', 'gemini']).default('mock'),
   GEMINI_API_KEY: z.string().optional().default(''),
   GEMINI_IMAGE_MODEL: z.string().default('gemini-2.5-flash-image-preview'),
-  GEMINI_TEXT_MODEL: z.string().default('gemini-2.0-flash'),
+  GEMINI_TEXT_MODEL: z.string().default('gemini-flash-latest'),
+
+  // --- Textos (OpenAI / Gemini) ---
+  TEXT_PROVIDER: z.enum(['mock', 'openai', 'gemini']).default('mock'),
+  OPENAI_API_KEY: z.string().optional().default(''),
+  OPENAI_TEXT_MODEL: z.string().default('gpt-4o-mini'),
+  OPENAI_BASE_URL: z.string().default('https://api.openai.com/v1'),
 
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_LOCAL_DIR: z.string().default('./storage'),
@@ -39,7 +46,7 @@ let cached: Env | null = null;
 
 /**
  * Devuelve el entorno validado (memoizado). Lanza si la configuración es inválida.
- * Si el proveedor es "gemini" exige GEMINI_API_KEY.
+ * Exige las API keys correspondientes según el proveedor seleccionado.
  */
 export function getEnv(): Env {
   if (cached) return cached;
@@ -48,9 +55,16 @@ export function getEnv(): Env {
     const issues = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Variables de entorno inválidas:\n${issues}`);
   }
-  if (parsed.data.IMAGE_PROVIDER === 'gemini' && !parsed.data.GEMINI_API_KEY) {
+  const e = parsed.data;
+  if (e.IMAGE_PROVIDER === 'gemini' && !e.GEMINI_API_KEY) {
     throw new Error('IMAGE_PROVIDER="gemini" requiere GEMINI_API_KEY.');
   }
-  cached = parsed.data;
+  if (e.TEXT_PROVIDER === 'openai' && !e.OPENAI_API_KEY) {
+    throw new Error('TEXT_PROVIDER="openai" requiere OPENAI_API_KEY.');
+  }
+  if (e.TEXT_PROVIDER === 'gemini' && !e.GEMINI_API_KEY) {
+    throw new Error('TEXT_PROVIDER="gemini" requiere GEMINI_API_KEY.');
+  }
+  cached = e;
   return cached;
 }

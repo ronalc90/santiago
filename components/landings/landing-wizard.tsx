@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
+import type { LandingSectionCopy } from '@/lib/services/landing-spec';
 
 interface ProductOpt { id: string; name: string; market: string; currency: string; }
 
@@ -34,8 +35,48 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
   const [productPhoto, setProductPhoto] = useState<File | null>(null);
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [compliance, setCompliance] = useState(false);
+  const [sections, setSections] = useState<LandingSectionCopy[]>([]);
+  const [autofilling, setAutofilling] = useState(false);
 
   function set<K extends keyof typeof form>(k: K, v: string) { setForm((f) => ({ ...f, [k]: v })); }
+
+  async function autofillWithAI() {
+    if (!form.productName) {
+      toast({ variant: 'destructive', title: 'Falta el nombre', description: 'Indica el nombre del producto antes de autocompletar.' });
+      return;
+    }
+    setAutofilling(true);
+    try {
+      const res = await fetch('/api/ai/landing-copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputs: {
+            productName: form.productName,
+            country: form.country,
+            audience: form.audience || undefined,
+            description: form.description || undefined,
+            angle: form.angle || undefined,
+            offerType: form.offerType || undefined,
+          },
+          complianceTiktok: compliance,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ variant: 'destructive', title: 'Error', description: data.error }); return; }
+      const c = data.copy;
+      setForm((f) => ({
+        ...f,
+        audience: c.audience || f.audience,
+        description: c.description || f.description,
+        angle: c.angle || f.angle,
+      }));
+      setSections(Array.isArray(c.sections) ? c.sections : []);
+      toast({ title: 'Copy generado', description: `Público, descripción, ángulo y ${c.sections?.length ?? 0} secciones rellenadas.` });
+    } finally {
+      setAutofilling(false);
+    }
+  }
 
   function onPickProduct(id: string) {
     setProductId(id);
@@ -53,6 +94,7 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
       fd.set('name', `Landing — ${form.productName}`);
       Object.entries(form).forEach(([k, v]) => fd.set(k, v));
       fd.set('complianceTiktok', String(compliance));
+      if (sections.length) fd.set('sectionsCopy', JSON.stringify(sections));
       if (productPhoto) fd.set('productPhoto', productPhoto);
       if (referenceImage) fd.set('referenceImage', referenceImage);
 
@@ -85,6 +127,12 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
                 <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <Button type="button" variant="outline" className="w-full" onClick={autofillWithAI} disabled={autofilling || !form.productName}>
+              {autofilling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Autocompletar con IA
+            </Button>
+            {sections.length > 0 && (
+              <p className="text-xs text-muted-foreground">✓ {sections.length} secciones de copy generadas; se usarán en los prompts de imagen.</p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nombre del producto"><Input value={form.productName} onChange={(e) => set('productName', e.target.value)} /></Field>
               <Field label="Tipo de oferta"><Input value={form.offerType} onChange={(e) => set('offerType', e.target.value)} placeholder="2x1, 50% OFF…" /></Field>
@@ -129,6 +177,7 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
             <Summary label="Foto producto" value={productPhoto?.name ?? 'no'} />
             <Summary label="Referencia" value={referenceImage?.name ?? 'no'} />
             <Summary label="Compliance TikTok" value={compliance ? 'sí' : 'no'} />
+            <Summary label="Copy IA" value={sections.length ? `${sections.length} secciones` : 'no'} />
             <p className="pt-2 text-muted-foreground">Se generarán 9 imágenes (hero, precio, antes/después, modo de uso, beneficios, ficha, garantía, urgencia, testimonios).</p>
           </div>
         )}
