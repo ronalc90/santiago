@@ -50,3 +50,4 @@ memory/
 
 # temporales de trabajo
 _*.txt
+.vercel
