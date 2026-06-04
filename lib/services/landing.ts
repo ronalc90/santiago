@@ -99,81 +99,145 @@ export async function processLanding(projectId: string, onlySlot?: number): Prom
   await prisma.landingProject.update({ where: { id: projectId }, data: { status: 'PROCESSING', error: null } });
   await prisma.job.updateMany({ where: { projectId, status: { in: ['PENDING', 'ACTIVE'] } }, data: { status: 'ACTIVE' } });
 
-  const inputs = project.inputs as unknown as LandingInputs;
-  const productPhoto = await loadRef(project.productPhotoKey);
-  const referenceImage = await loadRef(project.referenceImageKey);
+  try {
+    const inputs = project.inputs as unknown as LandingInputs;
+    const productPhoto = await loadRef(project.productPhotoKey);
+    const referenceImage = await loadRef(project.referenceImageKey);
 
-  // 1) Análisis de la imagen de referencia (8 elementos) — si hay referencia y aún no se hizo
-  let style: StyleAnalysis | null = (project.styleAnalysis as unknown as StyleAnalysis) ?? null;
-  if (!style && referenceImage) {
-    try {
-      style = await generator.analyzeReference(referenceImage);
-      await prisma.landingProject.update({ where: { id: projectId }, data: { styleAnalysis: style as unknown as object } });
-    } catch (err) {
-      console.error('[landing:analyze]', err);
-      // Continuamos sin estilo (el prompt usa un estilo por defecto)
+    // 1) Análisis de la imagen de referencia (8 elementos) — si hay referencia y aún no se hizo
+    let style: StyleAnalysis | null = (project.styleAnalysis as unknown as StyleAnalysis) ?? null;
+    if (!style && referenceImage) {
+      try {
+        style = await generator.analyzeReference(referenceImage);
+        await prisma.landingProject.update({ where: { id: projectId }, data: { styleAnalysis: style as unknown as object } });
+      } catch (err) {
+        console.error('[landing:analyze]', err);
+        // Continuamos sin estilo (el prompt usa un estilo por defecto)
+      }
     }
-  }
 
-  const slots = onlySlot ? LANDING_SLOTS.filter((s) => s.slot === onlySlot) : LANDING_SLOTS;
-  const refs: RefImage[] = [productPhoto, referenceImage].filter(Boolean) as RefImage[];
+    const slots = onlySlot ? LANDING_SLOTS.filter((s) => s.slot === onlySlot) : LANDING_SLOTS;
+    const refs: RefImage[] = [productPhoto, referenceImage].filter(Boolean) as RefImage[];
 
-  let done = 0;
-  let failures = 0;
+    let done = 0;
+    let failures = 0;
 
-  for (const slot of slots) {
-    const image = project.images.find((i) => i.slot === slot.slot);
-    if (!image) continue;
-    try {
-      await prisma.landingImage.update({ where: { id: image.id }, data: { status: 'PROCESSING', error: null } });
+    for (const slot of slots) {
+      const image = project.images.find((i) => i.slot === slot.slot);
+      if (!image) continue;
+      try {
+        await prisma.landingImage.update({ where: { id: image.id }, data: { status: 'PROCESSING', error: null } });
 
-      const prompt = buildImagePrompt(slot, inputs, style, project.complianceTiktok);
-      const raw = await generator.generateImage(prompt, refs);
-      const webp = await compressToWebp(raw);
-      const key = `landing/${projectId}/img-${slot.slot}.webp`;
-      const stored = await storage.put(key, webp.data, 'image/webp');
+        const prompt = buildImagePrompt(slot, inputs, style, project.complianceTiktok);
+        const raw = await generator.generateImage(prompt, refs);
+        const webp = await compressToWebp(raw);
+        const key = `landing/${projectId}/img-${slot.slot}.webp`;
+        const stored = await storage.put(key, webp.data, 'image/webp');
 
-      await prisma.landingImage.update({
-        where: { id: image.id },
-        data: {
-          status: 'COMPLETED',
-          promptEn: prompt,
-          storageKey: stored.key,
-          url: stored.url,
-          width: webp.width,
-          height: webp.height,
-          bytes: webp.bytes,
-        },
-      });
-    } catch (err) {
-      failures += 1;
-      const msg = err instanceof Error ? err.message : 'Error al generar';
-      console.error(`[landing:slot ${slot.slot}]`, msg);
-      await prisma.landingImage.update({ where: { id: image.id }, data: { status: 'FAILED', error: msg } });
-    } finally {
-      done += 1;
-      const progress = Math.round((done / slots.length) * 100);
-      await prisma.job.updateMany({ where: { projectId, status: 'ACTIVE' }, data: { progress } });
+        await prisma.landingImage.update({
+          where: { id: image.id },
+          data: {
+            status: 'COMPLETED',
+            promptEn: prompt,
+            storageKey: stored.key,
+            url: stored.url,
+            width: webp.width,
+            height: webp.height,
+            bytes: webp.bytes,
+          },
+        });
+      } catch (err) {
+        failures += 1;
+        const msg = err instanceof Error ? err.message : 'Error al generar';
+        console.error(`[landing:slot ${slot.slot}]`, msg);
+        await prisma.landingImage.update({ where: { id: image.id }, data: { status: 'FAILED', error: msg } });
+      } finally {
+        done += 1;
+        const progress = Math.round((done / slots.length) * 100);
+        await prisma.job.updateMany({ where: { projectId, status: 'ACTIVE' }, data: { progress } });
+      }
     }
-  }
 
-  const finalStatus = failures === slots.length ? 'FAILED' : 'COMPLETED';
+    // El estado global del proyecto se recalcula SIEMPRE a partir de TODAS las
+    // imágenes, no solo de las del lote procesado. Así, regenerar un único slot
+    // no degrada un proyecto ya COMPLETED ni "completa" uno con otros fallos.
+    const finalStatus = await recomputeProjectStatus(projectId);
+
+    await prisma.job.updateMany({
+      where: { projectId, status: 'ACTIVE' },
+      data: { status: finalStatus === 'FAILED' ? 'FAILED' : 'COMPLETED', progress: 100 },
+    });
+
+    // Avanza el pipeline del producto si todo salió bien
+    if (finalStatus === 'COMPLETED') {
+      await prisma.product.update({
+        where: { id: project.productId },
+        data: { status: 'LANDING_CREADA' },
+      }).catch(() => {});
+    }
+  } catch (err) {
+    // Fallo no controlado (carga de inputs, almacenamiento, etc.): el proyecto y
+    // el job no pueden quedar atascados en PROCESSING. Los marcamos FAILED, las
+    // imágenes que sigan pendientes también, y re-lanzamos para que BullMQ lo
+    // registre (lo que dispara además el handler 'failed' del worker).
+    const msg = err instanceof Error ? err.message : 'Error al generar la landing';
+    console.error(`[landing:process ${projectId}]`, msg);
+    await markLandingFailed(projectId, msg);
+    throw err;
+  }
+}
+
+/**
+ * Recalcula el estado del proyecto a partir del estado de TODAS sus imágenes:
+ *  - COMPLETED si todas están completadas,
+ *  - FAILED si ninguna se completó,
+ *  - PROCESSING si aún hay imágenes pendientes/en proceso,
+ *  - COMPLETED (parcial) si hay al menos una completada y el resto falló.
+ * Persiste el estado y el mensaje de error, y lo devuelve.
+ */
+async function recomputeProjectStatus(projectId: string): Promise<'PROCESSING' | 'COMPLETED' | 'FAILED'> {
+  const images = await prisma.landingImage.findMany({ where: { projectId }, select: { status: true } });
+  const total = images.length;
+  const completed = images.filter((i) => i.status === 'COMPLETED').length;
+  const failed = images.filter((i) => i.status === 'FAILED').length;
+  const pending = images.filter((i) => i.status === 'PENDING' || i.status === 'PROCESSING').length;
+
+  let status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  if (pending > 0) status = 'PROCESSING';
+  else if (completed === total) status = 'COMPLETED';
+  else if (completed === 0) status = 'FAILED';
+  else status = 'COMPLETED'; // parcial: hay imágenes válidas
+
   await prisma.landingProject.update({
     where: { id: projectId },
-    data: { status: finalStatus, error: failures ? `${failures} imagen(es) fallaron` : null },
+    data: { status, error: failed ? `${failed} imagen(es) fallaron` : null },
+  });
+  return status;
+}
+
+/**
+ * Marca un proyecto y sus jobs activos como FAILED de forma idempotente, y pasa
+ * a FAILED las imágenes que sigan PENDING/PROCESSING. Usado ante un fallo no
+ * controlado en el worker.
+ */
+async function markLandingFailed(projectId: string, message: string): Promise<void> {
+  await prisma.landingImage.updateMany({
+    where: { projectId, status: { in: ['PENDING', 'PROCESSING'] } },
+    data: { status: 'FAILED', error: message },
+  });
+  await prisma.landingProject.update({
+    where: { id: projectId },
+    data: { status: 'FAILED', error: message },
   });
   await prisma.job.updateMany({
-    where: { projectId, status: 'ACTIVE' },
-    data: { status: finalStatus === 'FAILED' ? 'FAILED' : 'COMPLETED', progress: 100 },
+    where: { projectId, status: { in: ['PENDING', 'ACTIVE'] } },
+    data: { status: 'FAILED', error: message },
   });
+}
 
-  // Avanza el pipeline del producto si todo salió bien
-  if (finalStatus === 'COMPLETED') {
-    await prisma.product.update({
-      where: { id: project.productId },
-      data: { status: 'LANDING_CREADA' },
-    }).catch(() => {});
-  }
+/** Marca como FAILED un proyecto/job atascados (idempotente). Lo usa el worker on 'failed'. */
+export async function failLanding(projectId: string, message: string): Promise<void> {
+  await markLandingFailed(projectId, message);
 }
 
 /** Reencola la regeneración de un único slot. */

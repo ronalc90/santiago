@@ -44,6 +44,11 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
                 <Metric label="Gasto est." value={ad.estimatedSpend > 0 ? `$${ad.estimatedSpend.toLocaleString()}` : '—'} />
                 <Metric label="Winner Score" value={ad.winnerScore.toLocaleString()} />
               </div>
+              {ad.estimatedSpend <= 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Winner Score: señal de anuncio ganador. Meta no publica el gasto de los anuncios comerciales en CO, así que se basa en los días activos — a más tiempo corriendo, más fuerte la señal.
+                </p>
+              )}
               <div>
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Copy del anuncio</p>
                 <p className="rounded-md border bg-muted/30 p-3 text-sm">{ad.copyText || '—'}</p>

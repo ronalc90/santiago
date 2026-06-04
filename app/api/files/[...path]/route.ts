@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getStorage } from '@/lib/storage';
+import { getCurrentUser } from '@/lib/auth/session';
 
 // Solo permitimos segmentos con caracteres seguros; rechaza '..', segmentos
 // vacíos y cualquier intento de path traversal antes de tocar el storage.
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 
-/** Sirve archivos guardados en el almacenamiento local durante desarrollo. */
+/**
+ * Sirve archivos guardados en el almacenamiento local durante desarrollo.
+ * En producción los creativos se sirven desde R2; esta ruta (driver local) NO
+ * debe quedar pública, así que exigimos sesión antes de entregar nada.
+ * middleware.ts excluye /api/files a propósito: la auth se hace aquí dentro.
+ */
 export async function GET(_req: Request, { params }: { params: { path: string[] } }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
+
   const segments = params.path ?? [];
   const valid =
     segments.length > 0 &&

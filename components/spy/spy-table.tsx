@@ -120,10 +120,10 @@ export function SpyTable() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('daysActive')}>
                 <span className="inline-flex items-center gap-1">Días <ArrowUpDown className="h-3 w-3" /></span>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('estimatedSpend')}>
-                <span className="inline-flex items-center gap-1">Gasto est. <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('estimatedSpend')} title="Gasto o impresiones estimados cuando Meta los publica. Para anuncios comerciales en CO casi siempre no hay dato público (—).">
+                <span className="inline-flex items-center gap-1">Gasto/Impr. (est.) <ArrowUpDown className="h-3 w-3" /></span>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('winnerScore')}>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('winnerScore')} title="Señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos: a más tiempo corriendo, más fuerte la señal.">
                 <span className="inline-flex items-center gap-1">Winner Score <ArrowUpDown className="h-3 w-3" /></span>
               </TableHead>
               <TableHead>Clasificación</TableHead>
@@ -174,7 +174,7 @@ export function SpyTable() {
           </TableBody>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">{ads.length} anuncios · Winner Score = gasto estimado / días activos</p>
+      <p className="text-xs text-muted-foreground">{ads.length} anuncios · Winner Score: señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos — a más tiempo corriendo, más fuerte la señal.</p>
     </div>
   );
 }

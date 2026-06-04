@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,14 @@ const TITLES: Record<string, string> = {
   beneficios: 'Beneficios', ficha: 'Ficha técnica', garantia: 'Garantía', urgencia: 'Urgencia', testimonios: 'Testimonios',
 };
 
-export function LandingDetail({ id, name, initialStatus, initialImages }: { id: string; name: string; initialStatus: string; initialImages: Img[]; }) {
+export function LandingDetail({ id, name, initialStatus, initialError, initialImages }: { id: string; name: string; initialStatus: string; initialError?: string | null; initialImages: Img[]; }) {
+  const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
+  const [error, setError] = useState<string | null>(initialError ?? null);
   const [images, setImages] = useState<Img[]>(initialImages);
   const [progress, setProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
@@ -25,6 +29,7 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
     if (!res.ok) return;
     const data = await res.json();
     setStatus(data.project.status);
+    setError(data.project.error ?? null);
     setProgress(data.progress ?? 0);
     setImages(data.project.images.map((i: Img) => ({ id: i.id, slot: i.slot, type: i.type, status: i.status, url: i.url, error: i.error })));
   }, [id]);
@@ -37,6 +42,14 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
     }
   }, [status, images, poll]);
 
+  // Hidrata el error/estado del proyecto al montar. El polling solo corre mientras
+  // la landing está activa, así que para una landing ya FAILED esta carga garantiza
+  // que el mensaje de error del proyecto esté disponible para el banner. `poll` es
+  // estable (memoizado por id) y la carga es idempotente.
+  useEffect(() => {
+    if (initialError === undefined) void poll();
+  }, [initialError, poll]);
+
   async function regenerate(slot: number) {
     setImages((prev) => prev.map((i) => (i.slot === slot ? { ...i, status: 'PENDING', url: null, error: null } : i)));
     const res = await fetch(`/api/landings/${id}/regenerate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slot }) });
@@ -44,8 +57,24 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
     else toast({ variant: 'destructive', title: 'No se pudo regenerar' });
   }
 
+  async function remove() {
+    if (deleting) return;
+    if (!window.confirm('¿Eliminar esta landing y todas sus imágenes? Esta acción no se puede deshacer.')) return;
+    setDeleting(true);
+    const res = await fetch(`/api/landings/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast({ title: 'Landing eliminada' });
+      router.push('/landings');
+      router.refresh();
+    } else {
+      setDeleting(false);
+      toast({ variant: 'destructive', title: 'No se pudo eliminar' });
+    }
+  }
+
   const completed = images.filter((i) => i.status === 'COMPLETED').length;
   const isActive = status === 'QUEUED' || status === 'PROCESSING';
+  const isFailed = status === 'FAILED';
 
   // Solo las imágenes generadas se pueden visualizar en el visor.
   const gallery = images.filter(
@@ -59,14 +88,22 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{name}</h1>
+            <Badge variant={status === 'COMPLETED' ? 'green' : isFailed ? 'destructive' : 'secondary'}>{status}</Badge>
+          </div>
           <p className="text-sm text-muted-foreground">{completed}/9 imágenes completadas</p>
         </div>
-        <a href={`/api/landings/${id}/download`}>
-          <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={`/api/landings/${id}/download`}>
+            <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
+          </a>
+          <Button variant="destructive" onClick={remove} disabled={deleting} title="Eliminar landing">
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
+          </Button>
+        </div>
       </div>
 
       {isActive && (
@@ -78,6 +115,23 @@ export function LandingDetail({ id, name, initialStatus, initialImages }: { id: 
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div className="h-full bg-sky-400 transition-all" style={{ width: `${progress}%` }} />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isFailed && (
+        <Card className="border-destructive/50">
+          <CardContent className="flex items-start gap-3 p-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">La generación de la landing falló</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {error ?? 'Ocurrió un error al generar las imágenes.'}
+                {completed > 0
+                  ? ' Puedes regenerar las imágenes con error o eliminar la landing.'
+                  : ' Puedes regenerar las imágenes o eliminar la landing y crear una nueva.'}
+              </p>
             </div>
           </CardContent>
         </Card>

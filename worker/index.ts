@@ -13,7 +13,7 @@ setDefaultResultOrder('ipv4first');
 import { Worker } from 'bullmq';
 import { LANDING_QUEUE, LandingJobData, AD_INGEST_QUEUE, AdIngestJobData, getAdIngestQueue } from '../lib/queue';
 import { getRedis } from '../lib/queue/connection';
-import { processLanding } from '../lib/services/landing';
+import { processLanding, failLanding } from '../lib/services/landing';
 import { runAdIngest } from '../lib/services/ad-ingest';
 import { getEnv } from '../lib/config/env';
 
@@ -53,6 +53,17 @@ for (const w of [landingWorker, adWorker]) {
   w.on('failed', (job, err) => console.error(`❌  Job ${job?.id} falló:`, err.message));
   w.on('error', (err) => console.error('Worker error:', err));
 }
+
+// Resiliencia: si una landing falla (incluido un crash que impida a processLanding
+// terminar su propio catch), garantizamos aquí que el proyecto y su Job no queden
+// atascados en QUEUED/PROCESSING. failLanding es idempotente.
+landingWorker.on('failed', (job, err) => {
+  const projectId = job?.data?.projectId;
+  if (!projectId) return;
+  void failLanding(projectId, err instanceof Error ? err.message : 'Error al generar la landing').catch((e) =>
+    console.error(`No se pudo marcar la landing ${projectId} como fallida:`, e instanceof Error ? e.message : e),
+  );
+});
 
 // Cron opcional de ingesta. El .catch evita que un fallo aquí (p. ej. patrón
 // inválido o Redis aún no listo) tumbe el worker en crash-loop.
