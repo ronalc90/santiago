@@ -71,6 +71,20 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # --- Asegura el usuario admin (solo si hay ADMIN_PASSWORD en secrets) ---
+      # Idempotente: crea el admin si no existe. No siembra datos demo.
+      - name: Ensure admin user
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          if [ -n "$ADMIN_PASSWORD" ]; then
+            npm run create-admin
+          else
+            echo "ADMIN_PASSWORD no configurada en secrets; se omite create-admin."
+          fi
+
       # --- Deploy Web/API en Vercel (sube el build ya hecho) ---
       - name: Deploy Web to Vercel
         run: |

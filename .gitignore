@@ -26,8 +26,12 @@ yarn-error.log*
 .env*.local
 .env.production
 .env.development
+.env.deploy
 !.env.example
 !.env.production.example
+
+# vercel cli
+.vercel
 
 # prisma
 /prisma/migrations/dev.db*
