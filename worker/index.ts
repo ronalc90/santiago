@@ -6,6 +6,10 @@
  * mismo Redis y Postgres. Consume la cola BullMQ y ejecuta processLanding().
  */
 import 'dotenv/config';
+import { setDefaultResultOrder } from 'node:dns';
+// Algunos contenedores (Railway) no tienen ruta IPv6; sin esto, fetch() a CDNs
+// con AAAA (p. ej. fbcdn de Meta) falla con "fetch failed". Preferimos IPv4.
+setDefaultResultOrder('ipv4first');
 import { Worker } from 'bullmq';
 import { LANDING_QUEUE, LandingJobData, AD_INGEST_QUEUE, AdIngestJobData, getAdIngestQueue } from '../lib/queue';
 import { getRedis } from '../lib/queue/connection';

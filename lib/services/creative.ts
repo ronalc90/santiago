@@ -110,7 +110,11 @@ async function download(url: string): Promise<{ buffer: Buffer; contentType: str
       return { buffer: buf, contentType: res.headers.get('content-type') ?? '' };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      lastError = message;
+      // undici esconde la causa real (DNS/TLS/conexión) en `cause`; la incluimos
+      // para poder diagnosticar fallos de red en producción.
+      const cause = (err as { cause?: unknown }).cause;
+      const causeMsg = cause instanceof Error ? cause.message : cause ? String(cause) : '';
+      lastError = causeMsg ? `${message} (${causeMsg})` : message;
       const isAbort = err instanceof Error && err.name === 'AbortError';
       if (attempt < MAX_RETRIES && (isAbort || message.includes('fetch') || message.includes('network'))) {
         await sleep(500 * attempt);
