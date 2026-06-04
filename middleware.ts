@@ -9,7 +9,9 @@ const SESSION_COOKIE = 'winspy_session';
  * hace en los Server Components / route handlers (requireUser / requireApiUser),
  * porque Prisma no corre en el runtime edge.
  */
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/ads/ingest'];
+// /api/ads/sync y /api/ads/ingest validan sesión-ADMIN o x-ingest-token dentro
+// del handler, así que el middleware los deja pasar (no puede leer el token aquí).
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/ads/ingest', '/api/ads/sync'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
