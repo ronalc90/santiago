@@ -101,7 +101,11 @@ jobs:
       # si el proyecto tiene un solo servicio).
       - name: Deploy Worker to Railway
         run: |
-          npm i -g @railway/cli
+          # CLI fijado a v4: la v5 cambió la auth y rompe `railway up` con token de
+          # proyecto en CI ("Not signed in"), aunque la v4 (y los comandos de lectura)
+          # funcionan con el mismo RAILWAY_TOKEN. Pinned para que un autoupdate no
+          # vuelva a tumbar el despliegue del worker.
+          npm i -g @railway/cli@4.68.0
           railway up --ci ${RAILWAY_SERVICE:+--service "$RAILWAY_SERVICE"}
           echo "### ✅ Worker desplegado en Railway" >> "$GITHUB_STEP_SUMMARY"
         env:
