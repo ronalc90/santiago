@@ -47,10 +47,17 @@ describe('computeWinnerScoreFromSignals', () => {
     expect(nuevo).toBeGreaterThan(0); // ya no colapsa a 0
   });
 
-  it('acota la longevidad por debajo del umbral de SATURADO', () => {
-    const cap = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 500 });
-    const justoAntes = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: DEFAULT_SCORING_RULES.saturadoDias - 1 });
-    expect(cap).toBe(justoAntes);
+  it('la longevidad crece de forma monótona SIN techo plano (641 > 300 > 89)', () => {
+    const d89 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 89 });
+    const d300 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 300 });
+    const d641 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 641 });
+    expect(d641).toBeGreaterThan(d300);
+    expect(d300).toBeGreaterThan(d89);
+    // días distintos por encima del antiguo techo (saturadoDias-1) NO empatan
+    const cap = DEFAULT_SCORING_RULES.saturadoDias - 1;
+    const justoAntes = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: cap });
+    const muyViejo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: cap + 200 });
+    expect(muyViejo).toBeGreaterThan(justoAntes);
   });
 });
 

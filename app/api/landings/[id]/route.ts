@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
+import { deleteLanding } from '@/lib/services/landing';
 
 /** Estado del proyecto + imágenes + progreso del job (para polling de la UI). */
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
@@ -16,17 +17,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 }
 
 /**
- * Elimina el proyecto de landing. Las imágenes y los jobs asociados se borran
- * en cascada (onDelete: Cascade en el esquema), por lo que basta con borrar el
- * proyecto. Idempotente: si ya no existe, responde 404.
+ * Elimina el proyecto de landing (imágenes y jobs caen en cascada) y reconcilia
+ * el estado del producto si se queda sin landings completadas. Idempotente: si
+ * ya no existe, responde 404.
  */
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 
-  const project = await prisma.landingProject.findUnique({ where: { id: params.id }, select: { id: true } });
-  if (!project) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
-
-  await prisma.landingProject.delete({ where: { id: params.id } });
+  const ok = await deleteLanding(params.id);
+  if (!ok) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

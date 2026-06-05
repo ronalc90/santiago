@@ -40,6 +40,9 @@ export function SpyTable() {
   const [notInColombia, setNotInColombia] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('winnerScore');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 50;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,16 +55,25 @@ export function SpyTable() {
     if (notInColombia) qs.set('sellsInColombia', 'false');
     qs.set('sortBy', sortBy);
     qs.set('sortDir', sortDir);
+    qs.set('page', String(page));
     const res = await fetch(`/api/ads?${qs.toString()}`);
     const data = await res.json();
     setAds(data.ads ?? []);
+    setTotal(data.total ?? 0);
     setLoading(false);
-  }, [search, classification, view, minDays, onlyUnusedForeign, notInColombia, sortBy, sortDir]);
+  }, [search, classification, view, minDays, onlyUnusedForeign, notInColombia, sortBy, sortDir, page]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);
     return () => clearTimeout(t);
   }, [load]);
+
+  // Al cambiar cualquier filtro u orden, vuelve a la página 1.
+  useEffect(() => {
+    setPage(1);
+  }, [search, classification, view, minDays, onlyUnusedForeign, notInColombia, sortBy, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function toggleSort(key: SortKey) {
     if (sortBy === key) setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
@@ -174,7 +186,22 @@ export function SpyTable() {
           </TableBody>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">{ads.length} anuncios · Winner Score: señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos — a más tiempo corriendo, más fuerte la señal.</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {total} anuncio(s){total > PAGE_SIZE ? ` · mostrando ${ads.length} (pág. ${page}/${totalPages})` : ''} · Winner Score: señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos — a más tiempo corriendo, más fuerte la señal.
+        </p>
+        {totalPages > 1 && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              Anterior
+            </Button>
+            <span className="text-xs text-muted-foreground">Pág. {page} / {totalPages}</span>
+            <Button variant="outline" size="sm" disabled={page >= totalPages || loading} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              Siguiente
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

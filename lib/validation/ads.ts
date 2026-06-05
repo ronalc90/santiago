@@ -44,3 +44,17 @@ export function normalizeIngestPayload(input: unknown): IngestAd[] {
   const parsed = ingestPayloadSchema.parse(input);
   return Array.isArray(parsed) ? parsed : parsed.ads;
 }
+
+/**
+ * Sanea el copy de un anuncio: elimina placeholders del anunciante tipo
+ * "{{product.brand}}" (cualquier {{...}}), colapsa espacios y recorta. Devuelve
+ * null si tras la limpieza no queda texto útil, para no guardar copys vacíos.
+ */
+export function sanitizeCopy(text: string | null | undefined): string | null {
+  if (!text) return null;
+  const cleaned = text
+    .replace(/\{\{[^}]*\}\}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned || null;
+}

@@ -10,6 +10,7 @@ import {
   StyleAnalysis,
 } from '@/lib/services/landing-spec';
 import { enqueueLandingJob } from '@/lib/queue';
+import { productStatusAfterLandingRemoval } from '@/lib/services/product-status';
 
 export interface CreateLandingParams {
   productId: string;
@@ -248,4 +249,44 @@ export async function regenerateImage(projectId: string, slot: number): Promise<
     data: { type: 'GENERATE_IMAGE', status: 'PENDING', projectId, payload: { projectId, onlySlot: slot } },
   });
   await enqueueLandingJob({ projectId, onlySlot: slot });
+}
+
+/**
+ * Elimina una landing y reconcilia el estado del producto: si tras borrarla el
+ * producto se queda sin ninguna landing COMPLETED, revierte su etapa (para que
+ * no quede en "Landing creada" con 0 landings). Devuelve false si no existía.
+ */
+export async function deleteLanding(projectId: string): Promise<boolean> {
+  const project = await prisma.landingProject.findUnique({
+    where: { id: projectId },
+    select: { id: true, productId: true },
+  });
+  if (!project) return false;
+
+  await prisma.landingProject.delete({ where: { id: projectId } });
+
+  const product = await prisma.product.findUnique({
+    where: { id: project.productId },
+    select: { id: true, status: true },
+  });
+  if (product) {
+    const completed = await prisma.landingProject.count({
+      where: { productId: product.id, status: 'COMPLETED' },
+    });
+    const next = productStatusAfterLandingRemoval(product.status, completed);
+    if (next) await prisma.product.update({ where: { id: product.id }, data: { status: next } });
+  }
+  return true;
+}
+
+/** Reencola la regeneración de las 9 imágenes (mismo flujo que la generación inicial). */
+export async function regenerateAllImages(projectId: string): Promise<void> {
+  const project = await prisma.landingProject.findUnique({ where: { id: projectId }, select: { id: true } });
+  if (!project) throw new Error('Landing no existe');
+  await prisma.landingImage.updateMany({ where: { projectId }, data: { status: 'PENDING', error: null } });
+  await prisma.landingProject.update({ where: { id: projectId }, data: { status: 'QUEUED', error: null } });
+  await prisma.job.create({
+    data: { type: 'GENERATE_LANDING', status: 'PENDING', projectId, payload: { projectId } },
+  });
+  await enqueueLandingJob({ projectId });
 }

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { IngestAd } from '@/lib/validation/ads';
+import { IngestAd, sanitizeCopy } from '@/lib/validation/ads';
 import { computeWinnerScoreFromSignals, classifyAd } from '@/lib/services/scoring';
 import { getScoringRules } from '@/lib/services/settings';
 
@@ -49,7 +49,7 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
           storeName: ad.store_name,
           country,
           adLibraryUrl: ad.ad_library_url,
-          copyText: ad.copy_text || null,
+          copyText: sanitizeCopy(ad.copy_text),
           creativeUrl: ad.creative_url || null,
           daysActive: ad.days_active,
           estimatedSpend: ad.estimated_spend,
@@ -67,7 +67,7 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
           // Reingesta: actualizamos métricas y marcamos como histórico (visto antes)
           storeId: store.id,
           adLibraryUrl: ad.ad_library_url,
-          copyText: ad.copy_text || undefined,
+          copyText: sanitizeCopy(ad.copy_text) ?? undefined,
           creativeUrl: ad.creative_url || undefined,
           daysActive: ad.days_active,
           estimatedSpend: ad.estimated_spend,
@@ -121,9 +121,13 @@ export interface AdFilters {
   search?: string;
   sortBy?: 'winnerScore' | 'daysActive' | 'estimatedSpend' | 'detectedAt';
   sortDir?: 'asc' | 'desc';
+  /** Página (1-based) para paginación server-side. */
+  page?: number;
+  /** Tamaño de página (por defecto 50, máx. 200). */
+  pageSize?: number;
 }
 
-/** Lista anuncios aplicando filtros del negocio y orden. */
+/** Lista anuncios aplicando filtros del negocio, orden y paginación. */
 export async function listAds(filters: AdFilters = {}) {
   const where: Record<string, unknown> = {};
   if (filters.classification) where.classification = filters.classification;
@@ -150,10 +154,19 @@ export async function listAds(filters: AdFilters = {}) {
     .map((k) => ({ [k]: 'desc' as const }));
   const orderBy = [{ [sortBy]: sortDir }, ...tiebreakers, { id: 'desc' as const }];
 
-  return prisma.ad.findMany({
-    where,
-    orderBy,
-    include: { store: true, product: true },
-    take: 500,
-  });
+  const page = Math.max(1, Math.floor(filters.page ?? 1));
+  const pageSize = Math.min(200, Math.max(1, Math.floor(filters.pageSize ?? 50)));
+
+  const [ads, total] = await prisma.$transaction([
+    prisma.ad.findMany({
+      where,
+      orderBy,
+      include: { store: true, product: true },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.ad.count({ where }),
+  ]);
+
+  return { ads, total, page, pageSize };
 }

@@ -96,9 +96,24 @@ export class ApifyAdSource implements AdSourceProvider {
     };
 
     const items = await this.runActor(body);
+    const requested = input.country.toUpperCase();
+    // Filtro de país (best-effort): si el item declara países y NO incluye el
+    // solicitado, lo excluimos (p.ej. anuncios de Ecuador colados en una búsqueda
+    // CO). Si la fuente no expone país, no filtramos (mejor incluir que perder).
+    let excludedForeign = 0;
     const ads = items
-      .map((it) => this.mapItem(it, input.country, url))
+      .map((it) => {
+        const declared = extractCountries(it);
+        if (declared.length > 0 && !declared.includes(requested)) {
+          excludedForeign += 1;
+          return null;
+        }
+        return this.mapItem(it, input.country, url);
+      })
       .filter((ad): ad is RawAd => ad !== null);
+    if (excludedForeign > 0) {
+      console.log(`[apify] ${excludedForeign} anuncio(s) excluidos por país declarado != ${requested}`);
+    }
 
     // Si no salió nada y el actor devolvió un item de error, propágalo claro.
     if (ads.length === 0) {
@@ -213,6 +228,32 @@ export class ApifyAdSource implements AdSourceProvider {
 
 function dedup(urls: string[]): string[] {
   return [...new Set(urls)];
+}
+
+/**
+ * Códigos ISO-2 de país que el item declara (best-effort): prueba varias claves
+ * candidatas que distintos actores exponen y recoge solo códigos de 2 letras.
+ * Devuelve [] si no hay nada interpretable (entonces NO se filtra por país).
+ */
+function extractCountries(it: Json): string[] {
+  const out = new Set<string>();
+  const candidates = [
+    pick(it, 'reached_countries'),
+    pick(it, 'reachedCountries'),
+    pick(it, 'countries'),
+    pick(it, 'country'),
+    pick(it, 'snapshot.country_iso_code'),
+    pick(it, 'targeted_or_reached_countries'),
+  ];
+  const add = (v: Json) => {
+    const s = asString(v).trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(s)) out.add(s);
+  };
+  for (const c of candidates) {
+    if (Array.isArray(c)) c.forEach(add);
+    else add(c);
+  }
+  return [...out];
 }
 
 /**

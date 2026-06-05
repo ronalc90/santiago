@@ -23,11 +23,12 @@ export async function GET(req: Request) {
     search: searchParams.get('search') || undefined,
     sortBy: (searchParams.get('sortBy') as AdFilters['sortBy']) || undefined,
     sortDir: (searchParams.get('sortDir') as AdFilters['sortDir']) || undefined,
+    page: searchParams.has('page') ? Number(searchParams.get('page')) : undefined,
   };
 
   try {
-    const ads = await listAds(filters);
-    return NextResponse.json({ ads });
+    const result = await listAds(filters);
+    return NextResponse.json(result);
   } catch (err) {
     console.error('[ads:list]', err);
     return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });

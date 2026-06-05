@@ -88,7 +88,10 @@ export default async function DashboardPage() {
                   <p className="truncate text-xs text-muted-foreground">{ad.copyText}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-semibold">{ad.winnerScore.toLocaleString()}</span>
+                  <span className="text-sm font-semibold">
+                    {ad.winnerScore.toLocaleString()}
+                    <span className="ml-1 font-normal text-muted-foreground">· {ad.daysActive}d</span>
+                  </span>
                   <ClassificationBadge value={ad.classification} />
                 </div>
               </Link>

@@ -24,6 +24,8 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [regenAllOpen, setRegenAllOpen] = useState(false);
+  const [regeneratingAll, setRegeneratingAll] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
@@ -57,6 +59,25 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
     const res = await fetch(`/api/landings/${id}/regenerate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slot }) });
     if (res.ok) { setStatus('PROCESSING'); poll(); }
     else toast({ variant: 'destructive', title: 'No se pudo regenerar' });
+  }
+
+  async function regenerateAll() {
+    if (regeneratingAll) return;
+    setRegeneratingAll(true);
+    const res = await fetch(`/api/landings/${id}/regenerate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ all: true }),
+    });
+    setRegeneratingAll(false);
+    setRegenAllOpen(false);
+    if (res.ok) {
+      setStatus('PROCESSING');
+      setImages((prev) => prev.map((i) => ({ ...i, status: 'PENDING', url: null, error: null })));
+      poll();
+    } else {
+      toast({ variant: 'destructive', title: 'No se pudo regenerar' });
+    }
   }
 
   async function remove() {
@@ -98,10 +119,13 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
           </div>
           <p className="text-sm text-muted-foreground">{completed}/9 imágenes completadas</p>
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <a href={`/api/landings/${id}/download`}>
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
           </a>
+          <Button variant="outline" onClick={() => setRegenAllOpen(true)} disabled={isActive || regeneratingAll} title="Regenerar las 9 imágenes">
+            {regeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Regenerar todas
+          </Button>
           <Button variant="destructive" onClick={() => setConfirmOpen(true)} disabled={deleting} title="Eliminar landing">
             {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
           </Button>
@@ -188,6 +212,16 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         destructive
         loading={deleting}
         onConfirm={remove}
+      />
+
+      <ConfirmDialog
+        open={regenAllOpen}
+        onOpenChange={setRegenAllOpen}
+        title="Regenerar las 9 imágenes"
+        description="Se volverán a generar las 9 imágenes con IA (consume créditos de Gemini). Las imágenes actuales se reemplazarán."
+        confirmLabel="Regenerar todas"
+        loading={regeneratingAll}
+        onConfirm={regenerateAll}
       />
     </div>
   );
