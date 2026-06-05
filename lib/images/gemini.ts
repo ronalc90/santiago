@@ -14,6 +14,10 @@ const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const MAX_RETRIES = 3;
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const REQUEST_TIMEOUT_MS = 120_000;
+// El modelo a veces responde 200 OK pero sin parte de imagen (texto de rechazo,
+// safety, o respuesta vacía): ~1 de cada 9 slots. Eso no es un error HTTP, así
+// que generateContent no lo reintenta; lo reintentamos a nivel de imagen.
+const MAX_IMAGE_ATTEMPTS = 3;
 
 /** Partes y respuesta parcial de generateContent que consumimos. */
 interface GeminiInlineData {
@@ -128,16 +132,25 @@ export class GeminiImageGenerator implements ImageGenerator {
     for (const ref of refs ?? []) {
       parts.push({ inlineData: { mimeType: ref.mimeType, data: ref.data.toString('base64') } });
     }
-    const data = await this.generateContent(this.imageModel, {
-      contents: [{ role: 'user', parts }],
-      generationConfig: { responseModalities: ['IMAGE'] },
-    });
-    const partsOut: GeminiPart[] = data.candidates?.[0]?.content?.parts ?? [];
-    const inline = partsOut.find((p) => p.inlineData?.data)?.inlineData;
-    if (!inline) {
-      throw new Error('Gemini no devolvió ninguna imagen.');
+
+    // Reintenta cuando la respuesta llega OK pero sin imagen (fallo intermitente
+    // del modelo, ~1/9). generateContent ya cubre los errores HTTP/red transitorios.
+    let lastError = 'Gemini no devolvió ninguna imagen.';
+    for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt += 1) {
+      const data = await this.generateContent(this.imageModel, {
+        contents: [{ role: 'user', parts }],
+        generationConfig: { responseModalities: ['IMAGE'] },
+      });
+      const partsOut: GeminiPart[] = data.candidates?.[0]?.content?.parts ?? [];
+      const inline = partsOut.find((p) => p.inlineData?.data)?.inlineData;
+      if (inline) return Buffer.from(inline.data, 'base64');
+
+      // Adjunta el texto devuelto (motivo del rechazo, si lo hay) para diagnóstico.
+      const note = partsOut.map((p) => p.text).filter(Boolean).join(' ').slice(0, 200);
+      lastError = `Gemini no devolvió ninguna imagen${note ? `: ${note}` : ''}`;
+      if (attempt < MAX_IMAGE_ATTEMPTS) await sleep(backoffMs(attempt));
     }
-    return Buffer.from(inline.data, 'base64');
+    throw new Error(lastError);
   }
 }
 

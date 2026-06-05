@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { NewProductDialog } from '@/components/products/new-product-dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +21,15 @@ export default async function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Productos</h1>
-        <p className="text-sm text-muted-foreground">Cada producto une su data de spy, su landing, notas y estado.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Productos</h1>
+          <p className="text-sm text-muted-foreground">Cada producto une su data de spy, su landing, notas y estado.</p>
+        </div>
+        <NewProductDialog />
       </div>
       {products.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Aún no hay productos. Créalos desde el detalle de un anuncio en el Spy.</CardContent></Card>
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Aún no hay productos. Créalos con «Nuevo producto» o desde el detalle de un anuncio en el Spy.</CardContent></Card>
       ) : (
         <div className="grid gap-3">
           {products.map((p) => (

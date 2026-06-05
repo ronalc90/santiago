@@ -21,8 +21,12 @@ async function main() {
   console.log('🧹  Purgando datos demo...');
 
   // Productos y landings demo (primero las dependencias por las FK).
+  // Incluye los productos generados con el generador de texto MOCK, que llevan
+  // el marcador "(mock)" en el nombre (p. ej. "Producto de ejemplo (mock)").
   const demoProducts = await prisma.product.findMany({
-    where: { name: { in: DEMO_PRODUCT_NAMES } },
+    where: {
+      OR: [{ name: { in: DEMO_PRODUCT_NAMES } }, { name: { contains: '(mock)' } }],
+    },
     select: { id: true },
   });
   const demoProductIds = demoProducts.map((p) => p.id);

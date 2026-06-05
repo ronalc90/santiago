@@ -22,7 +22,17 @@ export default async function DashboardPage() {
     prisma.landingProject.count({ where: { status: 'COMPLETED' } }),
     prisma.store.count(),
     prisma.product.groupBy({ by: ['market'], _count: { _all: true } }),
-    prisma.ad.findMany({ orderBy: { winnerScore: 'desc' }, take: 5, include: { store: true } }),
+    prisma.ad.findMany({
+      orderBy: [
+        { winnerScore: 'desc' },
+        { daysActive: 'desc' },
+        { estimatedSpend: 'desc' },
+        { detectedAt: 'desc' },
+        { id: 'desc' },
+      ],
+      take: 5,
+      include: { store: true },
+    }),
   ]);
 
   const pipeline: Record<string, number> = { DETECTADO: 0, VALIDADO: 0, LANDING_CREADA: 0, LANZADO: 0, ESCALANDO: 0 };

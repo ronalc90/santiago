@@ -111,6 +111,12 @@ export function getEnv(): Env {
           'Usa STORAGE_DRIVER="s3" para un almacenamiento común.',
       );
     }
+    if (e.TEXT_PROVIDER === 'mock') {
+      console.warn(
+        '⚠️  TEXT_PROVIDER="mock" en PRODUCCIÓN: las sugerencias de producto y el copy de landing ' +
+          'devolverían texto de relleno. Configura TEXT_PROVIDER="openai" (+ OPENAI_API_KEY) o "gemini".',
+      );
+    }
   }
 
   // S3 exige bucket y URL pública en cualquier entorno; sin ellos el driver no

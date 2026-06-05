@@ -142,9 +142,17 @@ export async function listAds(filters: AdFilters = {}) {
   const sortBy = filters.sortBy ?? 'winnerScore';
   const sortDir = filters.sortDir ?? 'desc';
 
+  // Orden determinista: tras la clave elegida, desempata por las otras señales y
+  // por id. Evita que muchos anuncios con el mismo Winner Score (p. ej. sin gasto)
+  // salgan en orden arbitrario y cambiante entre recargas.
+  const tiebreakers = (['winnerScore', 'daysActive', 'estimatedSpend', 'detectedAt'] as const)
+    .filter((k) => k !== sortBy)
+    .map((k) => ({ [k]: 'desc' as const }));
+  const orderBy = [{ [sortBy]: sortDir }, ...tiebreakers, { id: 'desc' as const }];
+
   return prisma.ad.findMany({
     where,
-    orderBy: { [sortBy]: sortDir },
+    orderBy,
     include: { store: true, product: true },
     take: 500,
   });

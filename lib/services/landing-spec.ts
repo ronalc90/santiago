@@ -122,6 +122,12 @@ ${styleBlock}${copyBlock}
 
 REQUIREMENTS:
 - ALL visible text on the image MUST be in SPANISH (es).
+- TEXT ACCURACY IS CRITICAL: spell every Spanish word correctly, with proper
+  accents (á é í ó ú ñ ¡ ¿). If "SECTION COPY" is provided above, reproduce that
+  text VERBATIM, character by character — do not paraphrase, translate, abbreviate
+  or invent words. Prefer short, common Spanish words you can render flawlessly;
+  if a word would render with garbled or misspelled letters, choose a simpler one.
+  Re-read all rendered text and fix any typo before finalizing.
 - Vertical format suitable for Shopify product page (portrait ~5:6).
 - Professional, high-resolution, conversion-focused composition.
 ${complianceTiktok ? COMPLIANCE_TIKTOK_RULES : ''}`.trim();

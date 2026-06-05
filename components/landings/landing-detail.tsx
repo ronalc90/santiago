@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
 
 interface Img { id: string; slot: number; type: string; status: string; url: string | null; error: string | null; }
@@ -22,6 +23,7 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
   const [progress, setProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
@@ -59,7 +61,6 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
 
   async function remove() {
     if (deleting) return;
-    if (!window.confirm('¿Eliminar esta landing y todas sus imágenes? Esta acción no se puede deshacer.')) return;
     setDeleting(true);
     const res = await fetch(`/api/landings/${id}`, { method: 'DELETE' });
     if (res.ok) {
@@ -68,6 +69,7 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
       router.refresh();
     } else {
       setDeleting(false);
+      setConfirmOpen(false);
       toast({ variant: 'destructive', title: 'No se pudo eliminar' });
     }
   }
@@ -100,7 +102,7 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
           <a href={`/api/landings/${id}/download`}>
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
           </a>
-          <Button variant="destructive" onClick={remove} disabled={deleting} title="Eliminar landing">
+          <Button variant="destructive" onClick={() => setConfirmOpen(true)} disabled={deleting} title="Eliminar landing">
             {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
           </Button>
         </div>
@@ -175,6 +177,17 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         index={activeIndex}
         onClose={() => setActiveIndex(null)}
         onNavigate={setActiveIndex}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Eliminar landing"
+        description="Se eliminarán esta landing y todas sus imágenes. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        loading={deleting}
+        onConfirm={remove}
       />
     </div>
   );

@@ -59,23 +59,29 @@ export interface WinnerSignals {
  * comerciales en CO, así que `computeWinnerScore` (gasto/día) da 0 para todos.
  * Esta función degrada con elegancia a la mejor señal disponible:
  *   1) hay gasto real → gasto/día (idéntico a computeWinnerScore).
- *   2) sin gasto pero con impresiones → impresiones/día escaladas.
- *   3) sin nada → longevidad acotada (a más días activos, más señal de ganador).
- * Los umbrales de clasificación (1000/400/100) siguen aplicando igual.
+ *   2) sin gasto → longevidad acotada + bonus por impresiones/día.
+ * Combinar ambas señales (en vez de elegir una) evita que muchos anuncios sin
+ * gasto colapsen al mismo valor (antes todos los de ≥89 días empataban en 1.068):
+ * con el mismo nº de días, el de más alcance puntúa más alto, así el orden
+ * "estrella" discrimina de verdad. Los umbrales (1000/400/100) siguen aplicando.
  */
 export function computeWinnerScoreFromSignals(s: WinnerSignals): number {
   const days = Number.isFinite(s.daysActive) && s.daysActive > 0 ? s.daysActive : 1;
   if (Number.isFinite(s.estimatedSpend) && s.estimatedSpend > 0) {
     return computeWinnerScore(s.estimatedSpend, s.daysActive);
   }
-  const impressions = s.estimatedImpressions ?? 0;
-  if (Number.isFinite(impressions) && impressions > 0) {
-    return Math.round((impressions / days) * IMPRESSIONS_PER_DAY_FACTOR * 100) / 100;
-  }
   // Longevidad: se acota por debajo del umbral de SATURADO para que un anuncio
-  // que lleva muchos días (pero aún no saturado) puntúe alto sin gasto.
+  // de muchos días (pero aún no saturado) puntúe alto sin gasto.
   const cappedDays = Math.min(days, DEFAULT_SCORING_RULES.saturadoDias - 1);
-  return Math.round(cappedDays * LONGEVITY_FACTOR * 100) / 100;
+  const longevity = cappedDays * LONGEVITY_FACTOR;
+  // Bonus por alcance: impresiones/día escaladas. Desempata anuncios de igual
+  // antigüedad y, sin impresiones, suma 0 (la longevidad manda).
+  const impressions = s.estimatedImpressions ?? 0;
+  const reach =
+    Number.isFinite(impressions) && impressions > 0
+      ? (impressions / days) * IMPRESSIONS_PER_DAY_FACTOR
+      : 0;
+  return Math.round((longevity + reach) * 100) / 100;
 }
 
 /**
