@@ -76,14 +76,14 @@ export function SpyTable() {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
+      <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="space-y-1">
           <Label className="text-xs">Buscar</Label>
-          <Input placeholder="Tienda o copy…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-56" />
+          <Input placeholder="Tienda o copy…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:w-56" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Clasificación</Label>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {CLASSES.map((c) => (
               <Button key={c} variant={classification === c ? 'default' : 'outline'} size="sm" onClick={() => setClassification(c)}>
                 {c === '' ? 'Todas' : c}
@@ -103,7 +103,7 @@ export function SpyTable() {
           <Switch id="notco" checked={notInColombia} onCheckedChange={setNotInColombia} />
           <Label htmlFor="notco" className="text-xs">No se vende en CO</Label>
         </div>
-        <div className="ml-auto flex rounded-md border p-0.5">
+        <div className="flex rounded-md border p-0.5 sm:ml-auto">
           <Button variant={view === 'all' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('all')}>Históricos</Button>
           <Button variant={view === 'new' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('new')}>Solo nuevos</Button>
         </div>
@@ -111,7 +111,7 @@ export function SpyTable() {
 
       {/* Tabla */}
       <div className="rounded-lg border bg-card">
-        <Table>
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
               <TableHead>Tienda</TableHead>

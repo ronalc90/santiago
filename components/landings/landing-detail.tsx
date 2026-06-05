@@ -90,15 +90,15 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{name}</h1>
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-xl font-bold sm:text-2xl">{name}</h1>
             <Badge variant={status === 'COMPLETED' ? 'green' : isFailed ? 'destructive' : 'secondary'}>{status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{completed}/9 imágenes completadas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <a href={`/api/landings/${id}/download`}>
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
           </a>

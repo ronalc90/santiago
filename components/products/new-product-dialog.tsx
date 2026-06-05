@@ -95,7 +95,7 @@ export function NewProductDialog() {
             <Label htmlFor="np-name" className="text-xs">Nombre *</Label>
             <Input id="np-name" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Nombre comercial del producto" autoFocus />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="np-market" className="text-xs">Mercado</Label>
               <Input id="np-market" value={form.market} onChange={(e) => set('market', e.target.value)} maxLength={4} />
@@ -104,7 +104,7 @@ export function NewProductDialog() {
               <Label htmlFor="np-currency" className="text-xs">Moneda</Label>
               <Input id="np-currency" value={form.currency} onChange={(e) => set('currency', e.target.value)} maxLength={4} />
             </div>
-            <div className="space-y-1.5">
+            <div className="col-span-2 space-y-1.5 sm:col-span-1">
               <Label className="text-xs">Dropi</Label>
               <Select value={form.dropiAvailability} onValueChange={(v) => set('dropiAvailability', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

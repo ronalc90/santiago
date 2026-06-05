@@ -36,7 +36,7 @@ export function CreativeImage({ src, alt }: { src: string; alt: string }) {
   }
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block max-w-full">
       {demo && (
         <span className="absolute left-2 top-2 z-10 rounded bg-zinc-900/80 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-100">
           creativo de demostración
@@ -48,7 +48,7 @@ export function CreativeImage({ src, alt }: { src: string; alt: string }) {
           controls
           playsInline
           onError={() => setFailed(true)}
-          className="max-h-96 rounded-md border"
+          className="max-h-96 w-full max-w-full rounded-md border"
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
@@ -56,7 +56,7 @@ export function CreativeImage({ src, alt }: { src: string; alt: string }) {
           src={src}
           alt={alt}
           onError={() => setFailed(true)}
-          className="max-h-96 rounded-md border"
+          className="h-auto max-h-96 w-auto max-w-full rounded-md border object-contain"
         />
       )}
     </div>

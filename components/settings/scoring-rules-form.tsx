@@ -39,7 +39,7 @@ export function ScoringRulesForm({ initial }: { initial: Rules }) {
       <CardHeader><CardTitle>Reglas de clasificación</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         {FIELDS.map((f) => (
-          <div key={f.key} className="grid grid-cols-2 items-center gap-4">
+          <div key={f.key} className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center sm:gap-4">
             <div><Label>{f.label}</Label><p className="text-xs text-muted-foreground">{f.hint}</p></div>
             <Input type="number" value={r[f.key]} onChange={(e) => setR({ ...r, [f.key]: Number(e.target.value) })} />
           </div>

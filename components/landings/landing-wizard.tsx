@@ -150,12 +150,12 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
         {step === 2 && (
           <>
             <Field label="Foto del producto (opcional)">
-              <input type="file" accept="image/*" onChange={(e) => setProductPhoto(e.target.files?.[0] ?? null)} className="text-sm" />
-              {productPhoto && <p className="mt-1 text-xs text-muted-foreground">{productPhoto.name}</p>}
+              <input type="file" accept="image/*" onChange={(e) => setProductPhoto(e.target.files?.[0] ?? null)} className="w-full max-w-full text-sm" />
+              {productPhoto && <p className="mt-1 truncate text-xs text-muted-foreground">{productPhoto.name}</p>}
             </Field>
             <Field label="Imagen de referencia de estilo (opcional)">
-              <input type="file" accept="image/*" onChange={(e) => setReferenceImage(e.target.files?.[0] ?? null)} className="text-sm" />
-              {referenceImage && <p className="mt-1 text-xs text-muted-foreground">{referenceImage.name}</p>}
+              <input type="file" accept="image/*" onChange={(e) => setReferenceImage(e.target.files?.[0] ?? null)} className="w-full max-w-full text-sm" />
+              {referenceImage && <p className="mt-1 truncate text-xs text-muted-foreground">{referenceImage.name}</p>}
               <p className="mt-1 text-xs text-muted-foreground">Analizaremos su estilo (paleta, tipografía, atmósfera…) para mantener coherencia visual.</p>
             </Field>
             <div className="flex items-center justify-between rounded-md border p-4">

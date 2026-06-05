@@ -29,9 +29,9 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle>{ad.storeName}</CardTitle>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <CardTitle className="truncate">{ad.storeName}</CardTitle>
                   {isDemo && <Badge variant="gray" title="Anuncio de demostración: el enlace abre una búsqueda, no un anuncio real">demo</Badge>}
                 </div>
                 <ClassificationBadge value={ad.classification} />
@@ -82,7 +82,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
               <Row label="Primera vez" value={formatDate(ad.firstSeenAt)} />
               <Row label="Última vez" value={formatDate(ad.lastSeenAt)} />
               <Row label="Estado" value={ad.isNew ? 'Nuevo' : 'Histórico'} />
-              <Row label="ad_id" value={ad.adId} />
+              <Row label="ad_id" value={ad.adId} breakAll />
             </CardContent>
           </Card>
 
@@ -113,11 +113,11 @@ function Metric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, breakAll = false }: { label: string; value: string; breakAll?: boolean }) {
   return (
     <div className="flex justify-between gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{value}</span>
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className={`min-w-0 text-right font-medium ${breakAll ? 'break-all' : ''}`}>{value}</span>
     </div>
   );
 }

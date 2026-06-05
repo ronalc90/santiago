@@ -49,12 +49,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             <CardContent className="space-y-2">
               {product.landings.length === 0 && <p className="text-sm text-muted-foreground">Aún no hay landings para este producto.</p>}
               {product.landings.map((l) => (
-                <Link key={l.id} href={`/landings/${l.id}`} className="flex items-center justify-between rounded-md border p-3 hover:bg-secondary/40">
-                  <div>
-                    <p className="text-sm font-medium">{l.name}</p>
+                <Link key={l.id} href={`/landings/${l.id}`} className="flex items-center justify-between gap-2 rounded-md border p-3 hover:bg-secondary/40">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{l.name}</p>
                     <p className="text-xs text-muted-foreground">{l._count.images} imágenes</p>
                   </div>
-                  <Badge variant={l.status === 'COMPLETED' ? 'green' : l.status === 'FAILED' ? 'destructive' : 'secondary'}>{LANDING_STATUS[l.status]}</Badge>
+                  <Badge variant={l.status === 'COMPLETED' ? 'green' : l.status === 'FAILED' ? 'destructive' : 'secondary'} className="shrink-0">{LANDING_STATUS[l.status]}</Badge>
                 </Link>
               ))}
             </CardContent>
@@ -70,7 +70,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                     <p className="truncate text-sm font-medium">{ad.storeName} · {ad.country}</p>
                     <p className="truncate text-xs text-muted-foreground">{ad.copyText}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <ClassificationBadge value={ad.classification} />
                     <a href={normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country })} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 text-muted-foreground" /></a>
                   </div>

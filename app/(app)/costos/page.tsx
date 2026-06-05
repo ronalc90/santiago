@@ -33,16 +33,16 @@ export default async function CostosPage() {
       {/* Gastado hasta ahora */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Gastado hasta ahora (estimado)</CardTitle>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-lg font-bold">{cop(report.spentTotalCop)}</p>
               <p className="text-xs text-muted-foreground">{usd(report.spentTotalUsd)}</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Concepto</TableHead>
@@ -74,7 +74,7 @@ export default async function CostosPage() {
       <Card>
         <CardHeader><CardTitle>Costo por acción (peso a peso)</CardTitle></CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Acción</TableHead>
@@ -102,16 +102,16 @@ export default async function CostosPage() {
       {/* Infra mensual */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Infraestructura mensual (fijo)</CardTitle>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-lg font-bold">{cop(report.monthlyCop)}<span className="text-xs font-normal text-muted-foreground">/mes</span></p>
               <p className="text-xs text-muted-foreground">{usd(report.monthlyUsd)}/mes</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Servicio</TableHead>

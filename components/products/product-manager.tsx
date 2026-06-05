@@ -59,13 +59,13 @@ export function ProductManager({ product }: { product: ProductState }) {
             <SelectContent>{DROPI.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Se vende en CO</Label>
-          <Switch checked={s.sellsInColombia} onCheckedChange={(v) => patch({ sellsInColombia: v })} />
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="sells-co" className="text-xs">Se vende en CO</Label>
+          <Switch id="sells-co" checked={s.sellsInColombia} onCheckedChange={(v) => patch({ sellsInColombia: v })} />
         </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Creativo extranjero sin usar</Label>
-          <Switch checked={s.hasUnusedForeignCreative} onCheckedChange={(v) => patch({ hasUnusedForeignCreative: v })} />
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="unused-foreign" className="text-xs">Creativo extranjero sin usar</Label>
+          <Switch id="unused-foreign" checked={s.hasUnusedForeignCreative} onCheckedChange={(v) => patch({ hasUnusedForeignCreative: v })} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Notas</Label>

@@ -93,13 +93,13 @@ export function AdActions(props: {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label htmlFor="sells">Se vende en Colombia</Label>
-        <Switch id="sells" checked={sellsCO} onCheckedChange={(v) => { setSellsCO(v); patch({ sellsInColombia: v }); }} />
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="sells" className="min-w-0">Se vende en Colombia</Label>
+        <Switch id="sells" className="shrink-0" checked={sellsCO} onCheckedChange={(v) => { setSellsCO(v); patch({ sellsInColombia: v }); }} />
       </div>
-      <div className="flex items-center justify-between">
-        <Label htmlFor="unused2">Creativo extranjero sin usar en CO</Label>
-        <Switch id="unused2" checked={unused} onCheckedChange={(v) => { setUnused(v); patch({ hasUnusedForeignCreative: v }); }} />
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="unused2" className="min-w-0">Creativo extranjero sin usar en CO</Label>
+        <Switch id="unused2" className="shrink-0" checked={unused} onCheckedChange={(v) => { setUnused(v); patch({ hasUnusedForeignCreative: v }); }} />
       </div>
       {saving && <p className="text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin" /> Guardando…</p>}
       <div className="border-t pt-4">

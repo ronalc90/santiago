@@ -22,7 +22,7 @@ export default async function LandingsPage() {
   });
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Landings</h1>
           <p className="text-sm text-muted-foreground">Proyectos de páginas de venta generadas con IA (9 imágenes c/u).</p>
@@ -38,12 +38,12 @@ export default async function LandingsPage() {
             return (
               <Link key={l.id} href={`/landings/${l.id}`}>
                 <Card className="transition-colors hover:bg-secondary/30">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{l.name}</p>
-                      <p className="text-xs text-muted-foreground">{l.product.name} · {l._count.images} imágenes</p>
+                  <CardContent className="flex items-center justify-between gap-2 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{l.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{l.product.name} · {l._count.images} imágenes</p>
                     </div>
-                    <Badge variant={st.variant}>{st.label}</Badge>
+                    <Badge variant={st.variant} className="shrink-0">{st.label}</Badge>
                   </CardContent>
                 </Card>
               </Link>

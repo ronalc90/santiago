@@ -50,14 +50,14 @@ export function LoginForm() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@ejemplo.com" required autoComplete="email" />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@ejemplo.com" required autoComplete="email" className="h-11 text-base sm:h-9 sm:text-sm" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña" required autoComplete="current-password" />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña" required autoComplete="current-password" className="h-11 text-base sm:h-9 sm:text-sm" />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="h-11 w-full sm:h-9" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Entrar
           </Button>

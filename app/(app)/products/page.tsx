@@ -35,12 +35,12 @@ export default async function ProductsPage() {
           {products.map((p) => (
             <Link key={p.id} href={`/products/${p.id}`}>
               <Card className="transition-colors hover:bg-secondary/30">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium">{p.name}</p>
+                <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p._count.ads} anuncio(s) · {p._count.landings} landing(s)</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                     <Badge variant="outline">{p.market}</Badge>
                     <Badge variant="secondary">{DROPI_LABEL[p.dropiAvailability]}</Badge>
                     <Badge>{STATUS_LABEL[p.status]}</Badge>

@@ -48,7 +48,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Kpi icon={<Telescope className="h-4 w-4" />} label="Anuncios detectados" value={adsDetected} hint={`${adsNew} nuevos`} />
         <Kpi icon={<Package className="h-4 w-4" />} label="En análisis" value={inAnalysis} />
         <Kpi icon={<Rocket className="h-4 w-4" />} label="Lanzados" value={launched} />
@@ -61,14 +61,14 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader><CardTitle>Pipeline de producto</CardTitle></CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-stretch gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
             {PIPELINE_STAGES.map((stage, i) => (
               <div key={stage.key} className="flex items-center gap-2">
-                <div className="min-w-[120px] rounded-lg border bg-muted/30 p-4 text-center">
+                <div className="w-full rounded-lg border bg-muted/30 p-3 text-center sm:w-auto sm:min-w-[120px] sm:p-4">
                   <div className="text-2xl font-bold">{pipeline[stage.key]}</div>
                   <div className="text-xs text-muted-foreground">{stage.label}</div>
                 </div>
-                {i < PIPELINE_STAGES.length - 1 && <span className="text-muted-foreground">→</span>}
+                {i < PIPELINE_STAGES.length - 1 && <span className="hidden text-muted-foreground sm:inline">→</span>}
               </div>
             ))}
           </div>
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
                   <p className="truncate text-sm font-medium">{ad.storeName}</p>
                   <p className="truncate text-xs text-muted-foreground">{ad.copyText}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                   <span className="text-sm font-semibold">{ad.winnerScore.toLocaleString()}</span>
                   <ClassificationBadge value={ad.classification} />
                 </div>
@@ -102,9 +102,9 @@ export default async function DashboardPage() {
           <CardContent className="space-y-2">
             {byMarket.length === 0 && <p className="text-sm text-muted-foreground">Sin productos todavía.</p>}
             {byMarket.map((m) => (
-              <div key={m.market} className="flex items-center justify-between rounded-md border p-3">
-                <span className="text-sm font-medium">{m.market}</span>
-                <span className="text-sm text-muted-foreground">{m._count._all} producto(s)</span>
+              <div key={m.market} className="flex min-w-0 items-center justify-between gap-2 rounded-md border p-3">
+                <span className="truncate text-sm font-medium">{m.market}</span>
+                <span className="shrink-0 text-sm text-muted-foreground">{m._count._all} producto(s)</span>
               </div>
             ))}
           </CardContent>
