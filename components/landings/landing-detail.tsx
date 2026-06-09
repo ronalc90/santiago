@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2 } from 'lucide-react';
+import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2, ShoppingBag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -122,6 +122,11 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <a href={`/api/landings/${id}/download`}>
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
+          </a>
+          <a href={`/api/landings/${id}/shopify`}>
+            <Button variant="outline" disabled={completed === 0} title="Exportar un CSV para importar el producto en Shopify">
+              <ShoppingBag className="h-4 w-4" /> Exportar a Shopify
+            </Button>
           </a>
           <Button variant="outline" onClick={() => setRegenAllOpen(true)} disabled={isActive || regeneratingAll} title="Regenerar las 9 imágenes">
             {regeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Regenerar todas

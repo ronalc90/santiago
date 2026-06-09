@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" font-family="Inter,Arial,sans-serif">
+  <rect width="1200" height="480" fill="#0F172A"/>
+  <circle cx="1050" cy="80" r="220" fill="#0EA5E9" opacity="0.08"/>
+  <circle cx="150" cy="420" r="180" fill="#22D3EE" opacity="0.07"/>
+  <text x="80" y="170" font-size="64" font-weight="800" fill="#F8FAFC">Win<tspan fill="#38BDF8">Spy</tspan></text>
+  <text x="82" y="220" font-size="26" fill="#94A3B8">Guía de uso — explicada paso a paso, sin tecnicismos</text>
+  <g transform="translate(80,280)">
+    <rect width="320" height="120" rx="14" fill="#111827" stroke="#1F2937"/>
+    <text x="24" y="46" font-size="28">🔎</text><text x="64" y="46" font-size="22" font-weight="700" fill="#F8FAFC">1. Espiar</text>
+    <text x="24" y="84" font-size="15" fill="#94A3B8">Encuentra productos que</text>
+    <text x="24" y="106" font-size="15" fill="#94A3B8">ya se venden mucho.</text>
+  </g>
+  <g transform="translate(440,280)">
+    <rect width="320" height="120" rx="14" fill="#111827" stroke="#1F2937"/>
+    <text x="24" y="46" font-size="28">🎨</text><text x="64" y="46" font-size="22" font-weight="700" fill="#F8FAFC">2. Crear landing</text>
+    <text x="24" y="84" font-size="15" fill="#94A3B8">9 imágenes de venta con</text>
+    <text x="24" y="106" font-size="15" fill="#94A3B8">inteligencia artificial.</text>
+  </g>
+  <g transform="translate(800,280)">
+    <rect width="320" height="120" rx="14" fill="#111827" stroke="#1F2937"/>
+    <text x="24" y="46" font-size="28">📊</text><text x="64" y="46" font-size="22" font-weight="700" fill="#F8FAFC">3. Gestionar</text>
+    <text x="24" y="84" font-size="15" fill="#94A3B8">Lleva cada producto de la</text>
+    <text x="24" y="106" font-size="15" fill="#94A3B8">idea hasta la venta.</text>
+  </g>
+</svg>

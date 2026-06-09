@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560" font-family="Inter,Arial,sans-serif">
+  <rect width="1100" height="560" fill="#0B1220"/>
+  <text x="40" y="46" font-size="24" font-weight="800" fill="#F8FAFC">Tu landing lista: 9 imágenes</text>
+  <rect x="860" y="22" width="180" height="38" rx="9" fill="#38BDF8"/><text x="886" y="47" font-size="14" font-weight="700" fill="#082F49">⬇ Descargar .zip</text>
+  <circle cx="1055" cy="41" r="14" fill="#22D3EE"/><text x="1050" y="46" font-size="15" font-weight="800" fill="#082F49">★</text>
+  <g font-size="13" fill="#CBD5E1">
+    <!-- fila 1 -->
+    <rect x="40" y="80" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="56" y="108" font-size="14" fill="#F8FAFC">1 · Hero (producto)</text><text x="56" y="200" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="385" y="80" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="401" y="108" font-size="14" fill="#F8FAFC">2 · Precio / oferta</text><text x="401" y="200" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="730" y="80" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="746" y="108" font-size="14" fill="#F8FAFC">3 · Antes / Después</text><text x="746" y="200" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <!-- fila 2 -->
+    <rect x="40" y="235" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="56" y="263" font-size="14" fill="#F8FAFC">4 · Modo de uso (3 pasos)</text><text x="56" y="355" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="385" y="235" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="401" y="263" font-size="14" fill="#F8FAFC">5 · Beneficios</text><text x="401" y="355" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="730" y="235" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="746" y="263" font-size="14" fill="#F8FAFC">6 · Ficha técnica</text><text x="746" y="355" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <!-- fila 3 -->
+    <rect x="40" y="390" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="56" y="418" font-size="14" fill="#F8FAFC">7 · Garantía / cierre</text><text x="56" y="510" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="385" y="390" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="401" y="418" font-size="14" fill="#F8FAFC">8 · Urgencia / escasez</text><text x="401" y="510" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <rect x="730" y="390" width="330" height="140" rx="10" fill="#111827" stroke="#1F2937"/><text x="746" y="418" font-size="14" fill="#F8FAFC">9 · Testimonios</text>
+    <text x="746" y="510" font-size="12" fill="#86EFAC">✔ COMPLETED</text>
+    <text x="980" y="418" font-size="18">⟳</text>
+  </g>
+  <text x="980" y="263" font-size="18" fill="#7DD3FC">⟳</text>
+  <text x="40" y="552" font-size="13" fill="#94A3B8">¿Una imagen no te gustó? Toca el ícono ⟳ y se regenera solo esa, sin tocar las demás.</text>
+</svg>

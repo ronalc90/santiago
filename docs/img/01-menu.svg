@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" font-family="Inter,Arial,sans-serif">
+  <rect width="1100" height="520" fill="#0B1220"/>
+  <rect x="40" y="40" width="300" height="440" rx="14" fill="#111827" stroke="#1F2937"/>
+  <text x="64" y="86" font-size="24" font-weight="800" fill="#F8FAFC">Win<tspan fill="#38BDF8">Spy</tspan></text>
+  <g font-size="18" fill="#CBD5E1">
+    <rect x="56" y="110" width="268" height="40" rx="8" fill="#1E293B"/>
+    <text x="76" y="136">📊  Dashboard</text>
+    <text x="76" y="186">🔎  Spy de anuncios</text>
+    <text x="76" y="236">📦  Productos</text>
+    <text x="76" y="286">🎨  Landings</text>
+    <text x="76" y="336">🏬  Tiendas</text>
+    <text x="76" y="386">⚙️  Ajustes</text>
+    <text x="76" y="436">💲  Costos</text>
+  </g>
+  <!-- Callouts -->
+  <g font-family="Inter,Arial,sans-serif">
+    <line x1="340" y1="130" x2="430" y2="130" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="135" font-size="16" fill="#E2E8F0">Resumen del negocio en números.</text>
+    <line x1="340" y1="180" x2="430" y2="180" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="185" font-size="16" fill="#E2E8F0">Aquí encuentras los productos ganadores. <tspan font-weight="700" fill="#7DD3FC">Empiezas aquí.</tspan></text>
+    <line x1="340" y1="230" x2="430" y2="230" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="235" font-size="16" fill="#E2E8F0">Cada idea que decides trabajar.</text>
+    <line x1="340" y1="280" x2="430" y2="280" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="285" font-size="16" fill="#E2E8F0">Las páginas de venta que crea la IA.</text>
+    <line x1="340" y1="330" x2="430" y2="330" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="335" font-size="16" fill="#E2E8F0">Las tiendas competidoras que vigilas.</text>
+    <line x1="340" y1="380" x2="430" y2="380" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="385" font-size="16" fill="#E2E8F0">Reglas del semáforo (avanzado).</text>
+    <line x1="340" y1="430" x2="430" y2="430" stroke="#38BDF8" stroke-width="2"/>
+    <text x="445" y="435" font-size="16" fill="#E2E8F0">Cuánto cuesta cada acción.</text>
+  </g>
+</svg>
