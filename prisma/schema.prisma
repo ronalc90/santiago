@@ -207,6 +207,14 @@ model LandingProject {
   status           LandingStatus  @default(DRAFT)
   error            String?
 
+  // Producto publicado en Shopify (Admin API): idempotencia y enlace al admin.
+  shopifyProductId   String?
+  shopifyHandle      String?
+  shopifyPublishedAt DateTime?
+  // Marca temporal del "claim" de publicación (lock optimista para no duplicar
+  // el producto si se pulsa dos veces a la vez). Se limpia al terminar.
+  shopifyPublishingAt DateTime?
+
   images           LandingImage[]
   jobs             Job[]
 

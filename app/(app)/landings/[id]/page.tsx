@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { LandingDetail } from '@/components/landings/landing-detail';
+import { shopifyAdminUrlFor, canPublishToShopify } from '@/lib/shopify/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,9 @@ export default async function LandingDetailPage({ params }: { params: { id: stri
         name={project.name}
         initialStatus={project.status}
         initialImages={project.images.map((i) => ({ id: i.id, slot: i.slot, type: i.type, status: i.status, url: i.url, error: i.error }))}
+        shopifyProductId={project.shopifyProductId}
+        shopifyAdminUrl={project.shopifyProductId ? shopifyAdminUrlFor(project.shopifyProductId) : null}
+        canPublishShopify={canPublishToShopify()}
       />
     </div>
   );

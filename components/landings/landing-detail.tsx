@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2, ShoppingBag } from 'lucide-react';
+import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2, ShoppingBag, Upload, Store } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const TITLES: Record<string, string> = {
   beneficios: 'Beneficios', ficha: 'Ficha técnica', garantia: 'Garantía', urgencia: 'Urgencia', testimonios: 'Testimonios',
 };
 
-export function LandingDetail({ id, name, initialStatus, initialError, initialImages }: { id: string; name: string; initialStatus: string; initialError?: string | null; initialImages: Img[]; }) {
+export function LandingDetail({ id, name, initialStatus, initialError, initialImages, shopifyProductId, shopifyAdminUrl, canPublishShopify }: { id: string; name: string; initialStatus: string; initialError?: string | null; initialImages: Img[]; shopifyProductId?: string | null; shopifyAdminUrl?: string | null; canPublishShopify?: boolean; }) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [error, setError] = useState<string | null>(initialError ?? null);
@@ -26,6 +26,9 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [regenAllOpen, setRegenAllOpen] = useState(false);
   const [regeneratingAll, setRegeneratingAll] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(shopifyAdminUrl ?? null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
@@ -80,6 +83,27 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
     }
   }
 
+  async function publishToShopify() {
+    if (publishing) return;
+    setPublishing(true);
+    const res = await fetch(`/api/landings/${id}/shopify/publish`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    setPublishing(false);
+    setPublishOpen(false);
+    if (res.ok) {
+      setPublishedUrl(data.adminUrl ?? null);
+      toast({
+        title: data.alreadyPublished ? 'Ya estaba publicado en Shopify' : 'Producto publicado en Shopify',
+        description:
+          data.status === 'active'
+            ? 'Quedó ACTIVO en tu tienda. Revísalo con "Ver en Shopify".'
+            : 'Quedó como borrador. Usa "Ver en Shopify" para revisarlo y publicarlo.',
+      });
+    } else {
+      toast({ variant: 'destructive', title: 'No se pudo publicar', description: data.error });
+    }
+  }
+
   async function remove() {
     if (deleting) return;
     setDeleting(true);
@@ -128,6 +152,20 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
               <ShoppingBag className="h-4 w-4" /> Exportar a Shopify
             </Button>
           </a>
+          {publishedUrl ? (
+            <a href={publishedUrl} target="_blank" rel="noreferrer">
+              <Button variant="outline" title="Abrir el producto en Shopify"><Store className="h-4 w-4" /> Ver en Shopify</Button>
+            </a>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setPublishOpen(true)}
+              disabled={completed === 0 || publishing || !canPublishShopify}
+              title={canPublishShopify ? 'Crear el producto en tu tienda Shopify' : 'Configura Shopify (y un almacenamiento https) para publicar'}
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Publicar en Shopify
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setRegenAllOpen(true)} disabled={isActive || regeneratingAll} title="Regenerar las 9 imágenes">
             {regeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Regenerar todas
           </Button>
@@ -227,6 +265,16 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         confirmLabel="Regenerar todas"
         loading={regeneratingAll}
         onConfirm={regenerateAll}
+      />
+
+      <ConfirmDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        title="Publicar en Shopify"
+        description="Se creará un producto NUEVO en tu tienda Shopify con las imágenes y el copy de esta landing. Es una acción sobre tu tienda real."
+        confirmLabel="Publicar"
+        loading={publishing}
+        onConfirm={publishToShopify}
       />
     </div>
   );

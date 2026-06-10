@@ -38,6 +38,15 @@ export interface LandingImageRef {
   url: string;
 }
 
+/** Mapea las imágenes de un proyecto a referencias del builder, descartando las sin URL. */
+export function landingImagesFromProject(
+  images: { slot: number; type: string; url: string | null }[],
+): LandingImageRef[] {
+  return images
+    .map((i) => ({ slot: i.slot, type: i.type, url: i.url ?? '' }))
+    .filter((i) => i.url);
+}
+
 /** Convierte un texto a un handle/slug válido para Shopify. */
 function slugify(text: string): string {
   return text

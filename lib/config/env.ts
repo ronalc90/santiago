@@ -64,6 +64,22 @@ const envSchema = z.object({
 
   // Tasa de cambio USD→COP para la página de Costos (configurable; cambia seguido).
   USD_COP_RATE: z.coerce.number().positive().default(4100),
+
+  // --- Publicación en Shopify (Admin API) ---
+  // Sin credenciales la feature queda DESACTIVADA (la ruta responde 409); el
+  // build/boot NO se rompe. Dominio SIN esquema/puerto/path: "mitienda.myshopify.com".
+  SHOPIFY_STORE_DOMAIN: z
+    .union([
+      z.string().regex(/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/, 'SHOPIFY_STORE_DOMAIN debe ser <tienda>.myshopify.com'),
+      z.literal(''),
+    ])
+    .default(''),
+  // Admin API access token de una Custom App (formato shpat_...; scope write_products).
+  SHOPIFY_ADMIN_TOKEN: z.string().optional().default(''),
+  // Versión trimestral YYYY-MM. En env para actualizar sin redeploy de código.
+  SHOPIFY_API_VERSION: z.string().regex(/^\d{4}-\d{2}$/).default('2025-10'),
+  // Estado con el que se crea el producto: borrador (recomendado) o activo.
+  SHOPIFY_PUBLISH_STATUS: z.enum(['draft', 'active']).default('draft'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -93,6 +109,11 @@ export function getEnv(): Env {
   }
   if (e.AD_SOURCE_PROVIDER === 'apify' && !e.APIFY_TOKEN) {
     throw new Error('AD_SOURCE_PROVIDER="apify" requiere APIFY_TOKEN.');
+  }
+  // Shopify: exigir la pareja dominio+token (o ninguno). Evita un estado a medias
+  // que fallaría en runtime. Como ambos default '', sin Shopify no salta.
+  if (Boolean(e.SHOPIFY_STORE_DOMAIN) !== Boolean(e.SHOPIFY_ADMIN_TOKEN)) {
+    throw new Error('Shopify requiere SHOPIFY_STORE_DOMAIN y SHOPIFY_ADMIN_TOKEN juntos (o ninguno).');
   }
 
   // --- Guardas de PRODUCCIÓN ------------------------------------------------

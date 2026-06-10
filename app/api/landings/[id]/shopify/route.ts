@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
 import { LandingInputs } from '@/lib/services/landing-spec';
-import { buildShopifyProduct, toShopifyProductCsv, LandingImageRef } from '@/lib/services/shopify-export';
+import { buildShopifyProduct, toShopifyProductCsv, landingImagesFromProject } from '@/lib/services/shopify-export';
 
 export const runtime = 'nodejs';
 
@@ -21,9 +21,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   });
   if (!project) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
-  const images: LandingImageRef[] = project.images
-    .map((i) => ({ slot: i.slot, type: i.type, url: i.url ?? '' }))
-    .filter((i) => i.url);
+  const images = landingImagesFromProject(project.images);
   if (!images.length) {
     return NextResponse.json({ error: 'Aún no hay imágenes generadas' }, { status: 409 });
   }
