@@ -1,5 +1,6 @@
 import { getTextGenerator } from '@/lib/text';
 import { LandingSectionCopy } from '@/lib/services/landing-spec';
+import { getPrompt, PROMPT_KEYS } from '@/lib/services/prompts';
 
 /**
  * Servicio de copy con IA (texto). Usa el generador configurado por TEXT_PROVIDER
@@ -100,12 +101,7 @@ export function normalizeSections(raw: unknown): LandingSectionCopy[] {
 export async function suggestProduct(adCopy: string, country: string): Promise<ProductSuggestion> {
   const generator = getTextGenerator();
 
-  const system = [
-    'Eres un experto en e-commerce y dropshipping para mercados de LATAM.',
-    'A partir del copy de un anuncio ganador, propones la ficha base de un producto para venderlo.',
-    'Responde SIEMPRE en español y SOLO con un objeto JSON válido (sin markdown), con estas claves exactas:',
-    '{ "name": string, "description": string, "audience": string, "angle": string }',
-  ].join('\n');
+  const system = await getPrompt(PROMPT_KEYS.SUGGEST_PRODUCT_SYSTEM);
 
   const user = [
     `País/mercado: ${country}`,
@@ -131,13 +127,6 @@ export async function suggestProduct(adCopy: string, country: string): Promise<P
   };
 }
 
-/** Reglas de compliance (TikTok) para inyectar en el prompt de la landing. */
-const COMPLIANCE_TIKTOK = [
-  'COMPLIANCE (TikTok): sin afirmaciones médicas, sin mencionar pérdida de peso,',
-  'sin promesas absolutas ("cura", "garantizado", "100%"). Mantén los claims suaves',
-  'y orientados al estilo de vida.',
-].join(' ');
-
 /**
  * Genera el copy de la landing: campos afinados (público, descripción, ángulo) y
  * las 9 secciones (headline + bullets), todo en español. Si compliance está activo,
@@ -146,24 +135,10 @@ const COMPLIANCE_TIKTOK = [
 export async function landingCopy(inputs: LandingCopyInputs, complianceTiktok: boolean): Promise<LandingCopy> {
   const generator = getTextGenerator();
 
-  const system = [
-    'Eres un copywriter experto en landings de venta para e-commerce en LATAM.',
-    'Generas el copy de las 9 secciones de una landing de producto.',
-    'Responde SIEMPRE en español y SOLO con un objeto JSON válido (sin markdown).',
-    'Estructura EXACTA:',
-    '{',
-    '  "audience": string,',
-    '  "description": string,',
-    '  "angle": string,',
-    '  "sections": [ { "slot": number (1..9), "headline": string, "bullets": string[] } ]',
-    '}',
-    'Las 9 secciones, en orden, son: 1 hero, 2 precio/oferta, 3 antes/después,',
-    '4 modo de uso, 5 beneficios, 6 ficha técnica, 7 garantía, 8 urgencia, 9 testimonios.',
-    'Cada sección debe tener un headline corto y de 2 a 4 bullets.',
-    complianceTiktok ? COMPLIANCE_TIKTOK : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
+  const base = await getPrompt(PROMPT_KEYS.LANDING_COPY_SYSTEM);
+  const system = complianceTiktok
+    ? `${base}\n${await getPrompt(PROMPT_KEYS.COMPLIANCE_TIKTOK)}`
+    : base;
 
   const user = [
     `Producto: ${inputs.productName}`,
