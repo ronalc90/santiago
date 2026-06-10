@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { ProductManager } from '@/components/products/product-manager';
+import { OpportunityCard } from '@/components/products/opportunity-card';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +81,20 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-6">
+          <OpportunityCard
+            productId={product.id}
+            initial={{
+              score: product.opportunityScore,
+              band: product.opportunityBand,
+              confidence: product.opportunityConfidence,
+              estimated: product.opportunityEstimated,
+              breakdown: product.opportunityBreakdown as {
+                coverage?: number;
+                dimensions?: Record<string, { score: number | null; estimated: boolean; reasons?: string[] }>;
+              } | null,
+            }}
+          />
           <ProductManager
             product={{
               id: product.id,

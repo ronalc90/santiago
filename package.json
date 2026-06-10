@@ -23,6 +23,7 @@
     "create-admin": "tsx prisma/seed.ts",
     "db:purge-demo": "tsx prisma/purge-demo.ts",
     "db:recompute": "tsx scripts/recompute-scores.ts",
+    "db:recompute-opportunity": "tsx scripts/recompute-opportunity.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force"
   },

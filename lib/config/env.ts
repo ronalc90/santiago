@@ -80,6 +80,19 @@ const envSchema = z.object({
   SHOPIFY_API_VERSION: z.string().regex(/^\d{4}-\d{2}$/).default('2025-10'),
   // Estado con el que se crea el producto: borrador (recomendado) o activo.
   SHOPIFY_PUBLISH_STATUS: z.enum(['draft', 'active']).default('draft'),
+
+  // --- Dropi (catálogo: costo/stock para el margen) --------------------------
+  // Sin token la integración queda DESACTIVADA. La key es IP-restringida en Dropi.
+  DROPI_API_TOKEN: z.string().optional().default(''),
+  DROPI_API_BASE: z.string().default('https://api.dropi.co'),
+
+  // --- MercadoLibre (saturación CO: nº de publicaciones) ---------------------
+  // App gratis en developers.mercadolibre.com. Sin credenciales, la saturación
+  // por MercadoLibre queda desactivada (se usa solo la señal de Ad Library CO).
+  MERCADOLIBRE_CLIENT_ID: z.string().optional().default(''),
+  MERCADOLIBRE_CLIENT_SECRET: z.string().optional().default(''),
+  // Refresh token OAuth de MercadoLibre (con él se obtiene el access token).
+  MERCADOLIBRE_REFRESH_TOKEN: z.string().optional().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

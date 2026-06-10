@@ -152,11 +152,28 @@ model Product {
   sellsInColombia   Boolean           @default(false)
   hasUnusedForeignCreative Boolean    @default(false)
   dropiAvailability DropiAvailability @default(DESCONOCIDO)
+  /// Precio de venta de referencia (para el margen). En la moneda del producto.
+  salePrice         Int?
 
   notes             String?
 
   ownerId           String?
   owner             User?             @relation("ProductOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  // --- Motor de Oportunidad (score 0-100 + trazabilidad) ---
+  /// Score final 0-100 (re-normalizado a las dimensiones con dato). null = sin evaluar.
+  opportunityScore       Float?
+  opportunityBand        OpportunityBand?
+  /// 0-1: fracción del peso respaldada por fuentes REALES (no estimadas).
+  opportunityConfidence  Float?
+  opportunityEstimated   Boolean          @default(false)
+  demandScore            Int?
+  competitionScore       Int?
+  marginScore            Int?
+  creativesScore         Int?
+  /// Trazabilidad completa (pesos, bandas, señales crudas y "por qué" por dimensión).
+  opportunityBreakdown   Json?
+  opportunityComputedAt  DateTime?
 
   ads               Ad[]
   landings          LandingProject[]
@@ -166,7 +183,19 @@ model Product {
 
   @@index([status])
   @@index([market])
+  @@index([opportunityScore])
+  @@index([opportunityBand])
   @@map("products")
+}
+
+/// Banda de oportunidad derivada del score (umbrales configurables en Setting).
+enum OpportunityBand {
+  EXCELENTE
+  MUY_BUENO
+  BUENO
+  RIESGOSO
+  RECHAZAR
+  SIN_DATOS
 }
 
 // ---------------------------------------------------------------------------
