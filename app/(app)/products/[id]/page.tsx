@@ -104,6 +104,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               sellsInColombia: product.sellsInColombia,
               hasUnusedForeignCreative: product.hasUnusedForeignCreative,
               dropiAvailability: product.dropiAvailability,
+              salePrice: product.salePrice,
               notes: product.notes ?? '',
             }}
           />

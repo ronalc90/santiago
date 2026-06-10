@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { OpportunityBadge } from '@/components/shared/opportunity-badge';
 import { NewProductDialog } from '@/components/products/new-product-dialog';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +42,10 @@ export default async function ProductsPage() {
                     <p className="text-xs text-muted-foreground">{p._count.ads} anuncio(s) · {p._count.landings} landing(s)</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                    {p.opportunityScore != null && (
+                      <span className="text-sm font-semibold" title="Score de oportunidad">{Math.round(p.opportunityScore)}</span>
+                    )}
+                    <OpportunityBadge band={p.opportunityBand} />
                     <Badge variant="outline">{p.market}</Badge>
                     <Badge variant="secondary">{DROPI_LABEL[p.dropiAvailability]}</Badge>
                     <Badge>{STATUS_LABEL[p.status]}</Badge>

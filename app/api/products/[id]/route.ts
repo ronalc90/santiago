@@ -2,18 +2,23 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
+import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine';
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   status: z.enum(['DETECTADO', 'VALIDADO', 'LANDING_CREADA', 'LANZADO', 'ESCALANDO']).optional(),
-  market: z.string().min(2).max(4).optional(),
-  currency: z.string().min(2).max(4).optional(),
+  market: z.string().regex(/^[A-Za-z]{2,4}$/, 'mercado inválido').optional(),
+  currency: z.string().regex(/^[A-Za-z]{2,4}$/, 'moneda inválida').optional(),
   sellsInColombia: z.boolean().optional(),
   hasUnusedForeignCreative: z.boolean().optional(),
   dropiAvailability: z.enum(['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO']).optional(),
+  salePrice: z.number().int().nonnegative().nullable().optional(),
   notes: z.string().optional(),
 });
+
+/** Campos cuyo cambio afecta el score de oportunidad → recalcular. */
+const OPPORTUNITY_SIGNAL_FIELDS = ['salePrice', 'dropiAvailability', 'hasUnusedForeignCreative'] as const;
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireApiUser();
@@ -34,6 +39,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const data = { ...parsed.data };
   if (data.market) data.market = data.market.toUpperCase();
   const product = await prisma.product.update({ where: { id: params.id }, data });
+  // Si cambió una señal del score, recalcular la oportunidad (no bloquea ante fallo).
+  if (OPPORTUNITY_SIGNAL_FIELDS.some((f) => f in parsed.data)) {
+    await computeAndPersistOpportunity(params.id).catch((e) =>
+      console.error('[product:patch:opportunity]', e instanceof Error ? e.message : e),
+    );
+  }
   return NextResponse.json({ product });
 }
 

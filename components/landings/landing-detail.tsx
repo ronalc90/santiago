@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2, ShoppingBag, Upload, Store } from 'lucide-react';
+import { Download, RefreshCw, Loader2, AlertTriangle, ZoomIn, Trash2, ShoppingBag, Upload, Store, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -146,6 +146,11 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <a href={`/api/landings/${id}/download`}>
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
+          </a>
+          <a href={`/api/landings/${id}/html`} target="_blank" rel="noreferrer">
+            <Button variant="outline" disabled={completed === 0} title="Ver la landing HTML de ventas (conversión + SEO)">
+              <Globe className="h-4 w-4" /> Landing HTML
+            </Button>
           </a>
           <a href={`/api/landings/${id}/shopify`}>
             <Button variant="outline" disabled={completed === 0} title="Exportar un CSV para importar el producto en Shopify">

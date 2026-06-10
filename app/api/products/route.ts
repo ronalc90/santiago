@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
+import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine';
 
 const createSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  market: z.string().min(2).max(4).default('CO'),
-  currency: z.string().min(2).max(4).default('COP'),
+  market: z.string().regex(/^[A-Za-z]{2,4}$/, 'mercado inválido').default('CO'),
+  currency: z.string().regex(/^[A-Za-z]{2,4}$/, 'moneda inválida').default('COP'),
   sellsInColombia: z.boolean().optional(),
   hasUnusedForeignCreative: z.boolean().optional(),
   dropiAvailability: z.enum(['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO']).optional(),
@@ -46,6 +47,10 @@ export async function POST(req: Request) {
     if (fromAdId) {
       await prisma.ad.update({ where: { id: fromAdId }, data: { productId: product.id } }).catch(() => {});
     }
+    // Calcula la oportunidad inicial (con el anuncio ya ligado). No bloquea ante fallo.
+    await computeAndPersistOpportunity(product.id).catch((e) =>
+      console.error('[product:create:opportunity]', e instanceof Error ? e.message : e),
+    );
     return NextResponse.json({ product }, { status: 201 });
   } catch (err) {
     console.error('[products:create]', err);

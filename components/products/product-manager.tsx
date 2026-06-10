@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +22,7 @@ interface ProductState {
   sellsInColombia: boolean;
   hasUnusedForeignCreative: boolean;
   dropiAvailability: string;
+  salePrice: number | null;
   notes: string;
 }
 
@@ -28,6 +30,8 @@ export function ProductManager({ product }: { product: ProductState }) {
   const router = useRouter();
   const [s, setS] = useState(product);
   const [saving, setSaving] = useState(false);
+  // Último salePrice confirmado por el servidor: evita PATCH+recompute en un blur sin cambio.
+  const savedSalePrice = useRef(product.salePrice);
 
   async function patch(data: Partial<ProductState>) {
     setSaving(true);
@@ -58,6 +62,22 @@ export function ProductManager({ product }: { product: ProductState }) {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{DROPI.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
           </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Precio de venta ({s.currency})</Label>
+          <Input
+            type="number"
+            min={0}
+            value={s.salePrice ?? ''}
+            onChange={(e) => setS({ ...s, salePrice: e.target.value === '' ? null : Number(e.target.value) })}
+            onBlur={() => {
+              if (s.salePrice !== savedSalePrice.current) {
+                savedSalePrice.current = s.salePrice;
+                patch({ salePrice: s.salePrice });
+              }
+            }}
+            placeholder="ej: 89900 (alimenta el margen)"
+          />
         </div>
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="sells-co" className="text-xs">Se vende en CO</Label>
