@@ -84,7 +84,12 @@ export function buildAuthorizeUrl(state: string): string {
 function parseToken(data: Record<string, unknown>): MeliTokenResponse {
   const accessToken = typeof data.access_token === 'string' ? data.access_token : '';
   const refreshToken = typeof data.refresh_token === 'string' ? data.refresh_token : '';
-  if (!accessToken || !refreshToken) throw new MeliApiError('MercadoLibre no devolvió tokens válidos.');
+  if (!accessToken || !refreshToken) {
+    // Lista de CAMPOS recibidos (no valores) para diagnosticar: si no viene
+    // refresh_token, falta habilitar el scope offline_access en la app de ML.
+    const present = Object.keys(data).join(',') || 'ninguno';
+    throw new MeliApiError(`MercadoLibre no devolvió refresh_token (recibido: ${present}); habilita offline_access en la app`);
+  }
   return {
     accessToken,
     refreshToken,
