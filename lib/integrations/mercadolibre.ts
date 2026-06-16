@@ -105,9 +105,10 @@ async function postToken(body: Record<string, string>, maxRetries = MAX_RETRIES)
         signal: controller.signal,
       });
       if (res.ok) return parseToken((await res.json()) as Record<string, unknown>);
-      // 400 (invalid_grant, etc.) no se reintenta: el code/refresh es inválido.
+      // 400 (invalid_grant/invalid_client) no se reintenta: el code/secret es inválido.
       if (!RETRYABLE_STATUS.has(res.status) || attempt === maxRetries) {
-        throw new MeliApiError(`MercadoLibre OAuth respondió ${res.status}.`);
+        const detail = await safeOAuthError(res);
+        throw new MeliApiError(`MercadoLibre OAuth respondió ${res.status}${detail ? ` (${detail})` : ''}.`);
       }
       lastError = `HTTP ${res.status}`;
       retryAfter = retryAfterMs(res);
@@ -195,6 +196,16 @@ function sleep(ms: number): Promise<void> {
 function backoffMs(attempt: number): number {
   return 500 * 2 ** (attempt - 1);
 }
+/** Extrae el error de OAuth de ML ({error, message}) sin filtrar secretos. */
+async function safeOAuthError(res: Response): Promise<string> {
+  try {
+    const j = (await res.json()) as { error?: string; message?: string; error_description?: string };
+    return [j.error, j.error_description ?? j.message].filter(Boolean).join(': ').slice(0, 200);
+  } catch {
+    return '';
+  }
+}
+
 /** Respeta el header Retry-After (segundos o fecha HTTP) en 429/5xx; acotado a 10s. */
 function retryAfterMs(res: Response): number | null {
   const h = res.headers.get('retry-after');

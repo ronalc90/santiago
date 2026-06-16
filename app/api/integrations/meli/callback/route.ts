@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const env = getEnv();
-  const redirectTo = (meli: string) => {
+  const redirectTo = (meli: string, reason?: string) => {
     const settings = new URL('/settings', env.APP_URL);
     settings.searchParams.set('meli', meli);
+    if (reason) settings.searchParams.set('reason', reason);
     const res = NextResponse.redirect(settings);
     res.cookies.delete(OAUTH_STATE_COOKIE);
     return res;
@@ -29,15 +30,20 @@ export async function GET(req: NextRequest) {
   const code = params.get('code');
   const state = params.get('state');
   const expected = req.cookies.get(OAUTH_STATE_COOKIE)?.value;
-  if (!state || !expected || state !== expected) return redirectTo('error');
-  if (!code) return redirectTo('error');
+  if (!state || !expected || state !== expected) {
+    // Cookie de state ausente o distinta: típicamente el "connect" se abrió en otro
+    // dominio (deployment URL ≠ APP_URL) o tardó >10 min en autorizar.
+    console.error(`[meli:callback] state inválido (state=${state ? 'present' : 'ausente'}, cookie=${expected ? 'present' : 'ausente'})`);
+    return redirectTo('error', 'state');
+  }
+  if (!code) return redirectTo('error', 'nocode');
 
   try {
     const token = await exchangeCodeForToken(code);
     await saveMeliConnection(token);
     return redirectTo('connected');
   } catch (e) {
-    console.error('[meli:callback]', e instanceof Error ? e.message : e);
-    return redirectTo('error');
+    console.error('[meli:callback] intercambio falló:', e instanceof Error ? e.message : e);
+    return redirectTo('error', 'exchange');
   }
 }
