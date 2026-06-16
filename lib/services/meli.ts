@@ -92,6 +92,7 @@ export async function getValidAccessToken(): Promise<string | null> {
     try {
       return decryptSecret(row.accessToken);
     } catch {
+      console.error('[meli] no se pudo descifrar el access token (¿rotó AUTH_SECRET?); reconecta MercadoLibre.');
       return null;
     }
   }
@@ -99,6 +100,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   try {
     currentRefresh = decryptSecret(row.refreshToken);
   } catch {
+    console.error('[meli] no se pudo descifrar el refresh token (¿rotó AUTH_SECRET?); reconecta MercadoLibre.');
     return null;
   }
 

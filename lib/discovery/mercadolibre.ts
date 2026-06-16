@@ -28,7 +28,10 @@ export const mercadoLibreSource: DiscoverySource = {
   estaActiva: () => isMeliConfigured(),
   async buscar(params): Promise<DiscoveryCandidate[]> {
     const token = await getValidAccessToken();
-    if (!token) return [];
+    if (!token) {
+      console.warn('[discovery:mercadolibre] configurado pero sin token válido (no conectado o AUTH_SECRET rotado); 0 candidatos de ML.');
+      return [];
+    }
     const out: DiscoveryCandidate[] = [];
     for (const country of params.countries) {
       const site = toSite(country);

@@ -23,6 +23,7 @@ export interface DiscoveryResult {
   found: number; // candidatos crudos (antes de dedupe)
   candidates: number; // únicos tras dedupe
   upserted: number;
+  warning?: string; // aviso de configuración (p. ej. sin keywords)
   at: string; // ISO
 }
 
@@ -73,6 +74,13 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
   const at = new Date().toISOString();
   const params = discoveryParams();
   const sources = getActiveSources();
+
+  // Aviso si no hay nada que buscar (no es un 0-candidatos "exitoso" engañoso).
+  let warning: string | undefined;
+  if (!getEnv().DISCOVERY_MOCK && params.keywords.length === 0) {
+    warning = 'Sin keywords: define DISCOVERY_KEYWORDS o AD_SOURCE_KEYWORDS. No se buscó nada.';
+    console.warn(`[discovery] ${warning}`);
+  }
 
   const raw: DiscoveryCandidate[] = [];
   for (const s of sources) {
@@ -135,7 +143,7 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
 
     const existing = await prisma.opportunityCandidate.findUnique({
       where: { normalizedName: key },
-      select: { id: true, countries: true, sources: true },
+      select: { id: true, countries: true, sources: true, creatives: { select: { url: true } } },
     });
     const union = (prev: string[] | undefined, next: string[]) => Array.from(new Set([...(prev ?? []), ...next]));
     const data = {
@@ -156,6 +164,15 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
 
     if (existing) {
       await prisma.opportunityCandidate.update({ where: { id: existing.id }, data });
+      // Creativos: añadir solo los nuevos (por url), SIN borrar los existentes, para
+      // no perder su storageKey en R2. Acotado a 12 en total.
+      const have = new Set(existing.creatives.map((cr) => cr.url));
+      const nuevos = a.creatives.filter((cr) => !have.has(cr.url)).slice(0, Math.max(0, 12 - have.size));
+      if (nuevos.length) {
+        await prisma.opportunityCreative.createMany({
+          data: nuevos.map((cr) => ({ candidateId: existing.id, url: cr.url, type: cr.type, country: cr.country, source: cr.source })),
+        });
+      }
     } else {
       await prisma.opportunityCandidate.create({
         data: {
@@ -170,7 +187,7 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
     upserted += 1;
   }
 
-  const res: DiscoveryResult = { mock: getEnv().DISCOVERY_MOCK, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, at };
+  const res: DiscoveryResult = { mock: getEnv().DISCOVERY_MOCK, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, warning, at };
   await prisma.setting.upsert({
     where: { key: STATUS_KEY },
     create: { key: STATUS_KEY, value: res as unknown as Prisma.InputJsonValue },

@@ -209,7 +209,7 @@ export async function searchListingTotal(siteId: string, query: string, accessTo
 
 /** Catálogo de productos de un sitio para una búsqueda (descubrimiento). */
 export interface MeliCatalogResult {
-  total: number; // paging.total (saturación del nicho)
+  total: number | null; // paging.total; null = no se pudo medir (≠ 0 = sin competencia)
   items: { name: string; domainId: string | null }[];
 }
 
@@ -230,7 +230,8 @@ export async function searchCatalog(siteId: string, query: string, accessToken: 
       const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' }, signal: controller.signal });
       if (res.ok) {
         const data = (await res.json()) as { paging?: { total?: number }; results?: { name?: string; domain_id?: string }[] };
-        const total = typeof data.paging?.total === 'number' ? data.paging.total : 0;
+        // null = no medible (≠ 0 = sin competencia), igual que searchListingTotal.
+        const total = typeof data.paging?.total === 'number' && Number.isFinite(data.paging.total) ? data.paging.total : null;
         const items = (data.results ?? [])
           .filter((r) => typeof r.name === 'string' && r.name.trim())
           .map((r) => ({ name: r.name as string, domainId: r.domain_id ?? null }));
