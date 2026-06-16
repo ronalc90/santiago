@@ -20,7 +20,8 @@ const base: OpportunitySignals = {
   coAdvertisers: 0,
   coAds: 0,
   mlListingsCO: null,
-  dropiCost: null,
+  unitCost: null,
+  shippingCost: null,
   salePrice: null,
   dropiAvailability: 'DESCONOCIDO',
   numVideos: 0,
@@ -65,13 +66,19 @@ describe('competitionScore', () => {
 });
 
 describe('marginScore — cascada', () => {
-  it('nivel 1: Dropi real + precio → real', () => {
-    const m = marginScore(sig({ dropiCost: 20000, salePrice: 80000 }), R);
+  it('nivel 1: costo real + precio → real (no estimado)', () => {
+    const m = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), R);
     expect(m.estimated).toBe(false);
     expect(m.score).toBeGreaterThan(60);
   });
-  it('nivel 2: precio sin Dropi → estimado por ratio', () => {
-    const m = marginScore(sig({ salePrice: 80000, dropiCost: null }), R);
+  it('el costo de envío reduce el margen', () => {
+    const sin = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), R);
+    const con = marginScore(sig({ unitCost: 20000, shippingCost: 15000, salePrice: 80000 }), R);
+    expect(con.score! ).toBeLessThan(sin.score!);
+    expect(con.estimated).toBe(false);
+  });
+  it('nivel 2: precio sin costo → estimado por ratio', () => {
+    const m = marginScore(sig({ salePrice: 80000, unitCost: null }), R);
     expect(m.estimated).toBe(true);
     expect(m.confidence).toBe(0.4);
     expect(m.score).not.toBeNull();
@@ -166,7 +173,7 @@ describe('computeOpportunity', () => {
         coAdvertisers: 1,
         mlListingsCO: 80,
         salePrice: 90000,
-        dropiCost: 22000,
+        unitCost: 22000,
         numVideos: 4,
         numImages: 5,
         maxCreativeDaysActive: 90,

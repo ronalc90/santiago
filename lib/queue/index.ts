@@ -65,3 +65,26 @@ export async function enqueueAdIngestJob(data: AdIngestJobData): Promise<string>
   });
   return job.id ?? '';
 }
+
+// ---------------------------------------------------------------------------
+// Cola de sincronización de costos desde Shopify (worker, no bloquea la UI).
+// ---------------------------------------------------------------------------
+
+export const COST_SYNC_QUEUE = 'cost-sync';
+
+/** El job no necesita payload: sincroniza todos los costos. */
+export type CostSyncJobData = Record<string, never>;
+
+let costSyncQueue: Queue<CostSyncJobData> | null = null;
+
+export function getCostSyncQueue(): Queue<CostSyncJobData> {
+  if (costSyncQueue) return costSyncQueue;
+  costSyncQueue = new Queue<CostSyncJobData>(COST_SYNC_QUEUE, { connection: getRedis() });
+  return costSyncQueue;
+}
+
+/** Encola una sincronización de costos (manual desde la UI). */
+export async function enqueueCostSyncJob(): Promise<string> {
+  const job = await getCostSyncQueue().add('sync', {}, { removeOnComplete: 50, removeOnFail: 100, attempts: 1 });
+  return job.id ?? '';
+}

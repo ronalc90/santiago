@@ -11,10 +11,21 @@ import { setDefaultResultOrder } from 'node:dns';
 // con AAAA (p. ej. fbcdn de Meta) falla con "fetch failed". Preferimos IPv4.
 setDefaultResultOrder('ipv4first');
 import { Worker } from 'bullmq';
-import { LANDING_QUEUE, LandingJobData, AD_INGEST_QUEUE, AdIngestJobData, getAdIngestQueue } from '../lib/queue';
+import {
+  LANDING_QUEUE,
+  LandingJobData,
+  AD_INGEST_QUEUE,
+  AdIngestJobData,
+  getAdIngestQueue,
+  COST_SYNC_QUEUE,
+  CostSyncJobData,
+  getCostSyncQueue,
+} from '../lib/queue';
 import { getRedis } from '../lib/queue/connection';
 import { processLanding, failLanding } from '../lib/services/landing';
 import { runAdIngest } from '../lib/services/ad-ingest';
+import { syncShopifyCosts } from '../lib/services/cost-sync';
+import { isShopifyConfigured } from '../lib/shopify/client';
 import { getEnv } from '../lib/config/env';
 
 const env = getEnv();
@@ -49,7 +60,21 @@ const adWorker = new Worker<AdIngestJobData>(
   { connection: getRedis(), concurrency: env.AD_WORKER_CONCURRENCY },
 );
 
-for (const w of [landingWorker, adWorker]) {
+// Worker de sincronización de costos desde Shopify (margen real).
+const costSyncWorker = new Worker<CostSyncJobData>(
+  COST_SYNC_QUEUE,
+  async () => {
+    console.log('▶️  Sincronizando costos desde Shopify…');
+    const r = await syncShopifyCosts();
+    if (!r.configured) console.log('ℹ️  Costos: Shopify no está configurado; nada que sincronizar.');
+    else if (r.missingScope) console.warn('⚠️  Costos: falta el scope read_inventory en la app de Shopify.');
+    else console.log(`✅  Costos: ${r.updated} actualizados, ${r.matched} emparejados, ${r.withoutCost} sin costo (de ${r.total}).`);
+    return r;
+  },
+  { connection: getRedis(), concurrency: 1 },
+);
+
+for (const w of [landingWorker, adWorker, costSyncWorker]) {
   w.on('failed', (job, err) => console.error(`❌  Job ${job?.id} falló:`, err.message));
   w.on('error', (err) => console.error('Worker error:', err));
 }
@@ -70,6 +95,28 @@ landingWorker.on('failed', (job, err) => {
 void scheduleAdIngestCron().catch((e) =>
   console.error('⏰  No se pudo programar la ingesta:', e instanceof Error ? e.message : e),
 );
+
+// Cron diario de refresco de costos (solo si Shopify está configurado y hay patrón).
+void scheduleCostSyncCron().catch((e) =>
+  console.error('⏰  No se pudo programar la sync de costos:', e instanceof Error ? e.message : e),
+);
+
+/** Programa (o elimina) el refresco diario de costos desde Shopify según COST_SYNC_CRON. */
+async function scheduleCostSyncCron(): Promise<void> {
+  const queue = getCostSyncQueue();
+  const id = 'cost-sync:daily';
+  const enabled = Boolean(env.COST_SYNC_CRON) && isShopifyConfigured();
+  if (!enabled) {
+    await queue.removeJobScheduler(id).catch(() => {});
+    return;
+  }
+  await queue.upsertJobScheduler(
+    id,
+    { pattern: env.COST_SYNC_CRON },
+    { name: 'sync', opts: { removeOnComplete: 50, removeOnFail: 100, attempts: 1 } },
+  );
+  console.log(`⏰  Sync de costos programada (${env.COST_SYNC_CRON}).`);
+}
 
 /**
  * Programa la ingesta por keyword usando Job Schedulers (id estable por
@@ -121,7 +168,7 @@ async function scheduleAdIngestCron(): Promise<void> {
 
 // Cierre ordenado
 async function shutdown(): Promise<void> {
-  await Promise.all([landingWorker.close(), adWorker.close()]);
+  await Promise.all([landingWorker.close(), adWorker.close(), costSyncWorker.close()]);
   process.exit(0);
 }
 process.on('SIGTERM', shutdown);

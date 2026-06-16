@@ -154,6 +154,14 @@ model Product {
   dropiAvailability DropiAvailability @default(DESCONOCIDO)
   /// Precio de venta de referencia (para el margen). En la moneda del producto.
   salePrice         Int?
+  /// Costo por artículo sincronizado desde Shopify (inventoryItem.unitCost). Read-only.
+  shopifyUnitCost   Int?
+  /// Costo por artículo MANUAL (fallback editable cuando no hay costo en Shopify).
+  manualCost        Int?
+  /// Costo de envío por unidad (opcional), se resta al margen si existe.
+  shippingCost      Int?
+  /// Cuándo se actualizó por última vez el costo desde Shopify.
+  costUpdatedAt     DateTime?
 
   notes             String?
 

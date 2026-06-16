@@ -45,7 +45,8 @@ export interface OpportunitySignals {
   coAds: number;
   mlListingsCO: number | null;
   // Margen
-  dropiCost: number | null;
+  unitCost: number | null; // costo por artículo (Shopify o manual)
+  shippingCost: number | null; // costo de envío por unidad (opcional)
   salePrice: number | null;
   dropiAvailability: DropiAvailability;
   // Creativos
@@ -136,9 +137,12 @@ export function competitionScore(s: OpportunitySignals, r: OpportunityRules = DE
   return { score: 100 - Math.round(saturation), confidence, estimated, signals, reasons };
 }
 
-// --- D3: Margen (Dropi) — cascada de degradación ---------------------------
+// --- D3: Margen — cascada de degradación -----------------------------------
+// El costo (unitCost) viene de Shopify (sincronizado desde Dropi vía la
+// integración oficial) o de un costo manual. Dropi NO expone API a terceros.
 export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT_OPPORTUNITY_RULES): DimensionResult {
-  const signals = { dropiCost: s.dropiCost, salePrice: s.salePrice, dropiAvailability: s.dropiAvailability };
+  const signals = { unitCost: s.unitCost, shippingCost: s.shippingCost, salePrice: s.salePrice, dropiAvailability: s.dropiAvailability };
+  const shipping = s.shippingCost ?? 0;
 
   const fromCost = (cost: number, price: number, estimated: boolean, confidence: number, reason: string): DimensionResult => {
     const margenPct = price > 0 ? (price - cost) / price : 0;
@@ -151,21 +155,21 @@ export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT
     return { score, confidence, estimated, signals, reasons };
   };
 
-  // Nivel 1: Dropi real + precio.
-  if (s.dropiCost !== null && s.salePrice !== null) {
-    return fromCost(s.dropiCost, s.salePrice, false, 1, 'costo Dropi real');
+  // Nivel 1: costo real (Shopify/manual) + precio → incluye envío si existe.
+  if (s.unitCost !== null && s.salePrice !== null) {
+    return fromCost(s.unitCost + shipping, s.salePrice, false, 1, 'costo real (Shopify/manual)');
   }
-  // Nivel 2: precio sin Dropi → costo estimado.
-  if (s.salePrice !== null && s.dropiCost === null) {
-    return fromCost(s.salePrice * r.margin.costRatioDefault, s.salePrice, true, 0.4, 'costo estimado (Dropi pendiente)');
+  // Nivel 2: precio sin costo → costo estimado por ratio.
+  if (s.salePrice !== null && s.unitCost === null) {
+    return fromCost(s.salePrice * r.margin.costRatioDefault, s.salePrice, true, 0.4, 'costo estimado (falta costo real)');
   }
-  // Nivel 3: solo disponibilidad Dropi.
+  // Nivel 3: solo disponibilidad Dropi (último recurso).
   const availScore = r.margin.availabilityScore[s.dropiAvailability];
-  if (s.salePrice === null && s.dropiCost === null && availScore !== null && availScore !== undefined) {
+  if (s.salePrice === null && s.unitCost === null && availScore !== null && availScore !== undefined) {
     return { score: clamp100(availScore), confidence: 0.3, estimated: true, signals, reasons: ['margen estimado por disponibilidad en Dropi'] };
   }
   // Nivel 4: no calculable.
-  return { score: null, confidence: 0, estimated: true, signals, reasons: ['margen no calculable: falta Dropi y precio'] };
+  return { score: null, confidence: 0, estimated: true, signals, reasons: ['margen no calculable: falta costo y precio'] };
 }
 
 // --- D4: Calidad de creativos ----------------------------------------------

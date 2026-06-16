@@ -80,11 +80,12 @@ const envSchema = z.object({
   SHOPIFY_API_VERSION: z.string().regex(/^\d{4}-\d{2}$/).default('2025-10'),
   // Estado con el que se crea el producto: borrador (recomendado) o activo.
   SHOPIFY_PUBLISH_STATUS: z.enum(['draft', 'active']).default('draft'),
+  // Patrón cron (BullMQ) para refrescar costos desde Shopify a diario en el worker.
+  // Vacío = desactivado. Default: 07:00 (solo corre si Shopify está configurado).
+  COST_SYNC_CRON: z.string().default('0 7 * * *'),
 
-  // --- Dropi (catálogo: costo/stock para el margen) --------------------------
-  // Sin token la integración queda DESACTIVADA. La key es IP-restringida en Dropi.
-  DROPI_API_TOKEN: z.string().optional().default(''),
-  DROPI_API_BASE: z.string().default('https://api.dropi.co'),
+  // NOTA: Dropi NO expone API a terceros. El costo (margen) llega a Shopify por la
+  // integración oficial Dropi→Shopify y WinSpy lo lee de Shopify (inventoryItem.unitCost).
 
   // --- MercadoLibre (saturación CO: nº de publicaciones) ---------------------
   // App gratis en developers.mercadolibre.com. Sin credenciales, la saturación

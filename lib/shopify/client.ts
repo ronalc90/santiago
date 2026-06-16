@@ -40,6 +40,40 @@ export interface CreatedShopifyProduct {
   adminUrl: string;
 }
 
+/** Costo por artículo de un producto de Shopify (primera variante). */
+export interface ShopifyCostRow {
+  shopifyProductId: string; // id numérico (no el gid)
+  title: string;
+  handle: string;
+  sku: string | null;
+  unitCost: number | null; // redondeado a entero (moneda de la tienda)
+}
+
+interface ProductsGqlResponse {
+  data?: {
+    products?: {
+      pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
+      nodes?: Array<{
+        id?: string;
+        title?: string;
+        handle?: string;
+        variants?: { nodes?: Array<{ sku?: string | null; inventoryItem?: { unitCost?: { amount?: string } | null } | null }> };
+      }>;
+    };
+  };
+  errors?: Array<{ message?: string; extensions?: { code?: string } }>;
+  // GraphQL "cost": el rate-limit es un leaky-bucket; cuando se agota, Shopify
+  // responde HTTP 200 con errors[].extensions.code='THROTTLED' (no un 429).
+  extensions?: {
+    cost?: {
+      requestedQueryCost?: number;
+      throttleStatus?: { maximumAvailable?: number; currentlyAvailable?: number; restoreRate?: number };
+    };
+  };
+}
+
+const MAX_THROTTLE_RETRIES = 4;
+
 /** True si hay credenciales para publicar por Admin API (gating de la feature). */
 export function isShopifyConfigured(): boolean {
   const env = getEnv();
@@ -129,6 +163,75 @@ export class ShopifyClient {
     };
   }
 
+  /**
+   * Lee el costo por artículo (inventoryItem.unitCost) de todos los productos vía
+   * Admin GraphQL, paginado. Requiere scope `read_inventory`: si falta, Shopify
+   * responde con ACCESS_DENIED citando read_inventory y se devuelve
+   * missingInventoryScope=true (no falla en silencio). Cualquier OTRO error de
+   * GraphQL se propaga como ShopifyApiError (no se disfraza de "falta scope").
+   * El THROTTLED (HTTP 200, no lo ve `post`) se reintenta aquí esperando la
+   * recarga del leaky-bucket; los 429/5xx de transporte los cubre `post`.
+   */
+  async fetchAllProductCosts(): Promise<{ rows: ShopifyCostRow[]; missingInventoryScope: boolean }> {
+    const url = `https://${this.domain}/admin/api/${this.version}/graphql.json`;
+    const query =
+      'query($cursor: String){ products(first: 100, after: $cursor){ pageInfo{ hasNextPage endCursor } nodes{ id title handle variants(first: 1){ nodes{ sku inventoryItem{ unitCost{ amount } } } } } } }';
+    const rows: ShopifyCostRow[] = [];
+    let cursor: string | null = null;
+    let throttleRetries = 0;
+    let pages = 0;
+
+    while (pages < 200) {
+      const body = (await this.post(url, JSON.stringify({ query, variables: { cursor } }))) as ProductsGqlResponse;
+
+      if (body.errors?.length) {
+        // THROTTLED: reintentar la MISMA página (sin avanzar cursor) tras esperar
+        // la recarga del bucket; solo abortar si se agotan los reintentos.
+        if (body.errors.some((e) => e.extensions?.code === 'THROTTLED' || /throttled/i.test(e.message ?? ''))) {
+          if (throttleRetries >= MAX_THROTTLE_RETRIES) {
+            throw new ShopifyApiError('Shopify GraphQL: throttled tras varios reintentos.', 'rate_limit');
+          }
+          throttleRetries += 1;
+          await sleep(throttleWaitMs(body));
+          continue;
+        }
+        // Falta read_inventory: ACCESS_DENIED (o "access denied") que cita read_inventory
+        // EN EL MISMO error. No basta con que el blob mencione "unitCost" (siempre está
+        // en la query): eso convertía errores transitorios en un no-op silencioso.
+        if (body.errors.some((e) => {
+          const msg = (e.message ?? '').toLowerCase();
+          return (e.extensions?.code === 'ACCESS_DENIED' || msg.includes('access denied')) && msg.includes('read_inventory');
+        })) {
+          return { rows: [], missingInventoryScope: true };
+        }
+        throw new ShopifyApiError(`Shopify GraphQL: ${body.errors[0]?.message ?? 'error'}`, 'server');
+      }
+      throttleRetries = 0;
+
+      const products = body.data?.products;
+      if (!products) break;
+      for (const node of products.nodes ?? []) {
+        const variant = node.variants?.nodes?.[0];
+        const amount = variant?.inventoryItem?.unitCost?.amount;
+        // Costo > 0: un 0/negativo/no-numérico se trata como "no cargado" (null) para
+        // que el margen caiga a estimado en vez de premiarse como margen real del 100%.
+        const n = amount != null ? Number(amount) : NaN;
+        const cost = amount != null && amount !== '' && Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+        rows.push({
+          shopifyProductId: String(node.id ?? '').split('/').pop() ?? '',
+          title: node.title ?? '',
+          handle: node.handle ?? '',
+          sku: variant?.sku ?? null,
+          unitCost: cost,
+        });
+      }
+      pages += 1;
+      if (!products.pageInfo?.hasNextPage) break;
+      cursor = products.pageInfo.endCursor ?? null;
+    }
+    return { rows, missingInventoryScope: false };
+  }
+
   /** POST con timeout y reintentos acotados (solo 429/5xx). Clasifica los errores. */
   private async post(url: string, body: string): Promise<unknown> {
     let lastError = '';
@@ -216,4 +319,18 @@ function sleep(ms: number): Promise<void> {
 /** Backoff exponencial: ~1s, 2s, 4s. */
 function backoffMs(attempt: number): number {
   return 1000 * 2 ** (attempt - 1);
+}
+/**
+ * Espera (ms) hasta que el leaky-bucket de GraphQL recupere puntos suficientes
+ * para la próxima query: (costo pedido − disponible) / tasa de recarga. Acotado
+ * a 10s; sin datos de throttle, espera 2s por defecto.
+ */
+function throttleWaitMs(body: ProductsGqlResponse): number {
+  const cost = body.extensions?.cost;
+  const ts = cost?.throttleStatus;
+  if (ts?.restoreRate && ts.restoreRate > 0) {
+    const needed = (cost?.requestedQueryCost ?? 0) - (ts.currentlyAvailable ?? 0);
+    if (needed > 0) return Math.min(10_000, Math.ceil((needed / ts.restoreRate) * 1000));
+  }
+  return 2000;
 }

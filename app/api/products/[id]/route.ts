@@ -14,11 +14,17 @@ const updateSchema = z.object({
   hasUnusedForeignCreative: z.boolean().optional(),
   dropiAvailability: z.enum(['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO']).optional(),
   salePrice: z.number().int().nonnegative().nullable().optional(),
+  manualCost: z.number().int().nonnegative().nullable().optional(),
+  shippingCost: z.number().int().nonnegative().nullable().optional(),
   notes: z.string().optional(),
 });
 
-/** Campos cuyo cambio afecta el score de oportunidad → recalcular. */
-const OPPORTUNITY_SIGNAL_FIELDS = ['salePrice', 'dropiAvailability', 'hasUnusedForeignCreative'] as const;
+/**
+ * Campos cuyo cambio afecta el score de oportunidad → recalcular.
+ * `name` entra porque alimenta la competencia (consulta a MercadoLibre por nombre);
+ * el costo por título solo se reconcilia en el siguiente cost-sync de Shopify.
+ */
+const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability', 'hasUnusedForeignCreative'] as const;
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireApiUser();

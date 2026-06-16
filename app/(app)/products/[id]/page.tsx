@@ -105,6 +105,9 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               hasUnusedForeignCreative: product.hasUnusedForeignCreative,
               dropiAvailability: product.dropiAvailability,
               salePrice: product.salePrice,
+              shopifyUnitCost: product.shopifyUnitCost,
+              manualCost: product.manualCost,
+              shippingCost: product.shippingCost,
               notes: product.notes ?? '',
             }}
           />

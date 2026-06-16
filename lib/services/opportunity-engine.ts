@@ -69,8 +69,10 @@ export async function recomputeAllProductsOpportunity(): Promise<number> {
       chunk.map((product) => {
         const signals = buildOpportunitySignalsFromAds(
           {
-            name: product.name,
             salePrice: product.salePrice ?? null,
+            shopifyUnitCost: product.shopifyUnitCost ?? null,
+            manualCost: product.manualCost ?? null,
+            shippingCost: product.shippingCost ?? null,
             dropiAvailability: product.dropiAvailability,
             hasUnusedForeignCreative: product.hasUnusedForeignCreative,
           },

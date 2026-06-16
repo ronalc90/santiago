@@ -162,3 +162,23 @@ curl -i -c ck.txt -X POST https://TU-APP.vercel.app/api/auth/login \
 Luego, en la UI: pulsa **«Sincronizar reales»** y espera a que el worker traiga los
 anuncios → crea producto → nueva landing → verifica que el worker genera las 9
 imágenes y que el `.zip` descarga.
+
+## 8) Costos / Margen desde Shopify
+
+Dropi **no da API a terceros**, así que el costo no se lee de Dropi. La vía oficial:
+
+1. En tu panel de **Dropi**, conecta **Dropi → Shopify** (integración oficial). Eso
+   sincroniza los productos y su **«costo por artículo»** a Shopify.
+2. La Custom App de Shopify (la misma del token `shpat_`) debe tener el scope
+   **`read_inventory`** además de `write_products`. Si falta, la sync de costos lo
+   reporta como pendiente (no falla en silencio): actualiza los permisos y reinstala.
+3. WinSpy lee el costo de Shopify (`inventoryItem.unitCost`) con el token existente y
+   lo usa para el **Margen** del score. Botón **«Sincronizar costos (Shopify)»** en
+   Ajustes (corre en el worker) + un **refresco diario** (`COST_SYNC_CRON`).
+
+| Variable | ¿Cuándo? | Qué |
+|---|---|---|
+| `COST_SYNC_CRON` | Opcional | Patrón cron del refresco diario de costos (default `0 7 * * *`; vacío = off). |
+
+> El costo manual por producto sigue disponible como fallback editable; si hay costo
+> de Shopify, se usa ese. Si no hay ningún costo, el margen se marca «estimado».

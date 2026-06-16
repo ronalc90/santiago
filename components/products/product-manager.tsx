@@ -23,6 +23,9 @@ interface ProductState {
   hasUnusedForeignCreative: boolean;
   dropiAvailability: string;
   salePrice: number | null;
+  shopifyUnitCost: number | null;
+  manualCost: number | null;
+  shippingCost: number | null;
   notes: string;
 }
 
@@ -30,8 +33,32 @@ export function ProductManager({ product }: { product: ProductState }) {
   const router = useRouter();
   const [s, setS] = useState(product);
   const [saving, setSaving] = useState(false);
-  // Último salePrice confirmado por el servidor: evita PATCH+recompute en un blur sin cambio.
+  // Últimos valores confirmados por el servidor: evitan PATCH+recompute en un blur sin cambio.
   const savedSalePrice = useRef(product.salePrice);
+  const savedManualCost = useRef(product.manualCost);
+  const savedShipping = useRef(product.shippingCost);
+
+  /** Input numérico de costo/precio con patch solo si cambió (evita recompute innecesario). */
+  function numberField(label: string, key: 'salePrice' | 'manualCost' | 'shippingCost', ref: typeof savedSalePrice, placeholder: string) {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-xs">{label}</Label>
+        <Input
+          type="number"
+          min={0}
+          value={s[key] ?? ''}
+          onChange={(e) => setS({ ...s, [key]: e.target.value === '' ? null : Number(e.target.value) })}
+          onBlur={() => {
+            if (s[key] !== ref.current) {
+              ref.current = s[key];
+              patch({ [key]: s[key] });
+            }
+          }}
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
 
   async function patch(data: Partial<ProductState>) {
     setSaving(true);
@@ -63,22 +90,15 @@ export function ProductManager({ product }: { product: ProductState }) {
             <SelectContent>{DROPI.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Precio de venta ({s.currency})</Label>
-          <Input
-            type="number"
-            min={0}
-            value={s.salePrice ?? ''}
-            onChange={(e) => setS({ ...s, salePrice: e.target.value === '' ? null : Number(e.target.value) })}
-            onBlur={() => {
-              if (s.salePrice !== savedSalePrice.current) {
-                savedSalePrice.current = s.salePrice;
-                patch({ salePrice: s.salePrice });
-              }
-            }}
-            placeholder="ej: 89900 (alimenta el margen)"
-          />
-        </div>
+        {numberField(`Precio de venta (${s.currency})`, 'salePrice', savedSalePrice, 'ej: 89900')}
+        {s.shopifyUnitCost != null ? (
+          <p className="text-xs text-muted-foreground">
+            Costo Shopify: <span className="font-medium">{s.shopifyUnitCost.toLocaleString('es-CO')} {s.currency}</span> (sincronizado · se usa para el margen)
+          </p>
+        ) : (
+          numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify')
+        )}
+        {numberField(`Costo de envío (${s.currency})`, 'shippingCost', savedShipping, 'opcional')}
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="sells-co" className="text-xs">Se vende en CO</Label>
           <Switch id="sells-co" checked={s.sellsInColombia} onCheckedChange={(v) => patch({ sellsInColombia: v })} />
