@@ -60,7 +60,10 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
           // si es CO, "se vende en CO". Solo los extranjeros quedan en false y son
           // los que deben aparecer en el filtro "No se vende en CO".
           sellsInColombia: ad.sells_in_colombia ?? country === 'CO',
-          hasUnusedForeignCreative: ad.has_unused_foreign_creative ?? false,
+          // "Creativo extranjero sin usar en CO" solo aplica a anuncios EXTRANJEROS
+          // (un creativo que funciona afuera y aún no se usa en CO). Un anuncio CO
+          // nunca lo lleva: su creativo ya está en CO.
+          hasUnusedForeignCreative: country !== 'CO' && (ad.has_unused_foreign_creative ?? false),
           detectedAt: ad.detected_at ?? new Date(),
           firstSeenAt: ad.detected_at ?? new Date(),
           lastSeenAt: new Date(),

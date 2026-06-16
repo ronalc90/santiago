@@ -40,4 +40,18 @@ describe('normalizeIngestPayload', () => {
   it('rechaza lista vacía', () => {
     expect(() => normalizeIngestPayload({ ads: [] })).toThrow();
   });
+
+  it('booleano tolerante: el string "false" es false (no true como con z.coerce)', () => {
+    const out = normalizeIngestPayload([
+      { ...valid, has_unused_foreign_creative: 'false', sells_in_colombia: 'true' },
+    ]);
+    expect(out[0].has_unused_foreign_creative).toBe(false);
+    expect(out[0].sells_in_colombia).toBe(true);
+  });
+
+  it('booleano tolerante: ausente queda undefined (para que apliquen los defaults de la ingesta)', () => {
+    const out = normalizeIngestPayload([valid]);
+    expect(out[0].has_unused_foreign_creative).toBeUndefined();
+    expect(out[0].sells_in_colombia).toBeUndefined();
+  });
 });
