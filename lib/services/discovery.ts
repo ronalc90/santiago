@@ -32,6 +32,7 @@ export interface DiscoveryResult {
   candidates: number; // únicos tras dedupe
   upserted: number;
   dropiMatched: number;
+  embeddingsFailed?: boolean; // dedupe por embeddings activo pero degradó (sin key/timeout)
   warning?: string;
   at: string; // ISO
 }
@@ -85,12 +86,12 @@ function mergeAgg(into: Agg, from: Agg): void {
   if (!into.category && from.category) into.category = from.category;
 }
 
-/** 2ª pasada de dedupe por embeddings: fusiona casi-idénticos (coseno ≥ 0.9). */
-async function mergeByEmbeddings(byKey: Map<string, Agg>): Promise<void> {
+/** 2ª pasada de dedupe por embeddings: fusiona casi-idénticos (coseno ≥ 0.9). false = degradó. */
+async function mergeByEmbeddings(byKey: Map<string, Agg>): Promise<boolean> {
   const keys = Array.from(byKey.keys());
-  if (keys.length < 2) return;
+  if (keys.length < 2) return true;
   const emb = await embedTexts(keys.map((k) => byKey.get(k)!.name));
-  if (!emb) return;
+  if (!emb) return false;
   const kept: { key: string; vec: number[] }[] = [];
   keys.forEach((k, i) => {
     const match = kept.find((p) => cosine(p.vec, emb[i]) >= 0.9);
@@ -101,21 +102,44 @@ async function mergeByEmbeddings(byKey: Map<string, Agg>): Promise<void> {
       kept.push({ key: k, vec: emb[i] });
     }
   });
+  return true;
 }
 
-/** Descarga los creativos NUEVOS a R2 (galería) y los inserta; preserva los existentes. */
-async function persistNewCreatives(candidateId: string, creatives: Agg['creatives'], existing: Set<string>): Promise<void> {
-  const nuevos = creatives.filter((cr) => !existing.has(cr.url)).slice(0, Math.max(0, MAX_CREATIVES - existing.size));
+const isHttpUrl = (u: string): boolean => /^https?:\/\//i.test(u);
+type ExistingCreative = { id: string; url: string; storageKey: string | null };
+
+/**
+ * Sincroniza la galería de un candidato: reintenta subir a R2 los creativos que
+ * quedaron sin storageKey y añade los nuevos (descargándolos a R2). Descarta URLs
+ * no http(s) para no dejar filas rotas. Preserva los ya guardados (idempotente).
+ */
+async function syncCreatives(candidateId: string, incoming: Agg['creatives'], existing: ExistingCreative[]): Promise<void> {
+  const downloadKind = (t: string): 'image' | 'video' => (t === 'video' ? 'video' : 'image');
+
+  // 1) Reintentar los que se insertaron con la URL original (sin R2).
+  for (const row of existing) {
+    if (row.storageKey || !isHttpUrl(row.url)) continue;
+    const kind = downloadKind(incoming.find((c) => c.url === row.url)?.type ?? 'image');
+    try {
+      const stored = await persistCreative(`discovery/${candidateId}`, row.url, kind);
+      await prisma.opportunityCreative.update({ where: { id: row.id }, data: { url: stored.url, storageKey: stored.key } });
+    } catch {
+      /* la URL original ya caducó; se queda como está */
+    }
+  }
+
+  // 2) Añadir los nuevos (por url), descartando URLs inválidas.
+  const haveUrls = new Set(existing.map((r) => r.url));
+  const nuevos = incoming.filter((cr) => !haveUrls.has(cr.url) && isHttpUrl(cr.url)).slice(0, Math.max(0, MAX_CREATIVES - existing.length));
   for (const cr of nuevos) {
     let url = cr.url;
     let storageKey: string | null = null;
     try {
-      const kind: 'image' | 'video' = cr.type === 'video' ? 'video' : 'image';
-      const stored = await persistCreative(`discovery/${candidateId}`, cr.url, kind);
+      const stored = await persistCreative(`discovery/${candidateId}`, cr.url, downloadKind(cr.type));
       url = stored.url;
       storageKey = stored.key;
     } catch {
-      /* la URL original puede haber caducado; se guarda tal cual, sin R2 */
+      /* la URL original puede haber caducado; se guarda tal cual, se reintentará */
     }
     await prisma.opportunityCreative.create({
       data: { candidateId, url, type: cr.type, country: cr.country, source: cr.source, storageKey },
@@ -169,8 +193,13 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
   }
 
   // 2ª dedupe opcional por embeddings (OpenAI).
+  let embeddingsFailed = false;
   if (cfg.sources.embeddings) {
-    await mergeByEmbeddings(byKey).catch((e) => console.error('[discovery:embeddings]', e instanceof Error ? e.message : e));
+    const ok = await mergeByEmbeddings(byKey).catch((e) => {
+      console.error('[discovery:embeddings]', e instanceof Error ? e.message : e);
+      return false;
+    });
+    embeddingsFailed = !ok;
   }
 
   const rules = await getOpportunityRules();
@@ -191,7 +220,7 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
 
     const existing = await prisma.opportunityCandidate.findUnique({
       where: { normalizedName: key },
-      select: { id: true, countries: true, sources: true, creatives: { select: { url: true } } },
+      select: { id: true, countries: true, sources: true, creatives: { select: { id: true, url: true, storageKey: true } } },
     });
     const union = (prev: string[] | undefined, next: string[]) => Array.from(new Set([...(prev ?? []), ...next]));
     const data = {
@@ -210,15 +239,12 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
       breakdown: { dimensions: result.dimensions, coverage: result.coverage, confidence: result.confidence } as unknown as Prisma.InputJsonValue,
     };
 
-    let candidateId: string;
     if (existing) {
       await prisma.opportunityCandidate.update({ where: { id: existing.id }, data });
-      candidateId = existing.id;
-      await persistNewCreatives(candidateId, a.creatives, new Set(existing.creatives.map((c) => c.url)));
+      await syncCreatives(existing.id, a.creatives, existing.creatives);
     } else {
       const created = await prisma.opportunityCandidate.create({ data: { normalizedName: key, ...data } });
-      candidateId = created.id;
-      await persistNewCreatives(candidateId, a.creatives, new Set());
+      await syncCreatives(created.id, a.creatives, []);
     }
     upserted += 1;
   }
@@ -226,7 +252,7 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
   // Cruce con el catálogo Dropi (si hay CSV importado).
   const dropiMatched = await matchCandidatesToDropi().catch(() => 0);
 
-  const res: DiscoveryResult = { mock, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, dropiMatched, warning, at };
+  const res: DiscoveryResult = { mock, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, dropiMatched, embeddingsFailed: embeddingsFailed || undefined, warning, at };
   await prisma.setting.upsert({
     where: { key: STATUS_KEY },
     create: { key: STATUS_KEY, value: res as unknown as Prisma.InputJsonValue },

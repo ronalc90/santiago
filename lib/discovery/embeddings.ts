@@ -9,11 +9,14 @@ import { getEnv } from '@/lib/config/env';
 export async function embedTexts(texts: string[]): Promise<number[][] | null> {
   const env = getEnv();
   if (!env.OPENAI_API_KEY || !texts.length) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000); // no estancar el job del worker
   try {
     const res = await fetch(`${env.OPENAI_BASE_URL.replace(/\/$/, '')}/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
       body: JSON.stringify({ model: 'text-embedding-3-small', input: texts }),
+      signal: controller.signal,
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { data?: { embedding?: number[] }[] };
@@ -21,6 +24,8 @@ export async function embedTexts(texts: string[]): Promise<number[][] | null> {
     return out.length === texts.length && out.every((e) => e.length) ? out : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

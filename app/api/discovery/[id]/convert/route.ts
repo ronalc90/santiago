@@ -23,7 +23,17 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       ownerId: auth.id,
     },
   });
-  await prisma.opportunityCandidate.update({ where: { id: c.id }, data: { status: 'CONVERTIDO', productId: product.id } });
+  // Reclamo CONDICIONAL: solo gana si el candidato sigue sin producto (evita que dos
+  // requests concurrentes creen dos productos). Si otro ganó, borra este huérfano.
+  const claim = await prisma.opportunityCandidate.updateMany({
+    where: { id: c.id, productId: null },
+    data: { status: 'CONVERTIDO', productId: product.id },
+  });
+  if (claim.count === 0) {
+    await prisma.product.delete({ where: { id: product.id } }).catch(() => {});
+    const fresh = await prisma.opportunityCandidate.findUnique({ where: { id: c.id }, select: { productId: true } });
+    return NextResponse.json({ productId: fresh?.productId ?? null, already: true });
+  }
   await computeAndPersistOpportunity(product.id).catch((e) => console.error('[discovery:convert:opportunity]', e instanceof Error ? e.message : e));
 
   return NextResponse.json({ productId: product.id });

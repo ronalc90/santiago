@@ -98,6 +98,11 @@ export async function matchCandidatesToDropi(): Promise<number> {
   if (!items.length) return 0;
   const byName = new Map(items.map((i) => [i.normalizedName, i]));
   const candidates = await prisma.opportunityCandidate.findMany({ select: { id: true, normalizedName: true } });
+
+  // Resuelve el match en memoria y agrupa por (status, ref) para emitir pocos
+  // updateMany en vez de N updates secuenciales (que saturarían el pool de Prisma).
+  const noMatch: string[] = [];
+  const byRef = new Map<string, string[]>(); // sku (o '∅') → ids con match
   let matched = 0;
   for (const c of candidates) {
     let item = byName.get(c.normalizedName) ?? null;
@@ -105,14 +110,23 @@ export async function matchCandidatesToDropi(): Promise<number> {
       let best = 0;
       for (const it of items) {
         const score = tokenOverlap(c.normalizedName, it.normalizedName);
-        if (score > best) { best = score; item = score >= 0.6 ? it : item; }
+        if (score > best && score >= 0.6) { best = score; item = it; }
       }
     }
-    await prisma.opportunityCandidate.update({
-      where: { id: c.id },
-      data: { dropiStatus: item ? DropiAvailability.DISPONIBLE : DropiAvailability.DESCONOCIDO, dropiRef: item?.sku ?? null },
-    });
-    if (item) matched += 1;
+    if (item) {
+      const ref = item.sku ?? '∅';
+      (byRef.get(ref) ?? byRef.set(ref, []).get(ref)!).push(c.id);
+      matched += 1;
+    } else {
+      noMatch.push(c.id);
+    }
+  }
+
+  if (noMatch.length) {
+    await prisma.opportunityCandidate.updateMany({ where: { id: { in: noMatch } }, data: { dropiStatus: DropiAvailability.DESCONOCIDO, dropiRef: null } });
+  }
+  for (const [ref, ids] of byRef) {
+    await prisma.opportunityCandidate.updateMany({ where: { id: { in: ids } }, data: { dropiStatus: DropiAvailability.DISPONIBLE, dropiRef: ref === '∅' ? null : ref } });
   }
   return matched;
 }

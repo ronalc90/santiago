@@ -29,7 +29,8 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   if (searchParams.noCO) where.enCO = false;
   if (searchParams.dropi) where.dropiStatus = 'DISPONIBLE';
   if (searchParams.creativos) where.creatives = { some: {} };
-  if (searchParams.fuente) where.sources = { has: searchParams.fuente };
+  const VALID_SOURCES = ['mercadolibre', 'trends', 'meta', 'tiktok', 'mock'];
+  if (searchParams.fuente && VALID_SOURCES.includes(searchParams.fuente)) where.sources = { has: searchParams.fuente };
 
   const [candidates, status] = await Promise.all([
     prisma.opportunityCandidate.findMany({
@@ -59,7 +60,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       {status && (
         <p className="text-xs text-muted-foreground">
           Última corrida: <span className="font-medium">{status.candidates}</span> candidato(s) · fuentes: {status.sources.join(', ') || 'ninguna'}
-          {status.dropiMatched ? ` · ${status.dropiMatched} con Dropi` : ''}{status.warning ? ` · ⚠️ ${status.warning}` : ''}.
+          {status.dropiMatched ? ` · ${status.dropiMatched} con Dropi` : ''}
+          {status.embeddingsFailed ? ' · ⚠️ dedupe por embeddings no disponible' : ''}
+          {status.warning ? ` · ⚠️ ${status.warning}` : ''}.
         </p>
       )}
 
