@@ -138,6 +138,19 @@ export function getEnv(): Env {
     throw new Error('Shopify requiere SHOPIFY_STORE_DOMAIN y SHOPIFY_ADMIN_TOKEN juntos (o ninguno).');
   }
 
+  // En PRODUCCIÓN, APP_URL debe ser la URL pública https (no localhost): si queda
+  // en el default, los callbacks de OAuth (MercadoLibre) y los enlaces absolutos
+  // redirigen a localhost en silencio. Falla rápido al boot. Se omite durante el
+  // build de Next (NEXT_PHASE) para no romper el compilado en entornos locales.
+  if (e.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
+    if (!/^https:\/\//i.test(e.APP_URL) || /\blocalhost\b|127\.0\.0\.1|\[::1\]/i.test(e.APP_URL)) {
+      throw new Error(
+        `APP_URL inválida en producción: "${e.APP_URL}". Debe ser la URL pública https ` +
+          '(p. ej. https://winspy-chi.vercel.app), no localhost. Configúrala en Vercel y en el worker (Railway).',
+      );
+    }
+  }
+
   // --- Guardas de PRODUCCIÓN ------------------------------------------------
   // Avisos (no bloqueantes) cuando la configuración delataría datos demo o un
   // almacenamiento no compartido entre Vercel y Railway.

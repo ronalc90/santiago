@@ -49,10 +49,20 @@ export function isMeliConfigured(): boolean {
   return Boolean(env.MELI_CLIENT_ID && env.MELI_CLIENT_SECRET);
 }
 
-/** URI de retorno del OAuth: la de env si se fijó, o derivada de APP_URL. */
+/**
+ * URI de retorno del OAuth: prioriza MELI_REDIRECT_URI explícito; si está vacío,
+ * la deriva de APP_URL. Debe coincidir EXACTO con la registrada en la app de ML.
+ */
 export function meliRedirectUri(): string {
   const env = getEnv();
-  return env.MELI_REDIRECT_URI || `${env.APP_URL.replace(/\/$/, '')}/api/integrations/meli/callback`;
+  if (env.MELI_REDIRECT_URI) return env.MELI_REDIRECT_URI;
+  if (/\blocalhost\b|127\.0\.0\.1/i.test(env.APP_URL)) {
+    console.warn(
+      '[meli] MELI_REDIRECT_URI vacío y APP_URL es localhost: el redirect_uri de OAuth apuntará a localhost ' +
+        'y MercadoLibre rechazará el callback en producción. Define MELI_REDIRECT_URI o un APP_URL público https.',
+    );
+  }
+  return `${env.APP_URL.replace(/\/$/, '')}/api/integrations/meli/callback`;
 }
 
 /** URL de autorización a la que se redirige al usuario para conceder el permiso. */

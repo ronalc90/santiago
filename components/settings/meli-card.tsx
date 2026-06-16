@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, RefreshCw, AlertTriangle, CheckCircle2, Link2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,16 @@ export interface MeliConnectionInfo {
   externalId: string | null;
 }
 
-const NOTICES: Record<string, { tone: 'ok' | 'warn'; text: string }> = {
-  connected: { tone: 'ok', text: 'MercadoLibre conectado correctamente.' },
-  denied: { tone: 'warn', text: 'Cancelaste la autorización de MercadoLibre.' },
-  error: { tone: 'warn', text: 'No se pudo completar la conexión con MercadoLibre. Intenta de nuevo.' },
-  unconfigured: { tone: 'warn', text: 'Faltan las credenciales de MercadoLibre (MELI_CLIENT_ID / MELI_CLIENT_SECRET).' },
+const NOTICES: Record<string, { tone: 'warn'; text: string }> = {
+  denied: { tone: 'warn', text: 'Cancelaste la autorización de MercadoLibre. Vuelve a intentarlo cuando quieras.' },
+  error: {
+    tone: 'warn',
+    text: 'No se pudo completar la conexión. Revisa que MELI_REDIRECT_URI coincida EXACTO con la URI registrada en la app de MercadoLibre, y que MELI_CLIENT_ID/SECRET y APP_URL estén bien en el despliegue.',
+  },
+  unconfigured: {
+    tone: 'warn',
+    text: 'MercadoLibre no está configurado: revisa las variables MELI_CLIENT_ID / MELI_CLIENT_SECRET y APP_URL en Vercel (y en el worker de Railway).',
+  },
 };
 
 export function MeliCard({
@@ -41,6 +46,13 @@ export function MeliCard({
 }) {
   const [loading, setLoading] = useState(false);
   const banner = notice ? NOTICES[notice] : undefined;
+
+  // ?meli=connected → toast de éxito (los estados de error se muestran como banner).
+  useEffect(() => {
+    if (notice === 'connected') {
+      toast({ title: 'MercadoLibre conectado', description: 'Ya puedes medir la saturación de tus productos.' });
+    }
+  }, [notice]);
 
   async function measure() {
     setLoading(true);
@@ -64,14 +76,8 @@ export function MeliCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {banner && (
-          <div
-            className={`flex items-start gap-2 rounded-md border p-2 text-xs ${
-              banner.tone === 'ok'
-                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
-            }`}
-          >
-            {banner.tone === 'ok' ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" /> : <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />}
+          <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>{banner.text}</span>
           </div>
         )}
