@@ -25,6 +25,14 @@ En GitHub: **Settings → Secrets and variables → Actions → New repository s
 > Los IDs de Vercel (`VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) ya están en `deploy.yml`
 > como variables normales (no son secretos: sin el token no sirven).
 
+O más rápido, desde la terminal con el CLI de GitHub:
+
+```bash
+gh secret set VERCEL_TOKEN   --repo ronalc90/santiago   # pega el token de Vercel
+gh secret set RAILWAY_TOKEN  --repo ronalc90/santiago   # pega el Project Token de Railway
+gh secret set DATABASE_URL   --repo ronalc90/santiago   # pega la cadena DIRECT de Neon
+```
+
 ## 2) Variable opcional del worker
 
 En **Settings → Secrets and variables → Actions → Variables → New repository variable**:
@@ -32,6 +40,10 @@ En **Settings → Secrets and variables → Actions → Variables → New reposi
 | Variable | Valor |
 |---|---|
 | `RAILWAY_SERVICE` | Nombre del servicio del worker en Railway (ej. `worker`). Opcional si el proyecto tiene un solo servicio. |
+
+```bash
+gh variable set RAILWAY_SERVICE --repo ronalc90/santiago --body "worker"  # ajusta el nombre
+```
 
 ## 3) Desactivar el auto-deploy nativo (evita despliegues duplicados)
 
