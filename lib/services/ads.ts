@@ -56,7 +56,10 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
           winnerScore,
           classification,
           isNew: true,
-          sellsInColombia: ad.sells_in_colombia ?? false,
+          // Un anuncio del Ad Library de `country` se está vendiendo en ese país:
+          // si es CO, "se vende en CO". Solo los extranjeros quedan en false y son
+          // los que deben aparecer en el filtro "No se vende en CO".
+          sellsInColombia: ad.sells_in_colombia ?? country === 'CO',
           hasUnusedForeignCreative: ad.has_unused_foreign_creative ?? false,
           detectedAt: ad.detected_at ?? new Date(),
           firstSeenAt: ad.detected_at ?? new Date(),
