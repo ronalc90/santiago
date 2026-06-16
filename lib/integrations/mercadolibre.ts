@@ -170,14 +170,17 @@ export async function refreshAccessToken(refreshToken: string): Promise<MeliToke
 }
 
 /**
- * Nº total de publicaciones activas de `query` en el sitio (paging.total), o null
- * si falla (token inválido, red, rate-limit agotado). 0 es un valor VÁLIDO (sin
- * competencia), distinto de null (no se pudo medir).
+ * Nº de productos de catálogo activos que matchean `query` en el sitio
+ * (paging.total), como proxy de saturación/competencia. O null si falla.
+ * 0 es un valor VÁLIDO (sin competencia), distinto de null (no se pudo medir).
+ *
+ * Usa /products/search: el viejo /sites/{site}/search está PROHIBIDO (403) por ML
+ * para apps de terceros (anti-scraping). /products/search sí responde con el conteo.
  */
 export async function searchListingTotal(siteId: string, query: string, accessToken: string): Promise<number | null> {
   const q = query.trim();
   if (!q) return null;
-  const url = `${API_BASE}/sites/${encodeURIComponent(siteId)}/search?q=${encodeURIComponent(q)}&limit=0`;
+  const url = `${API_BASE}/products/search?status=active&site_id=${encodeURIComponent(siteId)}&q=${encodeURIComponent(q)}&limit=1`;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

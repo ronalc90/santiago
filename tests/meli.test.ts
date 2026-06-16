@@ -72,9 +72,12 @@ describe('OAuth de MercadoLibre', () => {
 });
 
 describe('searchListingTotal (saturación)', () => {
-  it('lee paging.total', async () => {
-    mockFetch(res({ paging: { total: 1234 } }));
+  it('lee paging.total desde /products/search (no el /sites/search prohibido)', async () => {
+    const fn = mockFetch(res({ paging: { total: 1234 } }));
     expect(await searchListingTotal('MCO', 'masajeador', 'TOKEN')).toBe(1234);
+    const calledUrl = String(fn.mock.calls[0][0]);
+    expect(calledUrl).toContain('/products/search');
+    expect(calledUrl).toContain('site_id=MCO');
   });
 
   it('0 es un valor válido (sin competencia), distinto de null', async () => {
