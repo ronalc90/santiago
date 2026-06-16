@@ -124,16 +124,23 @@ async function postToken(body: Record<string, string>, maxRetries = MAX_RETRIES)
   throw new MeliApiError(lastError || 'Error con MercadoLibre OAuth.');
 }
 
-/** Intercambia el `code` del callback por tokens (grant_type=authorization_code). */
+/**
+ * Intercambia el `code` del callback por tokens (grant_type=authorization_code).
+ * El `code` es de UN SOLO USO: no se reintenta (un reintento lo quemaría y daría
+ * invalid_grant). maxRetries=1.
+ */
 export async function exchangeCodeForToken(code: string): Promise<MeliTokenResponse> {
   const env = getEnv();
-  return postToken({
-    grant_type: 'authorization_code',
-    client_id: env.MELI_CLIENT_ID,
-    client_secret: env.MELI_CLIENT_SECRET,
-    code,
-    redirect_uri: meliRedirectUri(),
-  });
+  return postToken(
+    {
+      grant_type: 'authorization_code',
+      client_id: env.MELI_CLIENT_ID,
+      client_secret: env.MELI_CLIENT_SECRET,
+      code,
+      redirect_uri: meliRedirectUri(),
+    },
+    1,
+  );
 }
 
 /**

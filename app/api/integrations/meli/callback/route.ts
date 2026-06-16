@@ -43,7 +43,10 @@ export async function GET(req: NextRequest) {
     await saveMeliConnection(token);
     return redirectTo('connected');
   } catch (e) {
-    console.error('[meli:callback] intercambio falló:', e instanceof Error ? e.message : e);
-    return redirectTo('error', 'exchange');
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[meli:callback] intercambio falló:', msg);
+    // El detalle (p. ej. "respondió 400 (invalid_grant: …)") no es secreto: lo
+    // dejamos en la URL para diagnosticar sin depender de los logs.
+    return redirectTo('error', msg.slice(0, 180));
   }
 }
