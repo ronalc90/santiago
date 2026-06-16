@@ -111,3 +111,26 @@ export async function enqueueMeliSaturationJob(): Promise<string> {
   const job = await getMeliSaturationQueue().add('measure', {}, { removeOnComplete: 50, removeOnFail: 100, attempts: 1 });
   return job.id ?? '';
 }
+
+// ---------------------------------------------------------------------------
+// Cola de descubrimiento de productos ganadores (Fase B, worker).
+// ---------------------------------------------------------------------------
+
+export const DISCOVERY_QUEUE = 'discovery';
+
+/** El job no necesita payload: corre todas las fuentes activas. */
+export type DiscoveryJobData = Record<string, never>;
+
+let discoveryQueue: Queue<DiscoveryJobData> | null = null;
+
+export function getDiscoveryQueue(): Queue<DiscoveryJobData> {
+  if (discoveryQueue) return discoveryQueue;
+  discoveryQueue = new Queue<DiscoveryJobData>(DISCOVERY_QUEUE, { connection: getRedis() });
+  return discoveryQueue;
+}
+
+/** Encola una corrida de descubrimiento (manual desde la UI). */
+export async function enqueueDiscoveryJob(): Promise<string> {
+  const job = await getDiscoveryQueue().add('discover', {}, { removeOnComplete: 50, removeOnFail: 100, attempts: 1 });
+  return job.id ?? '';
+}

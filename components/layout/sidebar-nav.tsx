@@ -1,13 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Telescope, Package, ImageIcon, Store, Settings, DollarSign, LogOut } from 'lucide-react';
+import { LayoutDashboard, Telescope, Trophy, Package, ImageIcon, Store, Settings, DollarSign, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 export const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/spy', label: 'Spy de anuncios', icon: Telescope },
+  { href: '/opportunities', label: 'Oportunidades', icon: Trophy },
   { href: '/products', label: 'Productos', icon: Package },
   { href: '/landings', label: 'Landings', icon: ImageIcon },
   { href: '/stores', label: 'Tiendas', icon: Store },

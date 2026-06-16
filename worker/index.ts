@@ -23,12 +23,16 @@ import {
   MELI_SATURATION_QUEUE,
   MeliSaturationJobData,
   getMeliSaturationQueue,
+  DISCOVERY_QUEUE,
+  DiscoveryJobData,
+  getDiscoveryQueue,
 } from '../lib/queue';
 import { getRedis } from '../lib/queue/connection';
 import { processLanding, failLanding } from '../lib/services/landing';
 import { runAdIngest } from '../lib/services/ad-ingest';
 import { syncShopifyCosts } from '../lib/services/cost-sync';
 import { syncMeliSaturation } from '../lib/services/meli';
+import { runDiscovery, getActiveSources } from '../lib/services/discovery';
 import { isShopifyConfigured } from '../lib/shopify/client';
 import { isMeliConfigured } from '../lib/integrations/mercadolibre';
 import { getEnv } from '../lib/config/env';
@@ -93,7 +97,21 @@ const meliSaturationWorker = new Worker<MeliSaturationJobData>(
   { connection: getRedis(), concurrency: 1 },
 );
 
-for (const w of [landingWorker, adWorker, costSyncWorker, meliSaturationWorker]) {
+// Worker de descubrimiento de productos ganadores (Fase B).
+const discoveryWorker = new Worker<DiscoveryJobData>(
+  DISCOVERY_QUEUE,
+  async () => {
+    console.log('▶️  Descubriendo productos ganadores…');
+    const r = await runDiscovery();
+    console.log(
+      `✅  Descubrimiento: ${r.candidates} candidato(s) (${r.upserted} guardados) de ${r.found} crudos · fuentes: ${r.sources.join(', ') || 'ninguna'}${r.mock ? ' [MOCK]' : ''}.`,
+    );
+    return r;
+  },
+  { connection: getRedis(), concurrency: 1 },
+);
+
+for (const w of [landingWorker, adWorker, costSyncWorker, meliSaturationWorker, discoveryWorker]) {
   w.on('failed', (job, err) => console.error(`❌  Job ${job?.id} falló:`, err.message));
   w.on('error', (err) => console.error('Worker error:', err));
 }
@@ -123,6 +141,11 @@ void scheduleCostSyncCron().catch((e) =>
 // Cron diario de medición de saturación (solo si MercadoLibre está configurado).
 void scheduleMeliSaturationCron().catch((e) =>
   console.error('⏰  No se pudo programar la saturación de ML:', e instanceof Error ? e.message : e),
+);
+
+// Cron diario de descubrimiento (solo si hay fuentes activas y patrón definido).
+void scheduleDiscoveryCron().catch((e) =>
+  console.error('⏰  No se pudo programar el descubrimiento:', e instanceof Error ? e.message : e),
 );
 
 /** Programa (o elimina) el refresco diario de costos desde Shopify según COST_SYNC_CRON. */
@@ -157,6 +180,23 @@ async function scheduleMeliSaturationCron(): Promise<void> {
     { name: 'measure', opts: { removeOnComplete: 50, removeOnFail: 100, attempts: 1 } },
   );
   console.log(`⏰  Saturación de ML programada (${env.MELI_SATURATION_CRON}).`);
+}
+
+/** Programa (o elimina) el descubrimiento diario según DISCOVERY_CRON + fuentes activas. */
+async function scheduleDiscoveryCron(): Promise<void> {
+  const queue = getDiscoveryQueue();
+  const id = 'discovery:daily';
+  const enabled = Boolean(env.DISCOVERY_CRON) && getActiveSources().length > 0;
+  if (!enabled) {
+    await queue.removeJobScheduler(id).catch(() => {});
+    return;
+  }
+  await queue.upsertJobScheduler(
+    id,
+    { pattern: env.DISCOVERY_CRON },
+    { name: 'discover', opts: { removeOnComplete: 50, removeOnFail: 100, attempts: 1 } },
+  );
+  console.log(`⏰  Descubrimiento programado (${env.DISCOVERY_CRON}).`);
 }
 
 /**
@@ -227,7 +267,7 @@ async function scheduleAdIngestCron(): Promise<void> {
 
 // Cierre ordenado
 async function shutdown(): Promise<void> {
-  await Promise.all([landingWorker.close(), adWorker.close(), costSyncWorker.close(), meliSaturationWorker.close()]);
+  await Promise.all([landingWorker.close(), adWorker.close(), costSyncWorker.close(), meliSaturationWorker.close(), discoveryWorker.close()]);
   process.exit(0);
 }
 process.on('SIGTERM', shutdown);

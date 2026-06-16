@@ -360,3 +360,96 @@ model OAuthToken {
 
   @@map("oauth_tokens")
 }
+
+// ---------------------------------------------------------------------------
+// MÓDULO — DESCUBRIMIENTO DE PRODUCTOS GANADORES (Fase B)
+// ---------------------------------------------------------------------------
+
+/// Estado de un candidato en el embudo de descubrimiento.
+enum CandidateStatus {
+  NUEVO
+  REVISADO
+  DESCARTADO
+  CONVERTIDO
+}
+
+/// Producto candidato descubierto por una o varias fuentes (ML, Trends, Meta…).
+/// Se deduplica por nombre normalizado y acumula países/fuentes/métricas.
+model OpportunityCandidate {
+  id             String          @id @default(cuid())
+  /// Clave de deduplicación entre fuentes y países.
+  normalizedName String          @unique
+  name           String
+  category       String?
+  /// Países donde se detectó (ISO-2/ML site sin prefijo M).
+  countries      String[]
+  /// Fuentes que lo trajeron (ids de DiscoverySource: 'mercadolibre', 'mock'…).
+  sources        String[]
+
+  // Métricas agregadas (la fuente que las tenga las aporta).
+  interest       Int? // interés/tendencia (Google Trends), 0-100
+  salesCount     Int? // ventas/cantidad vendida si la fuente la expone
+  listingsCount  Int? // nº de publicaciones (saturación de la fuente)
+  daysActive     Int? // antigüedad de la señal (días)
+
+  // Cruce con Colombia.
+  enCO           Boolean           @default(false)
+  saturationCO   Int? // nº de publicaciones en MercadoLibre CO
+
+  // Match con Dropi (por CSV; Dropi no da API).
+  dropiStatus    DropiAvailability @default(DESCONOCIDO)
+  dropiRef       String?
+
+  // Score reutilizando el motor 4×25.
+  score4x25      Float?
+  scoreBand      OpportunityBand?
+  breakdown      Json?
+
+  status         CandidateStatus   @default(NUEVO)
+  /// Si se convirtió en producto del pipeline.
+  productId      String?
+
+  creatives      OpportunityCreative[]
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([status])
+  @@index([score4x25])
+  @@index([enCO])
+  @@map("opportunity_candidates")
+}
+
+/// Creativo (imagen/video) de un candidato, re-hospedado en R2 cuando aplica.
+model OpportunityCreative {
+  id          String               @id @default(cuid())
+  candidateId String
+  candidate   OpportunityCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  url         String
+  type        String // 'image' | 'video'
+  country     String?
+  source      String
+  storageKey  String? // clave en R2 si se descargó
+  createdAt   DateTime             @default(now())
+
+  @@index([candidateId])
+  @@map("opportunity_creatives")
+}
+
+/// Catálogo de Dropi importado por CSV (Dropi no da API): permite matchear
+/// candidatos contra lo que SÍ está disponible/importable en Dropi.
+model DropiCatalogItem {
+  id             String   @id @default(cuid())
+  name           String
+  normalizedName String   @unique
+  sku            String?
+  category       String?
+  cost           Int? // costo por artículo (moneda del catálogo)
+  stock          Int?
+  imageUrl       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@map("dropi_catalog_items")
+}

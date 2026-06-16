@@ -207,6 +207,47 @@ export async function searchListingTotal(siteId: string, query: string, accessTo
   return null;
 }
 
+/** Catálogo de productos de un sitio para una búsqueda (descubrimiento). */
+export interface MeliCatalogResult {
+  total: number; // paging.total (saturación del nicho)
+  items: { name: string; domainId: string | null }[];
+}
+
+/**
+ * Productos de catálogo (top N) que matchean `query` en el sitio + el total del
+ * nicho (paging.total). Para descubrir candidatos. Null si falla (degrada).
+ */
+export async function searchCatalog(siteId: string, query: string, accessToken: string, limit = 10): Promise<MeliCatalogResult | null> {
+  const q = query.trim();
+  if (!q) return null;
+  const n = Math.max(1, Math.min(50, limit));
+  const url = `${API_BASE}/products/search?status=active&site_id=${encodeURIComponent(siteId)}&q=${encodeURIComponent(q)}&limit=${n}`;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let retryAfter: number | null = null;
+    try {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' }, signal: controller.signal });
+      if (res.ok) {
+        const data = (await res.json()) as { paging?: { total?: number }; results?: { name?: string; domain_id?: string }[] };
+        const total = typeof data.paging?.total === 'number' ? data.paging.total : 0;
+        const items = (data.results ?? [])
+          .filter((r) => typeof r.name === 'string' && r.name.trim())
+          .map((r) => ({ name: r.name as string, domainId: r.domain_id ?? null }));
+        return { total, items };
+      }
+      if (!RETRYABLE_STATUS.has(res.status) || attempt === MAX_RETRIES) return null;
+      retryAfter = retryAfterMs(res);
+    } catch {
+      if (attempt === MAX_RETRIES) return null;
+    } finally {
+      clearTimeout(timer);
+    }
+    await sleep(retryAfter ?? backoffMs(attempt));
+  }
+  return null;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

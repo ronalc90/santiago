@@ -9,6 +9,7 @@ import {
   exchangeCodeForToken,
   refreshAccessToken,
   searchListingTotal,
+  searchCatalog,
   isMeliConfigured,
   MeliApiError,
 } from '../lib/integrations/mercadolibre';
@@ -100,6 +101,16 @@ describe('searchListingTotal (saturación)', () => {
     const fn = mockFetch(res({ paging: { total: 1 } }));
     expect(await searchListingTotal('MCO', '   ', 'TOKEN')).toBeNull();
     expect(fn).not.toHaveBeenCalled();
+  });
+});
+
+describe('searchCatalog (descubrimiento)', () => {
+  it('parsea total + items de /products/search y filtra nombres vacíos', async () => {
+    const fn = mockFetch(res({ paging: { total: 42 }, results: [{ name: 'Masajeador Cervical', domain_id: 'MCO-NECK' }, { name: '', domain_id: null }] }));
+    const r = await searchCatalog('MCO', 'masajeador', 'TOKEN', 5);
+    expect(r?.total).toBe(42);
+    expect(r?.items).toEqual([{ name: 'Masajeador Cervical', domainId: 'MCO-NECK' }]);
+    expect(String(fn.mock.calls[0][0])).toContain('/products/search');
   });
 });
 

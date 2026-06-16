@@ -214,3 +214,29 @@ oficial de MercadoLibre y la usa en la dimensión **«Competencia»** del motor 
 > Sin conexión OAuth, la competencia degrada a «estimada» con solo la señal de Meta Ad
 > Library CO (no falla). `AUTH_SECRET` debe ser el MISMO en Vercel y Railway: cifra y
 > descifra los tokens; si difiere o se rota, hay que reconectar MercadoLibre.
+
+## 10) Descubrimiento de productos ganadores (Fase B)
+
+Un módulo que **descubre candidatos** de varias fuentes, los deduplica, cruza con
+Colombia, los puntúa con el motor 4×25 y los muestra en **Oportunidades**. El
+orquestador corre en el **worker** (cron) y la UI vive en Vercel.
+
+**Fuentes GRATIS (activas por defecto, corren solas):**
+- **MercadoLibre** (ya conectado por OAuth): catálogo por sitio/keyword (`/products/search`).
+- **Google Trends** y **Meta/TikTok vía Apify**: FASE 2 (las dos últimas son de PAGO y
+  están **off** por defecto; reutilizan `APIFY_TOKEN`).
+
+| Variable | ¿Cuándo? | Qué |
+|---|---|---|
+| `DISCOVERY_MOCK` | Opcional | `"true"` = solo la fuente de prueba (sin red ni gasto). Para validar el pipeline. |
+| `DISCOVERY_CRON` | Opcional | Cron del descubrimiento automático (default `0 6 * * *`; vacío = off). |
+| `DISCOVERY_COUNTRIES` | Opcional | Sitios ML a explorar (CSV): `MCO,MLM,MLA,MLC,MLB`. |
+| `DISCOVERY_KEYWORDS` | Opcional | Nichos a descubrir. Vacío = usa `AD_SOURCE_KEYWORDS`. |
+| `GOOGLE_TRENDS_ENABLED` | Opcional (Fase 2) | Gratis. Aún sin implementar (interfaz lista). |
+| `META_DISCOVERY` / `TIKTOK_DISCOVERY` | Opcional (Fase 2) | `on`/`off`. **PAGO** (Apify). Off por defecto. |
+
+> **Qué es gratis y qué cuesta:** ML + (futuro) Trends = **gratis**. Meta/TikTok vía
+> Apify = **pago por resultado** (off por defecto; solo si las activas).
+> El match con **Dropi** es por **CSV** (Dropi no da API): se importa el catálogo en
+> Ajustes (Fase 2) y se cruza por nombre. Pulsa **«Buscar ahora»** en Oportunidades o
+> espera el cron. Botón en el worker, no bloquea la UI.

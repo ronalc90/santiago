@@ -105,6 +105,22 @@ const envSchema = z.object({
   // Patrón cron (BullMQ) para medir la saturación a diario en el worker. Vacío =
   // desactivado. Default: 08:00 (corre solo si ML está configurado).
   MELI_SATURATION_CRON: z.string().default('0 8 * * *'),
+
+  // --- Descubrimiento de productos ganadores (Fase B) ------------------------
+  // Modo mock: corre solo la fuente de prueba (sin red ni gasto) para validar el
+  // pipeline. "false"/"0"/vacío = off (no usar z.coerce.boolean: "false"→true).
+  DISCOVERY_MOCK: z.string().default('false').transform((v) => v.trim().toLowerCase() === 'true'),
+  // Cron del descubrimiento automático (fuentes GRATIS). Default 06:00. Vacío = off.
+  DISCOVERY_CRON: z.string().default('0 6 * * *'),
+  // Sitios/Países a explorar (ML usa sites: MCO,MLM,MLA,MLC,MLB). CSV.
+  DISCOVERY_COUNTRIES: z.string().default('MCO'),
+  // Keywords/nichos a buscar. Vacío = usa AD_SOURCE_KEYWORDS.
+  DISCOVERY_KEYWORDS: z.string().default(''),
+  // Fuentes opcionales (fase 2): Google Trends (gratis) y Apify Meta/TikTok (pago,
+  // off por defecto). Se reutiliza APIFY_TOKEN cuando se activen.
+  GOOGLE_TRENDS_ENABLED: z.string().default('false').transform((v) => v.trim().toLowerCase() === 'true'),
+  META_DISCOVERY: z.enum(['on', 'off']).default('off'),
+  TIKTOK_DISCOVERY: z.enum(['on', 'off']).default('off'),
 });
 
 export type Env = z.infer<typeof envSchema>;
