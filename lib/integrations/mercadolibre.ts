@@ -73,6 +73,9 @@ export function buildAuthorizeUrl(state: string): string {
     response_type: 'code',
     client_id: env.MELI_CLIENT_ID,
     redirect_uri: meliRedirectUri(),
+    // offline_access es OBLIGATORIO para que ML devuelva refresh_token (sin él solo
+    // manda access_token y el intercambio fallaría al exigir el refresh). read = búsqueda.
+    scope: 'offline_access read',
     state,
   });
   return `${host}/authorization?${params.toString()}`;

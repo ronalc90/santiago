@@ -42,6 +42,8 @@ describe('OAuth de MercadoLibre', () => {
     expect(url.searchParams.get('client_id')).toBe('APP_ID_123');
     expect(url.searchParams.get('state')).toBe('STATE123');
     expect(url.searchParams.get('redirect_uri')).toMatch(/\/api\/integrations\/meli\/callback$/);
+    // offline_access es imprescindible para recibir refresh_token.
+    expect(url.searchParams.get('scope')).toContain('offline_access');
   });
 
   it('exchangeCodeForToken normaliza la respuesta y usa grant_type=authorization_code', async () => {
