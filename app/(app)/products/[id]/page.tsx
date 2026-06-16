@@ -108,6 +108,8 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               shopifyUnitCost: product.shopifyUnitCost,
               manualCost: product.manualCost,
               shippingCost: product.shippingCost,
+              saturationCount: product.saturationCount,
+              saturationKeyword: product.saturationKeyword,
               notes: product.notes ?? '',
             }}
           />

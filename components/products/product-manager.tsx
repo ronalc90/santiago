@@ -26,6 +26,8 @@ interface ProductState {
   shopifyUnitCost: number | null;
   manualCost: number | null;
   shippingCost: number | null;
+  saturationCount: number | null;
+  saturationKeyword: string | null;
   notes: string;
 }
 
@@ -37,6 +39,7 @@ export function ProductManager({ product }: { product: ProductState }) {
   const savedSalePrice = useRef(product.salePrice);
   const savedManualCost = useRef(product.manualCost);
   const savedShipping = useRef(product.shippingCost);
+  const savedKeyword = useRef(product.saturationKeyword);
 
   /** Input numérico de costo/precio con patch solo si cambió (evita recompute innecesario). */
   function numberField(label: string, key: 'salePrice' | 'manualCost' | 'shippingCost', ref: typeof savedSalePrice, placeholder: string) {
@@ -99,6 +102,24 @@ export function ProductManager({ product }: { product: ProductState }) {
           numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify')
         )}
         {numberField(`Costo de envío (${s.currency})`, 'shippingCost', savedShipping, 'opcional')}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Keyword de saturación (MercadoLibre)</Label>
+          <Input
+            value={s.saturationKeyword ?? ''}
+            onChange={(e) => setS({ ...s, saturationKeyword: e.target.value === '' ? null : e.target.value })}
+            onBlur={() => {
+              const next = s.saturationKeyword?.trim() ? s.saturationKeyword.trim() : null;
+              if (next !== savedKeyword.current) {
+                savedKeyword.current = next;
+                patch({ saturationKeyword: next });
+              }
+            }}
+            placeholder="vacío = usa el nombre del producto"
+          />
+          {s.saturationCount != null && (
+            <p className="text-xs text-muted-foreground">Competencia ML: {s.saturationCount.toLocaleString('es-CO')} publicaciones (medido)</p>
+          )}
+        </div>
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="sells-co" className="text-xs">Se vende en CO</Label>
           <Switch id="sells-co" checked={s.sellsInColombia} onCheckedChange={(v) => patch({ sellsInColombia: v })} />

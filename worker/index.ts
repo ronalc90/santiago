@@ -20,12 +20,17 @@ import {
   COST_SYNC_QUEUE,
   CostSyncJobData,
   getCostSyncQueue,
+  MELI_SATURATION_QUEUE,
+  MeliSaturationJobData,
+  getMeliSaturationQueue,
 } from '../lib/queue';
 import { getRedis } from '../lib/queue/connection';
 import { processLanding, failLanding } from '../lib/services/landing';
 import { runAdIngest } from '../lib/services/ad-ingest';
 import { syncShopifyCosts } from '../lib/services/cost-sync';
+import { syncMeliSaturation } from '../lib/services/meli';
 import { isShopifyConfigured } from '../lib/shopify/client';
+import { isMeliConfigured } from '../lib/integrations/mercadolibre';
 import { getEnv } from '../lib/config/env';
 
 const env = getEnv();
@@ -74,7 +79,21 @@ const costSyncWorker = new Worker<CostSyncJobData>(
   { connection: getRedis(), concurrency: 1 },
 );
 
-for (const w of [landingWorker, adWorker, costSyncWorker]) {
+// Worker de medición de saturación en MercadoLibre (competencia CO).
+const meliSaturationWorker = new Worker<MeliSaturationJobData>(
+  MELI_SATURATION_QUEUE,
+  async () => {
+    console.log('▶️  Midiendo saturación en MercadoLibre…');
+    const r = await syncMeliSaturation();
+    if (!r.configured) console.log('ℹ️  Saturación: MercadoLibre no está configurado; nada que medir.');
+    else if (!r.connected) console.warn('⚠️  Saturación: MercadoLibre no está conectado (OAuth); conéctalo en Ajustes.');
+    else console.log(`✅  Saturación: ${r.updated} cambiaron, ${r.measured} medidos, ${r.withoutData} sin dato (de ${r.total}).`);
+    return r;
+  },
+  { connection: getRedis(), concurrency: 1 },
+);
+
+for (const w of [landingWorker, adWorker, costSyncWorker, meliSaturationWorker]) {
   w.on('failed', (job, err) => console.error(`❌  Job ${job?.id} falló:`, err.message));
   w.on('error', (err) => console.error('Worker error:', err));
 }
@@ -101,6 +120,11 @@ void scheduleCostSyncCron().catch((e) =>
   console.error('⏰  No se pudo programar la sync de costos:', e instanceof Error ? e.message : e),
 );
 
+// Cron diario de medición de saturación (solo si MercadoLibre está configurado).
+void scheduleMeliSaturationCron().catch((e) =>
+  console.error('⏰  No se pudo programar la saturación de ML:', e instanceof Error ? e.message : e),
+);
+
 /** Programa (o elimina) el refresco diario de costos desde Shopify según COST_SYNC_CRON. */
 async function scheduleCostSyncCron(): Promise<void> {
   const queue = getCostSyncQueue();
@@ -116,6 +140,23 @@ async function scheduleCostSyncCron(): Promise<void> {
     { name: 'sync', opts: { removeOnComplete: 50, removeOnFail: 100, attempts: 1 } },
   );
   console.log(`⏰  Sync de costos programada (${env.COST_SYNC_CRON}).`);
+}
+
+/** Programa (o elimina) la medición diaria de saturación según MELI_SATURATION_CRON. */
+async function scheduleMeliSaturationCron(): Promise<void> {
+  const queue = getMeliSaturationQueue();
+  const id = 'meli-saturation:daily';
+  const enabled = Boolean(env.MELI_SATURATION_CRON) && isMeliConfigured();
+  if (!enabled) {
+    await queue.removeJobScheduler(id).catch(() => {});
+    return;
+  }
+  await queue.upsertJobScheduler(
+    id,
+    { pattern: env.MELI_SATURATION_CRON },
+    { name: 'measure', opts: { removeOnComplete: 50, removeOnFail: 100, attempts: 1 } },
+  );
+  console.log(`⏰  Saturación de ML programada (${env.MELI_SATURATION_CRON}).`);
 }
 
 /**
@@ -168,7 +209,7 @@ async function scheduleAdIngestCron(): Promise<void> {
 
 // Cierre ordenado
 async function shutdown(): Promise<void> {
-  await Promise.all([landingWorker.close(), adWorker.close(), costSyncWorker.close()]);
+  await Promise.all([landingWorker.close(), adWorker.close(), costSyncWorker.close(), meliSaturationWorker.close()]);
   process.exit(0);
 }
 process.on('SIGTERM', shutdown);

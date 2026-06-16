@@ -2,70 +2,196 @@ import 'server-only';
 import { getEnv } from '@/lib/config/env';
 
 /**
- * Cliente de MercadoLibre para la saturación CO (nº de publicaciones de un
- * producto en MercadoLibre Colombia). Gateado por env: sin credenciales OAuth,
- * `fetchListingTotalCO` devuelve null y la competencia degrada a solo Ad Library.
- *
- * La búsqueda de ML exige OAuth (403 sin token). Se obtiene un access token a
- * partir del refresh token (no se persiste; vive en memoria por la duración del
- * proceso). Cualquier fallo → null (no lanza), para no romper el recompute.
+ * Cliente HTTP de MercadoLibre (sin estado ni BD): OAuth (authorize/exchange/refresh)
+ * y búsqueda de saturación. La persistencia de tokens y el auto-refresh viven en la
+ * capa de servicio (lib/services/meli.ts). El access token SIEMPRE viaja en el header
+ * Authorization: Bearer, nunca en la query.
  */
-const ML_BASE = 'https://api.mercadolibre.com';
+const API_BASE = 'https://api.mercadolibre.com';
+const TOKEN_URL = `${API_BASE}/oauth/token`;
+const REQUEST_TIMEOUT_MS = 12_000;
+const MAX_RETRIES = 3;
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 
-let cachedToken: { value: string; expiresAt: number } | null = null;
+// Host de autorización por sitio (el endpoint de token es único y global).
+const AUTH_HOSTS: Record<string, string> = {
+  MCO: 'https://auth.mercadolibre.com.co',
+  MLA: 'https://auth.mercadolibre.com.ar',
+  MLM: 'https://auth.mercadolibre.com.mx',
+  MLC: 'https://auth.mercadolibre.cl',
+  MLU: 'https://auth.mercadolibre.com.uy',
+  MPE: 'https://auth.mercadolibre.com.pe',
+  MLB: 'https://auth.mercadolivre.com.br',
+};
 
+/** Nombre de la cookie con el `state` anti-CSRF del OAuth. */
+export const OAUTH_STATE_COOKIE = 'meli_oauth_state';
+
+export class MeliApiError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MeliApiError';
+  }
+}
+
+/** Token normalizado a camelCase desde la respuesta de ML (snake_case). */
+export interface MeliTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number; // segundos
+  scope: string | null;
+  userId: string | null;
+}
+
+/** True si hay credenciales de app para iniciar OAuth (gating de la feature). */
 export function isMeliConfigured(): boolean {
   const env = getEnv();
-  return Boolean(env.MERCADOLIBRE_CLIENT_ID && env.MERCADOLIBRE_CLIENT_SECRET && env.MERCADOLIBRE_REFRESH_TOKEN);
+  return Boolean(env.MELI_CLIENT_ID && env.MELI_CLIENT_SECRET);
 }
 
-/** Obtiene un access token vía refresh token (con caché en memoria). null si falla. */
-async function getAccessToken(): Promise<string | null> {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 30_000) return cachedToken.value;
+/** URI de retorno del OAuth: la de env si se fijó, o derivada de APP_URL. */
+export function meliRedirectUri(): string {
   const env = getEnv();
-  try {
-    const res = await fetch(`${ML_BASE}/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: env.MERCADOLIBRE_CLIENT_ID,
-        client_secret: env.MERCADOLIBRE_CLIENT_SECRET,
-        refresh_token: env.MERCADOLIBRE_REFRESH_TOKEN,
-      }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { access_token?: string; expires_in?: number };
-    if (!data.access_token) return null;
-    cachedToken = { value: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 21_600) * 1000 };
-    return cachedToken.value;
-  } catch {
-    return null;
-  }
+  return env.MELI_REDIRECT_URI || `${env.APP_URL.replace(/\/$/, '')}/api/integrations/meli/callback`;
 }
 
-/** Nº total de publicaciones del producto en MercadoLibre Colombia (MCO), o null. */
-export async function fetchMeliListingTotalCO(query: string): Promise<number | null> {
-  if (!isMeliConfigured() || !query.trim()) return null;
-  const url = `${ML_BASE}/sites/MCO/search?q=${encodeURIComponent(query.trim())}&limit=0`;
-  // Hasta 2 intentos: si el token fue revocado antes de expirar, el 401 invalida
-  // la caché y reintenta con uno fresco (sin esperar a expiresAt).
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const token = await getAccessToken();
-    if (!token) return null;
+/** URL de autorización a la que se redirige al usuario para conceder el permiso. */
+export function buildAuthorizeUrl(state: string): string {
+  const env = getEnv();
+  const host = AUTH_HOSTS[env.MELI_SITE_ID] ?? AUTH_HOSTS.MCO;
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: env.MELI_CLIENT_ID,
+    redirect_uri: meliRedirectUri(),
+    state,
+  });
+  return `${host}/authorization?${params.toString()}`;
+}
+
+function parseToken(data: Record<string, unknown>): MeliTokenResponse {
+  const accessToken = typeof data.access_token === 'string' ? data.access_token : '';
+  const refreshToken = typeof data.refresh_token === 'string' ? data.refresh_token : '';
+  if (!accessToken || !refreshToken) throw new MeliApiError('MercadoLibre no devolvió tokens válidos.');
+  return {
+    accessToken,
+    refreshToken,
+    expiresIn: typeof data.expires_in === 'number' ? data.expires_in : 21_600,
+    scope: typeof data.scope === 'string' ? data.scope : null,
+    userId: data.user_id != null ? String(data.user_id) : null,
+  };
+}
+
+async function postToken(body: Record<string, string>, maxRetries = MAX_RETRIES): Promise<MeliTokenResponse> {
+  let lastError = '';
+  for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let retryAfter: number | null = null;
     try {
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
-      if (res.status === 401 && attempt === 0) {
-        cachedToken = null;
-        continue;
+      const res = await fetch(TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+        body: new URLSearchParams(body),
+        signal: controller.signal,
+      });
+      if (res.ok) return parseToken((await res.json()) as Record<string, unknown>);
+      // 400 (invalid_grant, etc.) no se reintenta: el code/refresh es inválido.
+      if (!RETRYABLE_STATUS.has(res.status) || attempt === maxRetries) {
+        throw new MeliApiError(`MercadoLibre OAuth respondió ${res.status}.`);
       }
-      if (!res.ok) return null;
-      const data = (await res.json()) as { paging?: { total?: number } };
-      const total = data.paging?.total;
-      return typeof total === 'number' ? total : null;
-    } catch {
-      return null;
+      lastError = `HTTP ${res.status}`;
+      retryAfter = retryAfterMs(res);
+    } catch (err) {
+      if (err instanceof MeliApiError) throw err;
+      lastError = err instanceof Error ? err.message : String(err);
+      if (attempt === maxRetries) throw new MeliApiError(`Error de red con MercadoLibre OAuth: ${lastError}`);
+    } finally {
+      clearTimeout(timer);
     }
+    await sleep(retryAfter ?? backoffMs(attempt));
   }
+  throw new MeliApiError(lastError || 'Error con MercadoLibre OAuth.');
+}
+
+/** Intercambia el `code` del callback por tokens (grant_type=authorization_code). */
+export async function exchangeCodeForToken(code: string): Promise<MeliTokenResponse> {
+  const env = getEnv();
+  return postToken({
+    grant_type: 'authorization_code',
+    client_id: env.MELI_CLIENT_ID,
+    client_secret: env.MELI_CLIENT_SECRET,
+    code,
+    redirect_uri: meliRedirectUri(),
+  });
+}
+
+/**
+ * Renueva el access token con el refresh token. ML rota el refresh en CADA uso
+ * (single-use), así que NO se reintenta a ciegas: un timeout/red podría haberlo
+ * consumido del lado de ML y un reintento lo quemaría. maxRetries=1.
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<MeliTokenResponse> {
+  const env = getEnv();
+  return postToken(
+    {
+      grant_type: 'refresh_token',
+      client_id: env.MELI_CLIENT_ID,
+      client_secret: env.MELI_CLIENT_SECRET,
+      refresh_token: refreshToken,
+    },
+    1,
+  );
+}
+
+/**
+ * Nº total de publicaciones activas de `query` en el sitio (paging.total), o null
+ * si falla (token inválido, red, rate-limit agotado). 0 es un valor VÁLIDO (sin
+ * competencia), distinto de null (no se pudo medir).
+ */
+export async function searchListingTotal(siteId: string, query: string, accessToken: string): Promise<number | null> {
+  const q = query.trim();
+  if (!q) return null;
+  const url = `${API_BASE}/sites/${encodeURIComponent(siteId)}/search?q=${encodeURIComponent(q)}&limit=0`;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let retryAfter: number | null = null;
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { paging?: { total?: number } };
+        const total = data.paging?.total;
+        return typeof total === 'number' && Number.isFinite(total) ? total : null;
+      }
+      if (!RETRYABLE_STATUS.has(res.status) || attempt === MAX_RETRIES) return null;
+      retryAfter = retryAfterMs(res);
+    } catch {
+      if (attempt === MAX_RETRIES) return null;
+    } finally {
+      clearTimeout(timer);
+    }
+    await sleep(retryAfter ?? backoffMs(attempt));
+  }
+  return null;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+/** Backoff exponencial acotado: ~0.5s, 1s, 2s. */
+function backoffMs(attempt: number): number {
+  return 500 * 2 ** (attempt - 1);
+}
+/** Respeta el header Retry-After (segundos o fecha HTTP) en 429/5xx; acotado a 10s. */
+function retryAfterMs(res: Response): number | null {
+  const h = res.headers.get('retry-after');
+  if (!h) return null;
+  const secs = Number(h);
+  if (Number.isFinite(secs) && secs >= 0) return Math.min(secs * 1000, 10_000);
+  const at = Date.parse(h);
+  if (!Number.isNaN(at)) return Math.min(Math.max(at - Date.now(), 0), 10_000);
   return null;
 }

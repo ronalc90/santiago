@@ -37,8 +37,9 @@ function persistFields(result: OpportunityResult, rules: OpportunityRules, now: 
 }
 
 /**
- * Calcula la oportunidad de UN producto (consulta ML/Dropi puntualmente) y la
- * persiste. Devuelve el resultado, o null si el producto no existe.
+ * Calcula la oportunidad de UN producto a partir de datos YA persistidos (CERO
+ * red): la saturación de ML sale de `saturationCount` (lo mide el worker) y el
+ * costo de Shopify/manual. Persiste el resultado; null si el producto no existe.
  */
 export async function computeAndPersistOpportunity(productId: string): Promise<OpportunityResult | null> {
   const rules = await getOpportunityRules();
@@ -73,6 +74,7 @@ export async function recomputeAllProductsOpportunity(): Promise<number> {
             shopifyUnitCost: product.shopifyUnitCost ?? null,
             manualCost: product.manualCost ?? null,
             shippingCost: product.shippingCost ?? null,
+            saturationCount: product.saturationCount ?? null,
             dropiAvailability: product.dropiAvailability,
             hasUnusedForeignCreative: product.hasUnusedForeignCreative,
           },

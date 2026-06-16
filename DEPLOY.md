@@ -182,3 +182,34 @@ Dropi **no da API a terceros**, así que el costo no se lee de Dropi. La vía of
 
 > El costo manual por producto sigue disponible como fallback editable; si hay costo
 > de Shopify, se usa ese. Si no hay ningún costo, el margen se marca «estimado».
+
+## 9) Competencia / Saturación desde MercadoLibre
+
+Mide la **saturación real en Colombia** (nº de publicaciones por producto) con la API
+oficial de MercadoLibre y la usa en la dimensión **«Competencia»** del motor 4×25.
+
+1. Crea una app gratis en **developers.mercadolibre.com** (sitio Colombia).
+2. Registra la **URI de redirect** EXACTA (debe coincidir con la de WinSpy):
+   - Producción: `https://TU_DOMINIO/api/integrations/meli/callback`
+   - Local: `http://localhost:3000/api/integrations/meli/callback`
+3. Configura `MELI_CLIENT_ID` y `MELI_CLIENT_SECRET` en **Vercel** y en el **Worker**
+   (Railway). Si registraste una URI distinta a la derivada de `APP_URL`, fíjala en
+   `MELI_REDIRECT_URI` (debe ser idéntica a la de la app de ML).
+4. En WinSpy → **Ajustes → Competencia (MercadoLibre)** pulsa **«Conectar MercadoLibre»**
+   y autoriza. El access/refresh token queda **cifrado en BD** (AES‑256‑GCM con
+   `AUTH_SECRET`) y se **refresca solo** al expirar.
+5. La saturación se mide con el botón **«Medir saturación»** (corre en el worker) y a
+   diario vía `MELI_SATURATION_CRON`. El conteo se guarda en el producto y el score se
+   recalcula. Los umbrales conteo→competencia (`mlLo`, `mlHi`, `mlWeight`) se ajustan
+   en **Ajustes → reglas de oportunidad**.
+
+| Variable | ¿Cuándo? | Qué |
+|---|---|---|
+| `MELI_CLIENT_ID` / `MELI_CLIENT_SECRET` | Opcional | Credenciales de la app de MercadoLibre (Vercel + Worker). |
+| `MELI_REDIRECT_URI` | Opcional | URI de retorno del OAuth. Vacío = se deriva de `APP_URL`. Debe coincidir con la de la app de ML. |
+| `MELI_SITE_ID` | Opcional | Sitio de ML (default `MCO` = Colombia). |
+| `MELI_SATURATION_CRON` | Opcional | Patrón cron de la medición diaria (default `0 8 * * *`; vacío = off). |
+
+> Sin conexión OAuth, la competencia degrada a «estimada» con solo la señal de Meta Ad
+> Library CO (no falla). `AUTH_SECRET` debe ser el MISMO en Vercel y Railway: cifra y
+> descifra los tokens; si difiere o se rota, hay que reconectar MercadoLibre.

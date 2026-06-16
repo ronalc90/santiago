@@ -132,7 +132,7 @@ export function competitionScore(s: OpportunitySignals, r: OpportunityRules = DE
     saturation = pAds;
     estimated = true;
     confidence = 0.5;
-    reasons.push('ML sin OAuth: competencia estimada solo con Ad Library CO');
+    reasons.push('Saturación de MercadoLibre sin medir: competencia estimada solo con Ad Library CO');
   }
   return { score: 100 - Math.round(saturation), confidence, estimated, signals, reasons };
 }

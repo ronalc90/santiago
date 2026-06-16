@@ -88,3 +88,26 @@ export async function enqueueCostSyncJob(): Promise<string> {
   const job = await getCostSyncQueue().add('sync', {}, { removeOnComplete: 50, removeOnFail: 100, attempts: 1 });
   return job.id ?? '';
 }
+
+// ---------------------------------------------------------------------------
+// Cola de medición de saturación en MercadoLibre (worker, no bloquea la UI).
+// ---------------------------------------------------------------------------
+
+export const MELI_SATURATION_QUEUE = 'meli-saturation';
+
+/** El job no necesita payload: mide la saturación de todos los productos. */
+export type MeliSaturationJobData = Record<string, never>;
+
+let meliSaturationQueue: Queue<MeliSaturationJobData> | null = null;
+
+export function getMeliSaturationQueue(): Queue<MeliSaturationJobData> {
+  if (meliSaturationQueue) return meliSaturationQueue;
+  meliSaturationQueue = new Queue<MeliSaturationJobData>(MELI_SATURATION_QUEUE, { connection: getRedis() });
+  return meliSaturationQueue;
+}
+
+/** Encola una medición de saturación (manual desde la UI). */
+export async function enqueueMeliSaturationJob(): Promise<string> {
+  const job = await getMeliSaturationQueue().add('measure', {}, { removeOnComplete: 50, removeOnFail: 100, attempts: 1 });
+  return job.id ?? '';
+}

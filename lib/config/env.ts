@@ -88,12 +88,20 @@ const envSchema = z.object({
   // integración oficial Dropi→Shopify y WinSpy lo lee de Shopify (inventoryItem.unitCost).
 
   // --- MercadoLibre (saturación CO: nº de publicaciones) ---------------------
-  // App gratis en developers.mercadolibre.com. Sin credenciales, la saturación
-  // por MercadoLibre queda desactivada (se usa solo la señal de Ad Library CO).
-  MERCADOLIBRE_CLIENT_ID: z.string().optional().default(''),
-  MERCADOLIBRE_CLIENT_SECRET: z.string().optional().default(''),
-  // Refresh token OAuth de MercadoLibre (con él se obtiene el access token).
-  MERCADOLIBRE_REFRESH_TOKEN: z.string().optional().default(''),
+  // App gratis en developers.mercadolibre.com. La conexión es por OAuth desde
+  // Ajustes (el refresh token se guarda CIFRADO en BD, no en env). Sin credenciales
+  // la saturación por ML queda desactivada (se usa solo la señal de Ad Library CO).
+  MELI_CLIENT_ID: z.string().optional().default(''),
+  MELI_CLIENT_SECRET: z.string().optional().default(''),
+  // URI de retorno del OAuth. Si se deja vacía, se deriva de APP_URL. DEBE coincidir
+  // EXACTAMENTE con la registrada en la app de MercadoLibre.
+  MELI_REDIRECT_URI: z.string().optional().default(''),
+  // Sitio de MercadoLibre (MCO = Colombia). Enum para fallar rápido ante un valor
+  // inválido (coincide con las claves de AUTH_HOSTS), en vez de degradar en silencio.
+  MELI_SITE_ID: z.enum(['MCO', 'MLA', 'MLM', 'MLC', 'MLU', 'MPE', 'MLB']).default('MCO'),
+  // Patrón cron (BullMQ) para medir la saturación a diario en el worker. Vacío =
+  // desactivado. Default: 08:00 (corre solo si ML está configurado).
+  MELI_SATURATION_CRON: z.string().default('0 8 * * *'),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -163,6 +163,13 @@ model Product {
   /// Cuándo se actualizó por última vez el costo desde Shopify.
   costUpdatedAt     DateTime?
 
+  /// Nº de publicaciones activas en MercadoLibre CO (saturación). Lo mide el worker.
+  saturationCount     Int?
+  /// Cuándo cambió por última vez la saturación medida.
+  saturationUpdatedAt DateTime?
+  /// Keyword editable para medir la saturación; si está vacía, se usa el nombre.
+  saturationKeyword   String?
+
   notes             String?
 
   ownerId           String?
@@ -336,4 +343,20 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+/// Tokens OAuth de integraciones externas (MercadoLibre, etc.). access/refresh
+/// se guardan CIFRADOS en reposo (AES-256-GCM); nunca en claro ni en logs.
+model OAuthToken {
+  id           String   @id @default(cuid())
+  provider     String   @unique // 'meli'
+  accessToken  String // cifrado
+  refreshToken String // cifrado
+  expiresAt    DateTime
+  scope        String?
+  externalId   String? // id de usuario en el proveedor (informativo)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("oauth_tokens")
 }

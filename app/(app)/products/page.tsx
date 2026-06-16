@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { OpportunityBadge } from '@/components/shared/opportunity-badge';
 import { NewProductDialog } from '@/components/products/new-product-dialog';
+import { MeliSaturationButton } from '@/components/products/meli-saturation-button';
+import { getMeliConnection } from '@/lib/services/meli';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +17,13 @@ const DROPI_LABEL: Record<string, string> = {
 };
 
 export default async function ProductsPage() {
-  const products = await prisma.product.findMany({
-    orderBy: { updatedAt: 'desc' },
-    include: { _count: { select: { ads: true, landings: true } } },
-  });
+  const [products, meli] = await Promise.all([
+    prisma.product.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: { _count: { select: { ads: true, landings: true } } },
+    }),
+    getMeliConnection(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -27,7 +32,10 @@ export default async function ProductsPage() {
           <h1 className="text-2xl font-bold">Productos</h1>
           <p className="text-sm text-muted-foreground">Cada producto une su data de spy, su landing, notas y estado.</p>
         </div>
-        <NewProductDialog />
+        <div className="flex items-center gap-2">
+          {meli.connected && !meli.needsReconnect && <MeliSaturationButton />}
+          <NewProductDialog />
+        </div>
       </div>
       {products.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aún no hay productos. Créalos con «Nuevo producto» o desde el detalle de un anuncio en el Spy.</CardContent></Card>
