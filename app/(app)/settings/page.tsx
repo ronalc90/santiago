@@ -2,6 +2,7 @@ import { getScoringRules, getOpportunityRules } from '@/lib/services/settings';
 import { getAllPrompts, PROMPT_DEFS } from '@/lib/services/prompts';
 import { getCostSyncStatus } from '@/lib/services/cost-sync';
 import { getMeliConnection, getMeliSaturationStatus } from '@/lib/services/meli';
+import { getDiscoveryConfig } from '@/lib/services/discovery-config';
 import { isShopifyConfigured } from '@/lib/shopify/client';
 import { isMeliConfigured } from '@/lib/integrations/mercadolibre';
 import { ScoringRulesForm } from '@/components/settings/scoring-rules-form';
@@ -9,17 +10,19 @@ import { OpportunityRulesForm } from '@/components/settings/opportunity-rules-fo
 import { PromptsForm } from '@/components/settings/prompts-form';
 import { CostSyncCard } from '@/components/settings/cost-sync-card';
 import { MeliCard } from '@/components/settings/meli-card';
+import { DiscoveryCard } from '@/components/settings/discovery-card';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage({ searchParams }: { searchParams: { meli?: string } }) {
-  const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus] = await Promise.all([
+  const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus, discoveryConfig] = await Promise.all([
     getScoringRules(),
     getOpportunityRules(),
     getAllPrompts(),
     getCostSyncStatus(),
     getMeliConnection(),
     getMeliSaturationStatus(),
+    getDiscoveryConfig(),
   ]);
   const shopifyConfigured = isShopifyConfigured();
   const meliConfigured = isMeliConfigured();
@@ -40,6 +43,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
       <OpportunityRulesForm initial={opportunityRules} />
       <CostSyncCard status={costStatus} shopifyConfigured={shopifyConfigured} />
       <MeliCard configured={meliConfigured} connection={meliConnection} status={meliStatus} notice={searchParams.meli} />
+      <DiscoveryCard initial={discoveryConfig} />
       <PromptsForm initial={prompts} />
     </div>
   );

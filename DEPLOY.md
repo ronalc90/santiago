@@ -232,11 +232,17 @@ orquestador corre en el **worker** (cron) y la UI vive en Vercel.
 | `DISCOVERY_CRON` | Opcional | Cron del descubrimiento automático (default `0 6 * * *`; vacío = off). |
 | `DISCOVERY_COUNTRIES` | Opcional | Sitios ML a explorar (CSV): `MCO,MLM,MLA,MLC,MLB`. |
 | `DISCOVERY_KEYWORDS` | Opcional | Nichos a descubrir. Vacío = usa `AD_SOURCE_KEYWORDS`. |
-| `GOOGLE_TRENDS_ENABLED` | Opcional (Fase 2) | Gratis. Aún sin implementar (interfaz lista). |
-| `META_DISCOVERY` / `TIKTOK_DISCOVERY` | Opcional (Fase 2) | `on`/`off`. **PAGO** (Apify). Off por defecto. |
+| `GOOGLE_TRENDS_ENABLED` | Opcional | **Gratis** (best-effort: Google no da API oficial; degrada si falla). Interés por keyword/país. |
+| `META_DISCOVERY` / `TIKTOK_DISCOVERY` | Opcional | `on`/`off`. **PAGO** (Apify). Off por defecto. Traen creativos (se guardan en R2). |
+| `TIKTOK_DISCOVERY_ACTOR` | Opcional | Actor de Apify para TikTok (su dataset varía). Vacío = TikTok off. |
 
-> **Qué es gratis y qué cuesta:** ML + (futuro) Trends = **gratis**. Meta/TikTok vía
-> Apify = **pago por resultado** (off por defecto; solo si las activas).
-> El match con **Dropi** es por **CSV** (Dropi no da API): se importa el catálogo en
-> Ajustes (Fase 2) y se cruza por nombre. Pulsa **«Buscar ahora»** en Oportunidades o
-> espera el cron. Botón en el worker, no bloquea la UI.
+> **Qué es gratis y qué cuesta:** ML + Trends = **gratis**. Meta/TikTok vía Apify =
+> **pago por resultado** (off por defecto). Dedupe por **embeddings** (OpenAI) =
+> costo bajo, opcional (switch). El match con **Dropi** es por **CSV** (Dropi no da
+> API): se importa el catálogo en **Ajustes → Descubrimiento** y se cruza por nombre.
+>
+> **Config en caliente:** los switches por fuente, países y keywords se editan en
+> **Ajustes → Descubrimiento** (se guardan en BD y mandan sobre los defaults de env).
+> Pulsa **«Buscar ahora»** en Oportunidades o espera el cron (corre en el worker, no
+> bloquea la UI). El detalle de cada candidato muestra la galería de creativos y un
+> botón **«Crear producto»** que lo mete al pipeline (Producto → Landing).

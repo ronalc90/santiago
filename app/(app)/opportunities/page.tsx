@@ -1,9 +1,12 @@
+import Link from 'next/link';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { OpportunityBadge } from '@/components/shared/opportunity-badge';
 import { DiscoverButton } from '@/components/opportunities/discover-button';
+import { OpportunityFilters } from '@/components/opportunities/filters';
 import { getDiscoveryStatus } from '@/lib/services/discovery';
 import { getEnv } from '@/lib/config/env';
 
@@ -13,11 +16,24 @@ const DROPI_LABEL: Record<string, string> = {
   DISPONIBLE: 'Dropi', NO_DISPONIBLE: 'No Dropi', A_IMPORTAR: 'A importar', DESCONOCIDO: '—',
 };
 
-export default async function OpportunitiesPage() {
+interface SP {
+  noCO?: string;
+  dropi?: string;
+  creativos?: string;
+  fuente?: string;
+}
+
+export default async function OpportunitiesPage({ searchParams }: { searchParams: SP }) {
   const env = getEnv();
+  const where: Prisma.OpportunityCandidateWhereInput = { status: { not: 'DESCARTADO' } };
+  if (searchParams.noCO) where.enCO = false;
+  if (searchParams.dropi) where.dropiStatus = 'DISPONIBLE';
+  if (searchParams.creativos) where.creatives = { some: {} };
+  if (searchParams.fuente) where.sources = { has: searchParams.fuente };
+
   const [candidates, status] = await Promise.all([
     prisma.opportunityCandidate.findMany({
-      where: { status: { not: 'DESCARTADO' } },
+      where,
       orderBy: [{ score4x25: 'desc' }, { updatedAt: 'desc' }],
       take: 100,
       include: { _count: { select: { creatives: true } } },
@@ -32,23 +48,25 @@ export default async function OpportunitiesPage() {
         <div>
           <h1 className="text-2xl font-bold">Oportunidades</h1>
           <p className="text-sm text-muted-foreground">
-            Productos candidatos descubiertos por las fuentes activas, ordenados por score 4×25.
-            {env.DISCOVERY_MOCK ? ' (modo MOCK)' : ''}
+            Candidatos descubiertos por las fuentes activas, ordenados por score 4×25.{env.DISCOVERY_MOCK ? ' (modo MOCK)' : ''}
           </p>
         </div>
         <DiscoverButton paidActive={paidActive} />
       </div>
 
+      <OpportunityFilters />
+
       {status && (
         <p className="text-xs text-muted-foreground">
-          Última corrida: <span className="font-medium">{status.candidates}</span> candidato(s) · fuentes: {status.sources.join(', ') || 'ninguna'}.
+          Última corrida: <span className="font-medium">{status.candidates}</span> candidato(s) · fuentes: {status.sources.join(', ') || 'ninguna'}
+          {status.dropiMatched ? ` · ${status.dropiMatched} con Dropi` : ''}{status.warning ? ` · ⚠️ ${status.warning}` : ''}.
         </p>
       )}
 
       {candidates.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            Aún no hay candidatos. Pulsa «Buscar ahora» (o espera al descubrimiento diario).
+            No hay candidatos con esos filtros. Pulsa «Buscar ahora» (o espera al descubrimiento diario).
           </CardContent>
         </Card>
       ) : (
@@ -70,7 +88,7 @@ export default async function OpportunitiesPage() {
                 {candidates.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">
-                      {c.name}
+                      <Link href={`/opportunities/${c.id}`} className="hover:underline">{c.name}</Link>
                       {c.category && <span className="block text-xs text-muted-foreground">{c.category}</span>}
                     </TableCell>
                     <TableCell className="text-xs">{c.countries.join(', ')}</TableCell>

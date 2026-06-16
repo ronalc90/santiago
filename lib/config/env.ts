@@ -121,6 +121,8 @@ const envSchema = z.object({
   GOOGLE_TRENDS_ENABLED: z.string().default('false').transform((v) => v.trim().toLowerCase() === 'true'),
   META_DISCOVERY: z.enum(['on', 'off']).default('off'),
   TIKTOK_DISCOVERY: z.enum(['on', 'off']).default('off'),
+  // Actor de Apify para TikTok (configurable; el shape varía por actor). Reutiliza APIFY_TOKEN.
+  TIKTOK_DISCOVERY_ACTOR: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -3,49 +3,37 @@ import { prisma } from '@/lib/db';
 import { getEnv } from '@/lib/config/env';
 import { getOpportunityRules } from '@/lib/services/settings';
 import { computeOpportunity } from '@/lib/services/opportunity';
+import { persistCreative } from '@/lib/services/creative';
+import { getDiscoveryConfig, DiscoveryConfig } from '@/lib/services/discovery-config';
+import { matchCandidatesToDropi } from '@/lib/services/dropi-catalog';
 import { normalizeName } from '@/lib/discovery/normalize';
 import { candidateToSignals } from '@/lib/discovery/score';
+import { embedTexts, cosine } from '@/lib/discovery/embeddings';
 import { DiscoveryCandidate, DiscoveryParams, DiscoverySource } from '@/lib/discovery/types';
 import { mockSource } from '@/lib/discovery/mock';
 import { mercadoLibreSource } from '@/lib/discovery/mercadolibre';
+import { googleTrendsSource } from '@/lib/discovery/google-trends';
+import { metaApifySource } from '@/lib/discovery/meta-apify';
+import { tiktokApifySource } from '@/lib/discovery/tiktok-apify';
 
 /**
- * Orquestador de descubrimiento: corre las fuentes ACTIVAS, deduplica el mismo
- * producto entre fuentes/países (por nombre normalizado), cruza con Colombia,
- * puntúa con el motor 4×25 y persiste OpportunityCandidate (idempotente: upsert
- * por nombre normalizado). Si una fuente falla, las demás siguen.
+ * Orquestador de descubrimiento: corre las fuentes ACTIVAS (según config), deduplica
+ * (nombre normalizado + opcional embeddings), cruza con Colombia y Dropi, puntúa con
+ * el motor 4×25 y persiste OpportunityCandidate idempotente. Si una fuente falla, las
+ * demás siguen. Descarga los creativos a R2 (galería).
  */
 const STATUS_KEY = 'discovery_status';
+const MAX_CREATIVES = 6;
 
 export interface DiscoveryResult {
   mock: boolean;
-  sources: string[]; // fuentes que corrieron
+  sources: string[];
   found: number; // candidatos crudos (antes de dedupe)
   candidates: number; // únicos tras dedupe
   upserted: number;
-  warning?: string; // aviso de configuración (p. ej. sin keywords)
+  dropiMatched: number;
+  warning?: string;
   at: string; // ISO
-}
-
-const csv = (s: string): string[] => s.split(',').map((x) => x.trim()).filter(Boolean);
-
-/** Fuentes activas: en modo mock, solo la de prueba; si no, las gratis activas. */
-export function getActiveSources(): DiscoverySource[] {
-  if (getEnv().DISCOVERY_MOCK) return [mockSource];
-  // Las de pago (Meta/TikTok/Apify) y Trends se sumarán aquí en fase 2, gateadas.
-  const all: DiscoverySource[] = [mercadoLibreSource];
-  return all.filter((s) => s.estaActiva());
-}
-
-function discoveryParams(): DiscoveryParams {
-  const env = getEnv();
-  const countries = csv(env.DISCOVERY_COUNTRIES);
-  const keywords = csv(env.DISCOVERY_KEYWORDS).length ? csv(env.DISCOVERY_KEYWORDS) : csv(env.AD_SOURCE_KEYWORDS);
-  return {
-    countries: countries.length ? countries : ['MCO'],
-    keywords,
-    limit: 10,
-  };
 }
 
 interface Agg {
@@ -65,19 +53,85 @@ const maxN = (a: number | null, b: number | null | undefined): number | null => 
   return a == null ? b : Math.max(a, b);
 };
 
+/** Fuentes a correr según la config (mock → solo prueba). estaActiva = disponibilidad de env. */
+function sourcesFromConfig(cfg: DiscoveryConfig, mock: boolean): DiscoverySource[] {
+  if (mock) return [mockSource];
+  const list: DiscoverySource[] = [];
+  if (mercadoLibreSource.estaActiva()) list.push(mercadoLibreSource); // gratis, núcleo
+  if (cfg.sources.trends && googleTrendsSource.estaActiva()) list.push(googleTrendsSource);
+  if (cfg.sources.meta && metaApifySource.estaActiva()) list.push(metaApifySource);
+  if (cfg.sources.tiktok && tiktokApifySource.estaActiva()) list.push(tiktokApifySource);
+  return list;
+}
+
+/** Fuentes activas (para el gate del cron en el worker). */
+export async function getActiveSources(): Promise<DiscoverySource[]> {
+  return sourcesFromConfig(await getDiscoveryConfig(), getEnv().DISCOVERY_MOCK);
+}
+
 export async function getDiscoveryStatus(): Promise<DiscoveryResult | null> {
   const row = await prisma.setting.findUnique({ where: { key: STATUS_KEY } });
   return row ? (row.value as unknown as DiscoveryResult) : null;
 }
 
+function mergeAgg(into: Agg, from: Agg): void {
+  from.countries.forEach((c) => into.countries.add(c));
+  from.sources.forEach((s) => into.sources.add(s));
+  into.interest = maxN(into.interest, from.interest);
+  into.salesCount = maxN(into.salesCount, from.salesCount);
+  into.daysActive = maxN(into.daysActive, from.daysActive);
+  from.listingsByCountry.forEach((v, c) => into.listingsByCountry.set(c, Math.max(into.listingsByCountry.get(c) ?? 0, v)));
+  into.creatives.push(...from.creatives);
+  if (!into.category && from.category) into.category = from.category;
+}
+
+/** 2ª pasada de dedupe por embeddings: fusiona casi-idénticos (coseno ≥ 0.9). */
+async function mergeByEmbeddings(byKey: Map<string, Agg>): Promise<void> {
+  const keys = Array.from(byKey.keys());
+  if (keys.length < 2) return;
+  const emb = await embedTexts(keys.map((k) => byKey.get(k)!.name));
+  if (!emb) return;
+  const kept: { key: string; vec: number[] }[] = [];
+  keys.forEach((k, i) => {
+    const match = kept.find((p) => cosine(p.vec, emb[i]) >= 0.9);
+    if (match) {
+      mergeAgg(byKey.get(match.key)!, byKey.get(k)!);
+      byKey.delete(k);
+    } else {
+      kept.push({ key: k, vec: emb[i] });
+    }
+  });
+}
+
+/** Descarga los creativos NUEVOS a R2 (galería) y los inserta; preserva los existentes. */
+async function persistNewCreatives(candidateId: string, creatives: Agg['creatives'], existing: Set<string>): Promise<void> {
+  const nuevos = creatives.filter((cr) => !existing.has(cr.url)).slice(0, Math.max(0, MAX_CREATIVES - existing.size));
+  for (const cr of nuevos) {
+    let url = cr.url;
+    let storageKey: string | null = null;
+    try {
+      const kind: 'image' | 'video' = cr.type === 'video' ? 'video' : 'image';
+      const stored = await persistCreative(`discovery/${candidateId}`, cr.url, kind);
+      url = stored.url;
+      storageKey = stored.key;
+    } catch {
+      /* la URL original puede haber caducado; se guarda tal cual, sin R2 */
+    }
+    await prisma.opportunityCreative.create({
+      data: { candidateId, url, type: cr.type, country: cr.country, source: cr.source, storageKey },
+    });
+  }
+}
+
 export async function runDiscovery(): Promise<DiscoveryResult> {
   const at = new Date().toISOString();
-  const params = discoveryParams();
-  const sources = getActiveSources();
+  const mock = getEnv().DISCOVERY_MOCK;
+  const cfg = await getDiscoveryConfig();
+  const params: DiscoveryParams = { countries: cfg.countries, keywords: cfg.keywords, limit: 12 };
+  const sources = sourcesFromConfig(cfg, mock);
 
-  // Aviso si no hay nada que buscar (no es un 0-candidatos "exitoso" engañoso).
   let warning: string | undefined;
-  if (!getEnv().DISCOVERY_MOCK && params.keywords.length === 0) {
+  if (!mock && params.keywords.length === 0) {
     warning = 'Sin keywords: define DISCOVERY_KEYWORDS o AD_SOURCE_KEYWORDS. No se buscó nada.';
     console.warn(`[discovery] ${warning}`);
   }
@@ -91,21 +145,14 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
     }
   }
 
-  // Dedupe por nombre normalizado: acumula países, fuentes y métricas.
+  // 1ª dedupe: nombre normalizado.
   const byKey = new Map<string, Agg>();
   for (const c of raw) {
     const key = normalizeName(c.name);
     if (!key) continue;
     const a: Agg = byKey.get(key) ?? {
-      name: c.name,
-      category: c.category ?? null,
-      countries: new Set(),
-      sources: new Set(),
-      interest: null,
-      salesCount: null,
-      daysActive: null,
-      listingsByCountry: new Map(),
-      creatives: [],
+      name: c.name, category: c.category ?? null, countries: new Set(), sources: new Set(),
+      interest: null, salesCount: null, daysActive: null, listingsByCountry: new Map(), creatives: [],
     };
     const iso = c.country.toUpperCase();
     a.countries.add(iso);
@@ -116,11 +163,14 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
     if (c.metrics?.listingsCount != null) {
       a.listingsByCountry.set(iso, Math.max(a.listingsByCountry.get(iso) ?? 0, c.metrics.listingsCount));
     }
-    for (const cr of c.creatives ?? []) {
-      a.creatives.push({ url: cr.url, type: cr.type, country: cr.country ?? iso, source: c.source });
-    }
+    for (const cr of c.creatives ?? []) a.creatives.push({ url: cr.url, type: cr.type, country: cr.country ?? iso, source: c.source });
     if (!a.category && c.category) a.category = c.category;
     byKey.set(key, a);
+  }
+
+  // 2ª dedupe opcional por embeddings (OpenAI).
+  if (cfg.sources.embeddings) {
+    await mergeByEmbeddings(byKey).catch((e) => console.error('[discovery:embeddings]', e instanceof Error ? e.message : e));
   }
 
   const rules = await getOpportunityRules();
@@ -130,9 +180,7 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
     const countries = Array.from(a.countries);
     const enCO = a.countries.has('CO');
     const saturationCO = a.listingsByCountry.get('CO') ?? null;
-    const listingsCount = a.listingsByCountry.size
-      ? Math.max(...Array.from(a.listingsByCountry.values()))
-      : null;
+    const listingsCount = a.listingsByCountry.size ? Math.max(...Array.from(a.listingsByCountry.values())) : null;
     const numImages = a.creatives.filter((x) => x.type === 'image').length;
     const numVideos = a.creatives.filter((x) => x.type === 'video').length;
 
@@ -162,32 +210,23 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
       breakdown: { dimensions: result.dimensions, coverage: result.coverage, confidence: result.confidence } as unknown as Prisma.InputJsonValue,
     };
 
+    let candidateId: string;
     if (existing) {
       await prisma.opportunityCandidate.update({ where: { id: existing.id }, data });
-      // Creativos: añadir solo los nuevos (por url), SIN borrar los existentes, para
-      // no perder su storageKey en R2. Acotado a 12 en total.
-      const have = new Set(existing.creatives.map((cr) => cr.url));
-      const nuevos = a.creatives.filter((cr) => !have.has(cr.url)).slice(0, Math.max(0, 12 - have.size));
-      if (nuevos.length) {
-        await prisma.opportunityCreative.createMany({
-          data: nuevos.map((cr) => ({ candidateId: existing.id, url: cr.url, type: cr.type, country: cr.country, source: cr.source })),
-        });
-      }
+      candidateId = existing.id;
+      await persistNewCreatives(candidateId, a.creatives, new Set(existing.creatives.map((c) => c.url)));
     } else {
-      await prisma.opportunityCandidate.create({
-        data: {
-          normalizedName: key,
-          ...data,
-          creatives: a.creatives.length
-            ? { create: a.creatives.slice(0, 12).map((cr) => ({ url: cr.url, type: cr.type, country: cr.country, source: cr.source })) }
-            : undefined,
-        },
-      });
+      const created = await prisma.opportunityCandidate.create({ data: { normalizedName: key, ...data } });
+      candidateId = created.id;
+      await persistNewCreatives(candidateId, a.creatives, new Set());
     }
     upserted += 1;
   }
 
-  const res: DiscoveryResult = { mock: getEnv().DISCOVERY_MOCK, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, warning, at };
+  // Cruce con el catálogo Dropi (si hay CSV importado).
+  const dropiMatched = await matchCandidatesToDropi().catch(() => 0);
+
+  const res: DiscoveryResult = { mock, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, dropiMatched, warning, at };
   await prisma.setting.upsert({
     where: { key: STATUS_KEY },
     create: { key: STATUS_KEY, value: res as unknown as Prisma.InputJsonValue },

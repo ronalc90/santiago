@@ -186,7 +186,7 @@ async function scheduleMeliSaturationCron(): Promise<void> {
 async function scheduleDiscoveryCron(): Promise<void> {
   const queue = getDiscoveryQueue();
   const id = 'discovery:daily';
-  const enabled = Boolean(env.DISCOVERY_CRON) && getActiveSources().length > 0;
+  const enabled = Boolean(env.DISCOVERY_CRON) && (await getActiveSources()).length > 0;
   if (!enabled) {
     await queue.removeJobScheduler(id).catch(() => {});
     return;
