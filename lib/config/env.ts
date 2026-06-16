@@ -52,6 +52,9 @@ const envSchema = z.object({
   APIFY_ACTOR_ID: z.string().default('curious_coder~facebook-ads-library-scraper'),
   // País ISO-2 a vigilar por defecto y lista CSV de keywords/nichos.
   AD_SOURCE_COUNTRY: z.string().default('CO'),
+  // Lista CSV de países para la ingesta automática (cron). Vacío = solo
+  // AD_SOURCE_COUNTRY. Ej: "CO,US,MX" para sumar demanda extranjera a diario.
+  AD_SOURCE_COUNTRIES: z.string().default(''),
   AD_SOURCE_KEYWORDS: z.string().default(''),
   AD_SOURCE_LIMIT: z.coerce.number().int().positive().default(100),
   // Cron (patrón BullMQ) para la ingesta automática; vacío = desactivado.

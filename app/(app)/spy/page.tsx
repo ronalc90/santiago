@@ -1,6 +1,6 @@
 import { SpyTable } from '@/components/spy/spy-table';
 import { ImportDialog } from '@/components/spy/import-dialog';
-import { SyncButton } from '@/components/spy/sync-button';
+import { SyncDialog } from '@/components/spy/sync-dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,7 @@ export default function SpyPage() {
           <p className="text-sm text-muted-foreground">Productos ganadores detectados, ordenados por Winner Score.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <SyncButton />
+          <SyncDialog />
           <ImportDialog />
         </div>
       </div>

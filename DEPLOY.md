@@ -58,7 +58,7 @@ ADMIN_PASSWORD="UNA_CLAVE_FUERTE" \
 ```
 
 > El bootstrap **no** crea datos demo. Los anuncios reales se traen luego con el
-> botón **«Sincronizar reales»** (o `POST /api/ads/sync`) usando Apify.
+> botón **«Buscar anuncios»** (o `POST /api/ads/sync`) usando Apify.
 
 **Si tu base ya tiene datos de demostración** (de un seed antiguo: tiendas
 GadgetPro/HogarSmart/FitLife, anuncios `AD-*`/`MOCK-*`), límpialos una vez:
@@ -118,6 +118,7 @@ Vercel. Por eso muchas variables que parecen "de la app" tienen que estar tambi�
 | `APIFY_TOKEN` | Sí si `apify` | Sin el token con provider `apify`, `env.ts` lanza y el worker crashea. **Sin Apify la ingesta devuelve datos demo (mock).** |
 | `APIFY_ACTOR_ID` | Recomendada | Default: `curious_coder~facebook-ads-library-scraper`. |
 | `AD_SOURCE_COUNTRY` | Recomendada | País ISO-2 por defecto (ej. `CO`). |
+| `AD_SOURCE_COUNTRIES` | Opcional | CSV de países para el cron (ej. `CO,US,MX`). Vacío = solo `AD_SOURCE_COUNTRY`. El costo de Apify escala con países × keywords × límite. |
 | `AD_SOURCE_KEYWORDS` | Recomendada | CSV de nichos. Vacío = la ingesta automática no encola nada. |
 | `AD_SOURCE_LIMIT` | Opcional | Máx. resultados por job (controla el costo de Apify). |
 | `AD_SOURCE_CRON` | Opcional | Patrón BullMQ para ingesta automática; vacío = desactivado. |
@@ -134,7 +135,7 @@ Vercel. Por eso muchas variables que parecen "de la app" tienen que estar tambi�
 
 La ingesta real la ejecuta el **worker** (Apify). Hay dos formas de dispararla:
 
-- **Desde la UI**: Spy → botón **«Sincronizar reales»** (arriba de la tabla). Encola
+- **Desde la UI**: Spy → botón **«Buscar anuncios»** (arriba de la tabla). Encola
   trabajos con `AD_SOURCE_COUNTRY` / `AD_SOURCE_KEYWORDS` / `AD_SOURCE_LIMIT`.
 - **Por API** (cron o externos): `POST /api/ads/sync`. Autenticación por sesión ADMIN
   o por header `x-ingest-token`. Cuerpo opcional `{ country, keywords[], pageUrl, limit }`;
@@ -159,7 +160,7 @@ curl -i -c ck.txt -X POST https://TU-APP.vercel.app/api/auth/login \
   -d '{"email":"<ADMIN_EMAIL>","password":"<ADMIN_PASSWORD>"}'
 ```
 
-Luego, en la UI: pulsa **«Sincronizar reales»** y espera a que el worker traiga los
+Luego, en la UI: pulsa **«Buscar anuncios»** y espera a que el worker traiga los
 anuncios → crea producto → nueva landing → verifica que el worker genera las 9
 imágenes y que el `.zip` descarga.
 

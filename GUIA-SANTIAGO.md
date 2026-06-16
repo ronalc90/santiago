@@ -68,7 +68,7 @@ Es **la pantalla con la que más vas a trabajar**: la publicidad que corren otra
 
 | Paso | Qué haces | Por qué |
 |---|---|---|
-| ① | **Sincronizar reales** / **Importar resultados** (arriba a la derecha) | Trae anuncios nuevos. |
+| ① | **Buscar anuncios** / **Importar resultados** (arriba a la derecha) | Trae anuncios nuevos. |
 | ② | Usa los **filtros** (buscar, semáforo, días activos) | Para ver solo lo que te interesa. |
 | ③ | Mira **Winner Score** | Es la “nota”: más alto = más fuerte la señal de que vende. |
 | ④ | Pulsa **Detalle** en una fila | Para verlo a fondo y decidir. |
@@ -160,7 +160,7 @@ La pantalla **Costos** te muestra cuánto cuesta cada acción (traer anuncios, g
 
 ## ❓ Preguntas frecuentes
 
-**No aparecen anuncios nuevos.** Pulsa **Sincronizar reales**, espera ~30–60 s y recarga.
+**No aparecen anuncios nuevos.** Pulsa **Buscar anuncios**, espera ~30–60 s y recarga.
 **La landing se queda “en cola”.** Espera 1–2 min (la IA trabaja). Si tarda mucho, avisa a soporte.
 **Una imagen salió con una falta.** Toca ⟳ en esa imagen para regenerarla.
 **Me bloqueó el login.** Es la protección por intentos. Espera unos minutos.

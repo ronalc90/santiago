@@ -167,18 +167,32 @@ async function scheduleMeliSaturationCron(): Promise<void> {
  */
 async function scheduleAdIngestCron(): Promise<void> {
   const queue = getAdIngestQueue();
-  const prefix = `ad-ingest:${env.AD_SOURCE_COUNTRY}:`;
-  const schedulerId = (q: string) => `${prefix}${q}`;
+  // Un scheduler por (país × keyword). El prefijo común permite reconciliar todos.
+  const PREFIX = 'ad-ingest:';
+  const schedulerId = (country: string, q: string) => `${PREFIX}${country}:${q}`;
 
+  // Países: la lista CSV si se definió, si no el país único. En MAYÚSCULAS y sin duplicados.
+  const countries = Array.from(
+    new Set(
+      (env.AD_SOURCE_COUNTRIES || env.AD_SOURCE_COUNTRY)
+        .split(',')
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  );
   const keywords = env.AD_SOURCE_CRON
-    ? env.AD_SOURCE_KEYWORDS.split(',').map((k) => k.trim()).filter(Boolean)
+    ? Array.from(new Set(env.AD_SOURCE_KEYWORDS.split(',').map((k) => k.trim()).filter(Boolean)))
     : [];
-  const desired = new Set(keywords.map(schedulerId));
 
-  // Reconciliar: borra schedulers obsoletos de este país que ya no se desean.
+  const desired = new Set<string>();
+  for (const country of countries) for (const q of keywords) desired.add(schedulerId(country, q));
+
+  // Reconciliar: borra cualquier scheduler de ingesta que ya no se desee (país
+  // quitado, keyword quitada o cron desactivado), evitando huérfanos que sigan
+  // gastando créditos de Apify.
   const existing = await queue.getJobSchedulers(0, -1);
   for (const s of existing) {
-    if (s.id && s.id.startsWith(prefix) && !desired.has(s.id)) {
+    if (s.id && s.id.startsWith(PREFIX) && !desired.has(s.id)) {
       await queue.removeJobScheduler(s.id);
       console.log(`🧹  Scheduler de ingesta obsoleto eliminado: ${s.id}`);
     }
@@ -191,20 +205,24 @@ async function scheduleAdIngestCron(): Promise<void> {
     return;
   }
 
-  // Upsert: crea o reemplaza in-place el scheduler de cada keyword con el patrón
-  // actual (cambiar AD_SOURCE_CRON actualiza el mismo id, no crea uno nuevo).
-  for (const query of keywords) {
-    await queue.upsertJobScheduler(
-      schedulerId(query),
-      { pattern: env.AD_SOURCE_CRON },
-      {
-        name: 'ingest',
-        data: { country: env.AD_SOURCE_COUNTRY, query, limit: env.AD_SOURCE_LIMIT },
-        opts: { removeOnComplete: 100, removeOnFail: 200, attempts: 1 },
-      },
-    );
+  // Upsert in-place por (país × keyword): cambiar el patrón/keywords actualiza los
+  // mismos ids, no crea duplicados.
+  for (const country of countries) {
+    for (const query of keywords) {
+      await queue.upsertJobScheduler(
+        schedulerId(country, query),
+        { pattern: env.AD_SOURCE_CRON },
+        {
+          name: 'ingest',
+          data: { country, query, limit: env.AD_SOURCE_LIMIT },
+          opts: { removeOnComplete: 100, removeOnFail: 200, attempts: 1 },
+        },
+      );
+    }
   }
-  console.log(`⏰  Ingesta programada (${env.AD_SOURCE_CRON}) para ${keywords.length} keyword(s) en ${env.AD_SOURCE_COUNTRY}.`);
+  console.log(
+    `⏰  Ingesta programada (${env.AD_SOURCE_CRON}): ${keywords.length} keyword(s) × ${countries.length} país(es) [${countries.join(', ')}].`,
+  );
 }
 
 // Cierre ordenado
