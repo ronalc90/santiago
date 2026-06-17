@@ -105,11 +105,17 @@ describe('searchListingTotal (saturación)', () => {
 });
 
 describe('searchCatalog (descubrimiento)', () => {
-  it('parsea total + items de /products/search y filtra nombres vacíos', async () => {
-    const fn = mockFetch(res({ paging: { total: 42 }, results: [{ name: 'Masajeador Cervical', domain_id: 'MCO-NECK' }, { name: '', domain_id: null }] }));
+  it('parsea total + items (con fotos) de /products/search y filtra nombres vacíos', async () => {
+    const fn = mockFetch(res({
+      paging: { total: 42 },
+      results: [
+        { name: 'Masajeador Cervical', domain_id: 'MCO-NECK', pictures: [{ url: 'https://x/a.jpg' }, { url: 'nourl' }] },
+        { name: '', domain_id: null },
+      ],
+    }));
     const r = await searchCatalog('MCO', 'masajeador', 'TOKEN', 5);
     expect(r?.total).toBe(42);
-    expect(r?.items).toEqual([{ name: 'Masajeador Cervical', domainId: 'MCO-NECK' }]);
+    expect(r?.items).toEqual([{ name: 'Masajeador Cervical', domainId: 'MCO-NECK', pictures: ['https://x/a.jpg'] }]);
     expect(String(fn.mock.calls[0][0])).toContain('/products/search');
   });
 });

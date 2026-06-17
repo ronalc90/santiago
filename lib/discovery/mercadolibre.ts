@@ -46,6 +46,7 @@ export const mercadoLibreSource: DiscoverySource = {
             country: iso,
             source: 'mercadolibre',
             metrics: { listingsCount: r.total },
+            creatives: item.pictures.map((url) => ({ url, type: 'image', country: iso })),
           });
         }
       }
