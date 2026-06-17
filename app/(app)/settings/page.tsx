@@ -1,5 +1,6 @@
 import { getScoringRules, getOpportunityRules } from '@/lib/services/settings';
 import { getAllPrompts, PROMPT_DEFS } from '@/lib/services/prompts';
+import { getSlotPromptsForUI } from '@/lib/services/landing-slot-prompts';
 import { getCostSyncStatus } from '@/lib/services/cost-sync';
 import { getMeliConnection, getMeliSaturationStatus } from '@/lib/services/meli';
 import { getDiscoveryConfig } from '@/lib/services/discovery-config';
@@ -11,11 +12,12 @@ import { PromptsForm } from '@/components/settings/prompts-form';
 import { CostSyncCard } from '@/components/settings/cost-sync-card';
 import { MeliCard } from '@/components/settings/meli-card';
 import { DiscoveryCard } from '@/components/settings/discovery-card';
+import { LandingPromptsForm } from '@/components/settings/landing-prompts-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage({ searchParams }: { searchParams: { meli?: string } }) {
-  const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus, discoveryConfig] = await Promise.all([
+  const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus, discoveryConfig, slotPrompts] = await Promise.all([
     getScoringRules(),
     getOpportunityRules(),
     getAllPrompts(),
@@ -23,6 +25,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
     getMeliConnection(),
     getMeliSaturationStatus(),
     getDiscoveryConfig(),
+    getSlotPromptsForUI(),
   ]);
   const shopifyConfigured = isShopifyConfigured();
   const meliConfigured = isMeliConfigured();
@@ -45,6 +48,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
       <MeliCard configured={meliConfigured} connection={meliConnection} status={meliStatus} notice={searchParams.meli} />
       <DiscoveryCard initial={discoveryConfig} />
       <PromptsForm initial={prompts} />
+      <LandingPromptsForm slots={slotPrompts} />
     </div>
   );
 }

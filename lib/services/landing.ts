@@ -11,6 +11,7 @@ import {
 } from '@/lib/services/landing-spec';
 import { enqueueLandingJob } from '@/lib/queue';
 import { productStatusAfterLandingRemoval } from '@/lib/services/product-status';
+import { getSlotIntents } from '@/lib/services/landing-slot-prompts';
 
 export interface CreateLandingParams {
   productId: string;
@@ -119,6 +120,8 @@ export async function processLanding(projectId: string, onlySlot?: number): Prom
 
     const slots = onlySlot ? LANDING_SLOTS.filter((s) => s.slot === onlySlot) : LANDING_SLOTS;
     const refs: RefImage[] = [productPhoto, referenceImage].filter(Boolean) as RefImage[];
+    // Intención editable por imagen (Ajustes → Prompts por imagen): override del intent.
+    const slotIntents = await getSlotIntents();
 
     let done = 0;
     let failures = 0;
@@ -129,7 +132,7 @@ export async function processLanding(projectId: string, onlySlot?: number): Prom
       try {
         await prisma.landingImage.update({ where: { id: image.id }, data: { status: 'PROCESSING', error: null } });
 
-        const prompt = buildImagePrompt(slot, inputs, style, project.complianceTiktok);
+        const prompt = buildImagePrompt({ ...slot, intent: slotIntents[slot.slot] ?? slot.intent }, inputs, style, project.complianceTiktok);
         const raw = await generator.generateImage(prompt, refs);
         const webp = await compressToWebp(raw);
         const key = `landing/${projectId}/img-${slot.slot}.webp`;
