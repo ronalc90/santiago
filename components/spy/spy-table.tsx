@@ -135,7 +135,7 @@ export function SpyTable() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('estimatedSpend')} title="Gasto o impresiones estimados cuando Meta los publica. Para anuncios comerciales en CO casi siempre no hay dato público (—).">
                 <span className="inline-flex items-center gap-1">Gasto/Impr. (est.) <ArrowUpDown className="h-3 w-3" /></span>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('winnerScore')} title="Señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos: a más tiempo corriendo, más fuerte la señal.">
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('winnerScore')} title="Señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), es un proxy de longevidad/alcance, no de inversión: sube con los días hasta cierto punto y luego baja (un anuncio demasiado viejo está saturado).">
                 <span className="inline-flex items-center gap-1">Winner Score <ArrowUpDown className="h-3 w-3" /></span>
               </TableHead>
               <TableHead>Clasificación</TableHead>
@@ -188,7 +188,7 @@ export function SpyTable() {
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
-          {total} anuncio(s){total > PAGE_SIZE ? ` · mostrando ${ads.length} (pág. ${page}/${totalPages})` : ''} · Winner Score: señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), se basa en los días activos — a más tiempo corriendo, más fuerte la señal.
+          {total} anuncio(s){total > PAGE_SIZE ? ` · mostrando ${ads.length} (pág. ${page}/${totalPages})` : ''} · Winner Score: señal de anuncio ganador. Sin gasto público (anuncios comerciales en CO) es un proxy de longevidad/alcance, no de inversión: sube con los días hasta cierto punto y luego baja (demasiado tiempo corriendo = saturado).
         </p>
         {totalPages > 1 && (
           <div className="flex shrink-0 items-center gap-2">

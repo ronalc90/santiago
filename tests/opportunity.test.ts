@@ -3,6 +3,7 @@ import {
   demandScore,
   competitionScore,
   marginScore,
+  effectiveCodMargin,
   creativesScore,
   composeOpportunity,
   classifyOpportunity,
@@ -69,7 +70,22 @@ describe('marginScore — cascada', () => {
   it('nivel 1: costo real + precio → real (no estimado)', () => {
     const m = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), R);
     expect(m.estimated).toBe(false);
-    expect(m.score).toBeGreaterThan(60);
+    expect(m.score).toBeGreaterThan(40); // 75% bruto → ~52% efectivo COD
+  });
+  it('margen efectivo COD < bruto: las devoluciones + el recaudo recortan el score', () => {
+    const bruto = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), {
+      ...R,
+      margin: { ...R.margin, cod: { returnRate: 0, gatewayPct: 0, returnShippingRatio: 0 } },
+    });
+    const cod = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), R);
+    expect(cod.score!).toBeLessThan(bruto.score!);
+  });
+  it('una tasa de devolución alta puede volver el margen efectivo negativo → score 0', () => {
+    const m = marginScore(sig({ unitCost: 35000, shippingCost: 12000, salePrice: 60000 }), {
+      ...R,
+      margin: { ...R.margin, cod: { returnRate: 0.45, gatewayPct: 0.06, returnShippingRatio: 1 } },
+    });
+    expect(m.score).toBe(0);
   });
   it('el costo de envío reduce el margen', () => {
     const sin = marginScore(sig({ unitCost: 20000, salePrice: 80000 }), R);
@@ -90,6 +106,33 @@ describe('marginScore — cascada', () => {
   });
   it('nivel 4: nada → null', () => {
     expect(marginScore(base, R).score).toBeNull();
+  });
+});
+
+describe('effectiveCodMargin', () => {
+  const cod = { returnRate: 0.25, gatewayPct: 0.05, returnShippingRatio: 1 };
+
+  it('descuenta recaudo y devoluciones respecto al margen bruto', () => {
+    // 80k precio, 20k costo, sin envío: bruto 75% → efectivo ~52.5%.
+    const eff = effectiveCodMargin(20000, 0, 80000, cod);
+    expect(eff.margenPct).toBeCloseTo(0.525, 3);
+    expect(eff.profitPerOrder).toBeCloseTo(42000, 0); // AOV(80k) × 52.5%
+  });
+
+  it('sin devoluciones ni recaudo coincide con el margen bruto', () => {
+    const eff = effectiveCodMargin(20000, 0, 80000, { returnRate: 0, gatewayPct: 0, returnShippingRatio: 0 });
+    expect(eff.margenPct).toBeCloseTo(0.75, 5);
+    expect(eff.profitPerOrder).toBeCloseTo(60000, 0);
+  });
+
+  it('el flete de vuelta hunde el profit potential cuando hay devoluciones', () => {
+    const sinFlete = effectiveCodMargin(20000, 15000, 80000, { ...cod, returnShippingRatio: 0 });
+    const conFlete = effectiveCodMargin(20000, 15000, 80000, { ...cod, returnShippingRatio: 1 });
+    expect(conFlete.profitPerOrder).toBeLessThan(sinFlete.profitPerOrder);
+  });
+
+  it('precio 0 no divide por cero', () => {
+    expect(effectiveCodMargin(10000, 0, 0, cod).margenPct).toBe(0);
   });
 });
 

@@ -80,7 +80,7 @@ El color sale **solo**, sin que calcules nada:
 ![Semáforo de clasificación](docs/img/02-semaforo.svg)
 
 > 💡 **Truco:** empieza por los **🔴 rojos** y **🟡 amarillos** de arriba.
-> ℹ️ Si el gasto aparece como “—”, es normal (Facebook no lo publica en CO); ahí la nota se basa en los **días activos**.
+> ℹ️ Si el gasto aparece como “—”, es normal (Facebook no lo publica en CO); ahí la nota es un **proxy de longevidad/alcance**, no de inversión: sube con los días activos hasta cierto punto y luego **baja** —un anuncio que lleva demasiado tiempo está ⚪ **saturado**, no es mejor.
 
 ---
 
@@ -141,6 +141,8 @@ Aquí agregas o quitas las tiendas que quieres vigilar (nombre, país y URL de l
 ## ⚙️ 9. Ajustes (avanzado)
 
 Aquí afinas las reglas del semáforo (**Winner Score**) y los pesos del **Motor de Oportunidad 4×25** (Demanda · Competencia · Margen · Creativos). Al guardar, se recalcula todo.
+
+> 💰 El **Margen** usa el **margen efectivo COD** (pago contra entrega): descuenta **devoluciones**, **flete de vuelta** y **comisión de recaudo**, así no sobreestima la ganancia. Ajusta tu **tasa de devolución** real (en CO suele ser 15–40 %) para que el score y el *profit potential por pedido* sean fieles.
 
 ![Ajustes: reglas y motor de oportunidad](docs/img/06-ajustes.png)
 

@@ -28,6 +28,7 @@ const rulesSchema = z.object({
   margin: z.object({
     marginLo: num, marginHi: num, roiLo: num, roiHi: num, costRatioDefault: num.min(0).max(1),
     availabilityScore: z.object({ DISPONIBLE: nullableScore, A_IMPORTAR: nullableScore, NO_DISPONIBLE: nullableScore, DESCONOCIDO: nullableScore }),
+    cod: z.object({ returnRate: num.min(0).max(1), gatewayPct: num.min(0).max(1), returnShippingRatio: num.min(0) }),
   }),
   creatives: z.object({ videosHi: num, creativesHi: num, provenLo: num, provenHi: num, unusedBonus: num }),
 });

@@ -2,10 +2,29 @@ import { describe, it, expect } from 'vitest';
 import {
   computeWinnerScore,
   computeWinnerScoreFromSignals,
+  longevityScore,
   classifyAd,
   isForeignDemandSignal,
   DEFAULT_SCORING_RULES,
 } from '../lib/services/scoring';
+
+/** Atajo: Winner Score por sola longevidad (sin gasto ni impresiones). */
+const byLongevity = (days: number, rules = DEFAULT_SCORING_RULES) =>
+  computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: days }, rules);
+
+/** Día (≤ horizonte) en el que la curva de longevidad alcanza su máximo. */
+function peakDay(rules = DEFAULT_SCORING_RULES, horizon = 365): number {
+  let best = -1;
+  let bestDay = 0;
+  for (let d = 1; d <= horizon; d += 1) {
+    const v = byLongevity(d, rules);
+    if (v > best) {
+      best = v;
+      bestDay = d;
+    }
+  }
+  return bestDay;
+}
 
 describe('computeWinnerScore', () => {
   it('divide gasto entre días activos', () => {
@@ -40,24 +59,54 @@ describe('computeWinnerScoreFromSignals', () => {
     expect(pocas).toBeGreaterThan(0);
   });
 
-  it('sin gasto ni impresiones, ordena por longevidad (más días = más score)', () => {
-    const nuevo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 3 });
-    const viejo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 45 });
-    expect(viejo).toBeGreaterThan(nuevo);
-    expect(nuevo).toBeGreaterThan(0); // ya no colapsa a 0
+  it('sube con la longevidad en la zona joven (3 < 30 < 60 días)', () => {
+    expect(byLongevity(30)).toBeGreaterThan(byLongevity(3));
+    expect(byLongevity(60)).toBeGreaterThan(byLongevity(30));
+    expect(byLongevity(3)).toBeGreaterThan(0); // nunca colapsa a 0
   });
 
-  it('la longevidad crece de forma monótona SIN techo plano (641 > 300 > 89)', () => {
-    const d89 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 89 });
-    const d300 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 300 });
-    const d641 = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: 641 });
-    expect(d641).toBeGreaterThan(d300);
-    expect(d300).toBeGreaterThan(d89);
-    // días distintos por encima del antiguo techo (saturadoDias-1) NO empatan
-    const cap = DEFAULT_SCORING_RULES.saturadoDias - 1;
-    const justoAntes = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: cap });
-    const muyViejo = computeWinnerScoreFromSignals({ estimatedSpend: 0, daysActive: cap + 200 });
-    expect(muyViejo).toBeGreaterThan(justoAntes);
+  it('tiene TECHO: pasada la zona saturada el score BAJA (más viejo = menos score)', () => {
+    const d120 = byLongevity(120);
+    const d300 = byLongevity(300);
+    const d641 = byLongevity(641);
+    expect(d120).toBeGreaterThan(d300);
+    expect(d300).toBeGreaterThan(d641);
+    // un anuncio veterano-pero-fresco supera a uno antiquísimo: ya no se premia
+    // la antigüedad infinita (lo contrario del comportamiento anterior).
+    expect(byLongevity(60)).toBeGreaterThan(d641);
+  });
+
+  it('coherencia con SATURADO: el mejor score NO está saturado y la zona saturada decrece', () => {
+    const r = DEFAULT_SCORING_RULES;
+    // El máximo de la curva cae ANTES del umbral de saturación.
+    expect(peakDay(r)).toBeLessThan(r.saturadoDias);
+    // Cualquier anuncio saturado puntúa por debajo del pico.
+    const pico = byLongevity(peakDay(r));
+    expect(byLongevity(r.saturadoDias)).toBeLessThan(pico);
+    // Dentro de la zona saturada, a más días menos score.
+    expect(byLongevity(r.saturadoDias)).toBeGreaterThan(byLongevity(r.saturadoDias + 50));
+    expect(byLongevity(r.saturadoDias + 50)).toBeGreaterThan(byLongevity(r.saturadoDias + 200));
+  });
+
+  it('el pico de longevidad sigue a saturadoDias (regla configurable)', () => {
+    const r30 = { ...DEFAULT_SCORING_RULES, saturadoDias: 30 };
+    const pico30 = peakDay(r30, 120);
+    expect(pico30).toBeLessThan(30); // siempre antes de su propia saturación
+    expect(pico30).toBeGreaterThan(15); // ~0.85 × 30 ≈ 26
+  });
+});
+
+describe('longevityScore', () => {
+  it('alcanza su máximo (LONGEVITY_MAX = 1000) en el pico y decae después', () => {
+    const peak = Math.round(DEFAULT_SCORING_RULES.saturadoDias * 0.85);
+    expect(longevityScore(peak, DEFAULT_SCORING_RULES.saturadoDias)).toBeCloseTo(1000, 5);
+    expect(longevityScore(peak + 1, DEFAULT_SCORING_RULES.saturadoDias)).toBeLessThan(1000);
+    expect(longevityScore(peak - 1, DEFAULT_SCORING_RULES.saturadoDias)).toBeLessThan(1000);
+  });
+
+  it('trata días no válidos como 1 y saturadoDias inválido como el valor por defecto', () => {
+    expect(longevityScore(0, 90)).toBe(longevityScore(1, 90));
+    expect(longevityScore(50, 0)).toBe(longevityScore(50, DEFAULT_SCORING_RULES.saturadoDias));
   });
 });
 

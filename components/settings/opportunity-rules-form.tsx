@@ -12,7 +12,7 @@ import type { OpportunityRules } from '@/lib/services/opportunity-rules';
 const WEIGHTS: { key: keyof OpportunityRules['weights']; label: string }[] = [
   { key: 'demand', label: 'Demanda internacional' },
   { key: 'competition', label: 'Competencia Colombia' },
-  { key: 'margin', label: 'Margen (Dropi)' },
+  { key: 'margin', label: 'Margen efectivo (COD)' },
   { key: 'creatives', label: 'Calidad de creativos' },
 ];
 const BANDS: { key: keyof OpportunityRules['bands']; label: string }[] = [
@@ -32,6 +32,9 @@ export function OpportunityRulesForm({ initial }: { initial: OpportunityRules })
   }
   function setBand(k: keyof OpportunityRules['bands'], v: number) {
     setR((prev) => ({ ...prev, bands: { ...prev.bands, [k]: v } }));
+  }
+  function setCod(k: keyof OpportunityRules['margin']['cod'], v: number) {
+    setR((prev) => ({ ...prev, margin: { ...prev.margin, cod: { ...prev.margin.cod, [k]: v } } }));
   }
 
   async function save() {
@@ -80,6 +83,44 @@ export function OpportunityRulesForm({ initial }: { initial: OpportunityRules })
                 <Input type="number" min={0} max={100} value={r.bands[b.key]} onChange={(e) => setBand(b.key, Number(e.target.value))} />
               </div>
             ))}
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Margen efectivo COD (pago contra entrega)</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            El margen descuenta devoluciones, flete de vuelta y comisión de recaudo: refleja la rentabilidad real, no la bruta.
+          </p>
+          <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 items-center gap-1 sm:grid-cols-2">
+              <Label className="text-sm">Tasa de devolución (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={Math.round(r.margin.cod.returnRate * 100)}
+                onChange={(e) => setCod('returnRate', Number(e.target.value) / 100)}
+              />
+            </div>
+            <div className="grid grid-cols-1 items-center gap-1 sm:grid-cols-2">
+              <Label className="text-sm">Comisión de recaudo (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={Math.round(r.margin.cod.gatewayPct * 100)}
+                onChange={(e) => setCod('gatewayPct', Number(e.target.value) / 100)}
+              />
+            </div>
+            <div className="grid grid-cols-1 items-center gap-1 sm:grid-cols-2">
+              <Label className="text-sm">Flete de vuelta (× flete de ida)</Label>
+              <Input
+                type="number"
+                min={0}
+                step={0.1}
+                value={r.margin.cod.returnShippingRatio}
+                onChange={(e) => setCod('returnShippingRatio', Number(e.target.value))}
+              />
+            </div>
           </div>
         </div>
         <Button onClick={save} disabled={saving}>

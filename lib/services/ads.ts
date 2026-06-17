@@ -24,11 +24,14 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
 
   for (const ad of ads) {
     try {
-      const winnerScore = computeWinnerScoreFromSignals({
-        estimatedSpend: ad.estimated_spend,
-        daysActive: ad.days_active,
-        estimatedImpressions: ad.estimated_impressions,
-      });
+      const winnerScore = computeWinnerScoreFromSignals(
+        {
+          estimatedSpend: ad.estimated_spend,
+          daysActive: ad.days_active,
+          estimatedImpressions: ad.estimated_impressions,
+        },
+        rules,
+      );
       const classification = classifyAd(winnerScore, ad.days_active, rules);
       const country = ad.country.toUpperCase();
 
@@ -105,11 +108,14 @@ export async function recomputeAllAds(): Promise<number> {
   for (const ad of ads) {
     // Las impresiones (si las hubo) quedaron en el payload original `raw`.
     const raw = ad.raw as { estimated_impressions?: number } | null;
-    const winnerScore = computeWinnerScoreFromSignals({
-      estimatedSpend: ad.estimatedSpend,
-      daysActive: ad.daysActive,
-      estimatedImpressions: raw?.estimated_impressions,
-    });
+    const winnerScore = computeWinnerScoreFromSignals(
+      {
+        estimatedSpend: ad.estimatedSpend,
+        daysActive: ad.daysActive,
+        estimatedImpressions: raw?.estimated_impressions,
+      },
+      rules,
+    );
     const classification = classifyAd(winnerScore, ad.daysActive, rules);
     await prisma.ad.update({ where: { id: ad.id }, data: { winnerScore, classification } });
     n += 1;

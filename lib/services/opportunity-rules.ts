@@ -37,6 +37,19 @@ export interface OpportunityRules {
     costRatioDefault: number;
     /** Último recurso: score por disponibilidad en Dropi. */
     availabilityScore: Record<DropiAvailability, number | null>;
+    /**
+     * Economía del pago contra entrega (COD). El margen bruto sobreestima la
+     * rentabilidad en CO: el margen EFECTIVO descuenta devoluciones, flete de
+     * vuelta y comisión de recaudo.
+     */
+    cod: {
+      /** Fracción de pedidos devueltos (0-1). En CO suele ser 0.15–0.40. */
+      returnRate: number;
+      /** Comisión de recaudo COD sobre el precio cobrado (0-1). */
+      gatewayPct: number;
+      /** Flete de vuelta como múltiplo del flete de ida (1 = mismo costo). */
+      returnShippingRatio: number;
+    };
   };
   creatives: { videosHi: number; creativesHi: number; provenLo: number; provenHi: number; unusedBonus: number };
 }
@@ -55,6 +68,7 @@ export const DEFAULT_OPPORTUNITY_RULES: OpportunityRules = {
     roiHi: 4,
     costRatioDefault: 0.4,
     availabilityScore: { DISPONIBLE: 55, A_IMPORTAR: 40, NO_DISPONIBLE: 15, DESCONOCIDO: null },
+    cod: { returnRate: 0.25, gatewayPct: 0.05, returnShippingRatio: 1 },
   },
   creatives: { videosHi: 8, creativesHi: 20, provenLo: 7, provenHi: 90, unusedBonus: 20 },
 };

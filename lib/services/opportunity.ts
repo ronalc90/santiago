@@ -140,24 +140,60 @@ export function competitionScore(s: OpportunitySignals, r: OpportunityRules = DE
 // --- D3: Margen — cascada de degradación -----------------------------------
 // El costo (unitCost) viene de Shopify (sincronizado desde Dropi vía la
 // integración oficial) o de un costo manual. Dropi NO expone API a terceros.
-export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT_OPPORTUNITY_RULES): DimensionResult {
-  const signals = { unitCost: s.unitCost, shippingCost: s.shippingCost, salePrice: s.salePrice, dropiAvailability: s.dropiAvailability };
-  const shipping = s.shippingCost ?? 0;
 
-  const fromCost = (cost: number, price: number, estimated: boolean, confidence: number, reason: string): DimensionResult => {
-    const margenPct = price > 0 ? (price - cost) / price : 0;
-    const roi = cost > 0 ? (price - cost) / cost : 0;
-    const sMargin = to100(scale(margenPct, r.margin.marginLo, r.margin.marginHi));
-    const sRoi = to100(logScale(roi, r.margin.roiLo, r.margin.roiHi));
+/**
+ * Margen EFECTIVO en pago contra entrega (COD). El margen bruto sobreestima la
+ * rentabilidad en Colombia: una fracción `returnRate` de los pedidos se
+ * devuelve y, en esos, se pierden el flete de ida y el de vuelta (el producto
+ * regresa al proveedor, así que NO se pierde su costo) y nunca se cobra. En los
+ * entregados se paga además la comisión de recaudo (`gatewayPct`).
+ *
+ * Devuelve el margen y ROI EFECTIVOS (esperados por pedido intentado) y el
+ * profit potential por pedido en la moneda del producto (= AOV × margen
+ * efectivo, con AOV = precio de venta de una unidad). Un producto que pierde
+ * tras devoluciones da margen negativo → score 0 (no lo lanzas).
+ */
+export function effectiveCodMargin(
+  unitCost: number,
+  shipping: number,
+  price: number,
+  cod: OpportunityRules['margin']['cod'],
+): { margenPct: number; roi: number; profitPerOrder: number } {
+  const returnRate = clamp01(cod.returnRate);
+  const gateway = clamp01(cod.gatewayPct);
+  const returnShipping = shipping * Math.max(0, cod.returnShippingRatio);
+  const profitDelivered = price - unitCost - shipping - gateway * price;
+  const lossReturned = shipping + returnShipping; // sin ingreso; el producto regresa
+  const profitPerOrder = (1 - returnRate) * profitDelivered - returnRate * lossReturned;
+  const margenPct = price > 0 ? profitPerOrder / price : 0;
+  const costBase = unitCost + shipping; // caja en riesgo por pedido
+  const roi = costBase > 0 ? profitPerOrder / costBase : 0;
+  return { margenPct, roi, profitPerOrder };
+}
+
+export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT_OPPORTUNITY_RULES): DimensionResult {
+  const cod = r.margin.cod;
+  const signals = { unitCost: s.unitCost, shippingCost: s.shippingCost, salePrice: s.salePrice, dropiAvailability: s.dropiAvailability, cod };
+  const shipping = s.shippingCost ?? 0;
+  const fmtCop = (n: number) => Math.round(n).toLocaleString('es-CO');
+
+  const fromCost = (unitCost: number, price: number, estimated: boolean, confidence: number, reason: string): DimensionResult => {
+    const eff = effectiveCodMargin(unitCost, shipping, price, cod);
+    const sMargin = to100(scale(eff.margenPct, r.margin.marginLo, r.margin.marginHi));
+    const sRoi = to100(logScale(eff.roi, r.margin.roiLo, r.margin.roiHi));
     const score = Math.round(0.6 * sMargin + 0.4 * sRoi);
-    const reasons = [reason, `margen ${(margenPct * 100).toFixed(0)}%, ROI ${roi.toFixed(1)}x`];
+    const reasons = [
+      reason,
+      `margen efectivo COD ${(eff.margenPct * 100).toFixed(0)}% · ROI ${eff.roi.toFixed(1)}x (devol. ${Math.round(cod.returnRate * 100)}%)`,
+      `profit potential ≈ $${fmtCop(eff.profitPerOrder)}/pedido`,
+    ];
     if (s.dropiAvailability === 'NO_DISPONIBLE') reasons.push('ojo: no disponible en Dropi (sin logística)');
     return { score, confidence, estimated, signals, reasons };
   };
 
-  // Nivel 1: costo real (Shopify/manual) + precio → incluye envío si existe.
+  // Nivel 1: costo real (Shopify/manual) + precio → margen efectivo COD (con envío).
   if (s.unitCost !== null && s.salePrice !== null) {
-    return fromCost(s.unitCost + shipping, s.salePrice, false, 1, 'costo real (Shopify/manual)');
+    return fromCost(s.unitCost, s.salePrice, false, 1, 'costo real (Shopify/manual)');
   }
   // Nivel 2: precio sin costo → costo estimado por ratio.
   if (s.salePrice !== null && s.unitCost === null) {

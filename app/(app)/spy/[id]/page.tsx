@@ -46,7 +46,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
               </div>
               {ad.estimatedSpend <= 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Winner Score: señal de anuncio ganador. Meta no publica el gasto de los anuncios comerciales en CO, así que se basa en los días activos — a más tiempo corriendo, más fuerte la señal.
+                  Winner Score: señal de anuncio ganador. Meta no publica el gasto de los anuncios comerciales en CO, así que aquí es un proxy de longevidad/alcance, no de inversión: la señal sube con los días hasta cierto punto y luego baja —un anuncio que lleva demasiado tiempo está saturado, no es mejor.
                 </p>
               )}
               <div>

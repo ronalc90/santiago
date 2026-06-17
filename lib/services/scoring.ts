@@ -44,8 +44,21 @@ export function computeWinnerScore(estimatedSpend: number, daysActive: number): 
 
 /** Factor para escalar impresiones/día a una magnitud comparable a gasto/día. */
 const IMPRESSIONS_PER_DAY_FACTOR = 0.05;
-/** Factor de longevidad: días activos × K (sin techo) cuando no hay gasto. */
-const LONGEVITY_FACTOR = 12;
+
+/**
+ * Escala (pico) de la señal de longevidad cuando no hay gasto. Calibrada para
+ * que un anuncio longevo-pero-aún-no-saturado roce la banda LANZAR por defecto
+ * (~1000); por debajo del pico el número cae solo en CONSIDERAR/MONITOREAR.
+ */
+const LONGEVITY_MAX = 1000;
+
+/**
+ * El pico de longevidad cae en `saturadoDias × LONGEVITY_PEAK_RATIO`, es decir
+ * JUSTO ANTES de la saturación. Así el anuncio mejor puntuado por longevidad
+ * siempre está en la zona «lanzable» (no saturada) y todo anuncio ⚪ SATURADO
+ * queda en la pendiente descendente, por debajo del pico.
+ */
+const LONGEVITY_PEAK_RATIO = 0.85;
 
 export interface WinnerSignals {
   estimatedSpend: number;
@@ -55,25 +68,48 @@ export interface WinnerSignals {
 }
 
 /**
+ * Señal de longevidad CON TECHO: sube hasta un pico y luego BAJA.
+ *  - Subida (días ≤ pico): lineal de 0 → LONGEVITY_MAX. Más días = más prueba.
+ *  - Bajada (días > pico): decaimiento hiperbólico LONGEVITY_MAX × pico/días.
+ *    Decrece de forma monótona (un anuncio más viejo puntúa MENOS), pero nunca
+ *    llega a 0: conserva una señal débil de antigüedad.
+ * El pico cae en `saturadoDias × LONGEVITY_PEAK_RATIO` (antes de la saturación),
+ * de modo que el máximo corresponde siempre a un anuncio aún NO saturado y todo
+ * anuncio saturado puntúa por debajo del pico. Ya no se premia la antigüedad
+ * infinita: a 641 días la señal es débil, no la más alta.
+ */
+export function longevityScore(daysActive: number, saturadoDias: number): number {
+  const days = Number.isFinite(daysActive) && daysActive > 0 ? daysActive : 1;
+  const saturado =
+    Number.isFinite(saturadoDias) && saturadoDias > 0
+      ? saturadoDias
+      : DEFAULT_SCORING_RULES.saturadoDias;
+  const peakDias = Math.max(1, Math.round(saturado * LONGEVITY_PEAK_RATIO));
+  const ratio = days <= peakDias ? days / peakDias : peakDias / days;
+  return LONGEVITY_MAX * ratio;
+}
+
+/**
  * Winner Score robusto a la falta de gasto. Meta NO expone gasto para anuncios
  * comerciales en CO, así que `computeWinnerScore` (gasto/día) da 0 para todos.
- * Esta función degrada con elegancia a la mejor señal disponible:
+ * Degrada con elegancia a la mejor señal disponible:
  *   1) hay gasto real → gasto/día (idéntico a computeWinnerScore).
- *   2) sin gasto → longevidad MONÓTONA (días × factor, SIN techo) + bonus por
- *      impresiones/día.
- * Sin techo, el score crece siempre con los días activos: 641 días puntúa más
- * que 300 y que 89 (antes todos los de ≥89 días colapsaban a 1.068). Así el
- * número visible sirve para comparar y el orden por score coincide con la
- * antigüedad. La marca ⚪ SATURADO la decide `classifyAd` por días, no este valor;
- * los umbrales 1000/400/100 siguen aplicando a la rama de gasto.
+ *   2) sin gasto → longevidad CON TECHO (sube hasta el pico y luego baja) +
+ *      bonus por impresiones/día.
+ * Sin gasto, el número es un PROXY de longevidad/alcance, no de inversión: por
+ * eso tiene techo y decae pasada la zona saturada, en coherencia con la marca
+ * ⚪ SATURADO de `classifyAd` (el pico se ata a `rules.saturadoDias`). Los
+ * umbrales 1000/400/100 aplican igual a ambas ramas.
  */
-export function computeWinnerScoreFromSignals(s: WinnerSignals): number {
+export function computeWinnerScoreFromSignals(
+  s: WinnerSignals,
+  rules: ScoringRules = DEFAULT_SCORING_RULES,
+): number {
   const days = Number.isFinite(s.daysActive) && s.daysActive > 0 ? s.daysActive : 1;
   if (Number.isFinite(s.estimatedSpend) && s.estimatedSpend > 0) {
     return computeWinnerScore(s.estimatedSpend, s.daysActive);
   }
-  // Longevidad sin techo: a más días activos, más fuerte la señal de ganador.
-  const longevity = days * LONGEVITY_FACTOR;
+  const longevity = longevityScore(days, rules.saturadoDias);
   // Bonus por alcance: impresiones/día escaladas. Desempata anuncios de igual
   // antigüedad y, sin impresiones, suma 0 (la longevidad manda).
   const impressions = s.estimatedImpressions ?? 0;
