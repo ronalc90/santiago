@@ -58,6 +58,14 @@ export default async function ProductsPage() {
                     {p.opportunityScore != null && (
                       <span className="text-sm font-semibold" title="Score de oportunidad">{Math.round(p.opportunityScore)}</span>
                     )}
+                    {(() => {
+                      const cascade = (p.opportunityBreakdown as { cascade?: { score?: number | null } } | null)?.cascade?.score;
+                      return cascade != null && cascade >= 60 ? (
+                        <Badge variant="green" title="Winner global que aún no llega a CO: ventana para entrar primero">
+                          🌊 {cascade}
+                        </Badge>
+                      ) : null;
+                    })()}
                     <OpportunityBadge band={p.opportunityBand} />
                     <Badge variant="outline">{p.market}</Badge>
                     <Badge variant="secondary">{DROPI_LABEL[p.dropiAvailability]}</Badge>

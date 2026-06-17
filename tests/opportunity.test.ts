@@ -4,6 +4,7 @@ import {
   competitionScore,
   marginScore,
   effectiveCodMargin,
+  cascadeScore,
   creativesScore,
   composeOpportunity,
   classifyOpportunity,
@@ -164,6 +165,39 @@ describe('composeOpportunity — re-normalización', () => {
     const dims = { demand: dim(80), competition: dim(60, true), margin: dim(40, true), creatives: dim(100) };
     const c = composeOpportunity(dims, R);
     expect(c.confidence).toBeCloseTo(0.5, 5); // demand+creatives reales = 0.25+0.25
+  });
+});
+
+describe('cascadeScore — winner global aún sin llegar a CO', () => {
+  it('null sin demanda internacional (no es un winner global)', () => {
+    expect(cascadeScore(base, R).score).toBeNull();
+  });
+
+  it('alto: probado en varios países y CO casi vacío', () => {
+    const c = cascadeScore(
+      sig({ foreignAdvertisers: 10, foreignAds: 25, foreignMaxDaysActive: 110, foreignCountries: 3, coAdvertisers: 1, mlListingsCO: 80 }),
+      R,
+    );
+    expect(c.score).toBeGreaterThan(60);
+  });
+
+  it('cae a ~0 cuando CO ya está saturado (la cascada ya llegó)', () => {
+    const fuerte = { foreignAdvertisers: 10, foreignAds: 25, foreignMaxDaysActive: 110, foreignCountries: 3 };
+    const libre = cascadeScore(sig({ ...fuerte, coAdvertisers: 0, mlListingsCO: 0 }), R);
+    const saturado = cascadeScore(sig({ ...fuerte, coAdvertisers: 40, mlListingsCO: 8000 }), R);
+    expect(libre.score!).toBeGreaterThan(saturado.score!);
+    expect(saturado.score).toBeLessThan(10);
+  });
+
+  it('la amplitud de países sube el score (cascada geográfica)', () => {
+    const unPais = cascadeScore(sig({ foreignAdvertisers: 6, foreignAds: 12, foreignMaxDaysActive: 90, foreignCountries: 1 }), R);
+    const variosPaises = cascadeScore(sig({ foreignAdvertisers: 6, foreignAds: 12, foreignMaxDaysActive: 90, foreignCountries: 4 }), R);
+    expect(variosPaises.score!).toBeGreaterThan(unPais.score!);
+  });
+
+  it('computeOpportunity expone el cascade junto al score 4×25', () => {
+    const r = computeOpportunity(sig({ foreignAdvertisers: 8, foreignAds: 20, foreignMaxDaysActive: 100, foreignCountries: 3 }), R);
+    expect(r.cascade.score).not.toBeNull();
   });
 });
 

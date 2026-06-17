@@ -64,12 +64,20 @@ export interface DimensionResult {
   reasons: string[];
 }
 
+export interface CascadeResult {
+  /** 0-100, o null si no es un winner global (sin demanda internacional). */
+  score: number | null;
+  reasons: string[];
+}
+
 export interface OpportunityResult {
   score: number | null;
   band: OpportunityBandName;
   confidence: number;
   estimated: boolean;
   dimensions: Record<DimensionKey, DimensionResult>;
+  /** Winner global que aún no llega a CO (señal de timing/primer movimiento). */
+  cascade: CascadeResult;
   weightsUsed: Record<DimensionKey, number>;
   weightsEffective: Record<DimensionKey, number>;
   coverage: number;
@@ -231,6 +239,50 @@ export function creativesScore(s: OpportunitySignals, r: OpportunityRules = DEFA
   return { score: Math.min(100, score), confidence: firm ? 1 : 0.6, estimated: !firm, signals, reasons };
 }
 
+// --- Country / Cascade Score -----------------------------------------------
+/**
+ * Country/Cascade Score: ¿es un GANADOR GLOBAL que aún NO llegó a Colombia?
+ * Multiplica la FUERZA de la demanda internacional (anunciantes, países,
+ * longevidad y volumen fuera de CO) por el ESPACIO que queda en CO
+ * (1 − saturación CO). Alto = producto probado afuera, en varios países, con CO
+ * todavía vacío → ventana para entrar primero. Sin demanda internacional no es
+ * un winner global (score null); si CO ya está saturado, la cascada ya llegó
+ * (score ~0). Usa SOLO señales existentes: no agrega datos ni configuración.
+ */
+export function cascadeScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT_OPPORTUNITY_RULES): CascadeResult {
+  if (s.foreignAdvertisers === 0 && s.foreignAds === 0) {
+    return { score: null, reasons: ['Sin anuncios internacionales: no es un winner global'] };
+  }
+  // Fuerza internacional (0-1): la AMPLITUD de países y la longevidad pesan más,
+  // porque son la esencia de una "cascada" geográfica probada.
+  const fAdvertisers = logScale(s.foreignAdvertisers, 1, r.demand.advertisersHi);
+  const fBreadth = scale(s.foreignCountries, 1, r.demand.breadthHi);
+  const fAge = scale(s.foreignMaxDaysActive, r.demand.ageLo, r.demand.ageHi);
+  const fVolume = logScale(s.foreignAds, 1, r.demand.adsHi);
+  const foreignStrength = clamp01(0.3 * fAdvertisers + 0.3 * fBreadth + 0.25 * fAge + 0.15 * fVolume);
+
+  // Espacio en CO (0-1): 1 − saturación (anunciantes CO + publicaciones ML).
+  const pAds = logScale(s.coAdvertisers, 1, r.competition.coAdvertisersHi);
+  const mlKnown = s.mlListingsCO !== null;
+  const coPresence = mlKnown
+    ? r.competition.mlWeight * logScale(s.mlListingsCO as number, r.competition.mlLo, r.competition.mlHi) +
+      (1 - r.competition.mlWeight) * pAds
+    : pAds;
+  const coHeadroom = clamp01(1 - coPresence);
+
+  const score = Math.round(foreignStrength * coHeadroom * 100);
+  const coEmpty = s.coAdvertisers === 0 && (!mlKnown || (s.mlListingsCO as number) === 0);
+  return {
+    score,
+    reasons: [
+      `${s.foreignAdvertisers} anunciante(s) en ${s.foreignCountries} país(es) fuera de CO, máx ${s.foreignMaxDaysActive} días activos`,
+      coEmpty
+        ? 'CO todavía vacío: ventana para entrar primero'
+        : `presencia en CO: ${s.coAdvertisers} anunciante(s)${mlKnown ? `, ${s.mlListingsCO} en ML` : ''}`,
+    ],
+  };
+}
+
 // --- Clasificación y composición -------------------------------------------
 export function classifyOpportunity(score: number | null, r: OpportunityRules = DEFAULT_OPPORTUNITY_RULES): OpportunityBandName {
   if (score === null) return 'SIN_DATOS';
@@ -299,6 +351,7 @@ export function computeOpportunity(s: OpportunitySignals, r: OpportunityRules = 
     confidence: comp.confidence,
     estimated,
     dimensions,
+    cascade: cascadeScore(s, r),
     weightsUsed: comp.weightsUsed,
     weightsEffective: comp.weightsEffective,
     coverage: comp.coverage,

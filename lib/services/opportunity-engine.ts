@@ -17,6 +17,7 @@ function buildBreakdown(result: OpportunityResult, rules: OpportunityRules, comp
     confidence: result.confidence,
     estimated: result.estimated,
     dimensions: result.dimensions,
+    cascade: result.cascade,
   } as unknown as Prisma.InputJsonValue;
 }
 

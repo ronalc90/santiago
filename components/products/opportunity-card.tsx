@@ -13,9 +13,14 @@ interface DimensionView {
   estimated: boolean;
   reasons?: string[];
 }
+interface CascadeView {
+  score: number | null;
+  reasons?: string[];
+}
 interface Breakdown {
   coverage?: number;
   dimensions?: Record<string, DimensionView>;
+  cascade?: CascadeView;
 }
 interface OpportunityView {
   score: number | null;
@@ -48,7 +53,7 @@ export function OpportunityCard({ productId, initial }: { productId: string; ini
         band: opportunity.band,
         confidence: opportunity.confidence,
         estimated: opportunity.estimated,
-        breakdown: { coverage: opportunity.coverage, dimensions: opportunity.dimensions },
+        breakdown: { coverage: opportunity.coverage, dimensions: opportunity.dimensions, cascade: opportunity.cascade },
       });
       router.refresh();
     } else {
@@ -59,6 +64,8 @@ export function OpportunityCard({ productId, initial }: { productId: string; ini
 
   const dims = op.breakdown?.dimensions ?? {};
   const coverage = op.breakdown?.coverage;
+  const cascade = op.breakdown?.cascade;
+  const cascadeHigh = cascade?.score != null && cascade.score >= 60;
 
   return (
     <Card>
@@ -108,6 +115,30 @@ export function OpportunityCard({ productId, initial }: { productId: string; ini
             );
           })}
         </div>
+
+        {cascade?.score != null && (
+          <div
+            className={
+              cascadeHigh
+                ? 'rounded-md border border-sky-500/40 bg-sky-500/10 p-2 text-xs text-sky-700 dark:text-sky-300'
+                : 'rounded-md border p-2 text-xs text-muted-foreground'
+            }
+            title={(cascade.reasons ?? []).join(' · ') || undefined}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                🌊 Winner global (cascada)
+                {cascadeHigh && (
+                  <Badge variant="green" className="px-1 py-0 text-[10px]">
+                    entrar ya
+                  </Badge>
+                )}
+              </span>
+              <span className="font-medium">{cascade.score}</span>
+            </div>
+            {cascadeHigh && <p className="mt-0.5">Probado afuera y CO aún con espacio: ventana para entrar primero.</p>}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -92,6 +92,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               breakdown: product.opportunityBreakdown as {
                 coverage?: number;
                 dimensions?: Record<string, { score: number | null; estimated: boolean; reasons?: string[] }>;
+                cascade?: { score: number | null; reasons?: string[] };
               } | null,
             }}
           />
