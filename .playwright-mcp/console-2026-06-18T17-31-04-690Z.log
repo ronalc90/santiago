@@ -1,0 +1,2 @@
+[    1560ms] [WARNING] Error while trying to use the following icon from the Manifest: https://meraki-app.vercel.app/icons/icon-192.png (Download error or resource isn't a valid image) @ https://meraki-app.vercel.app/assistant:0
+[ 1750717ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://wnvttwqlumxoiyfarmlx.supabase.co/rest/v1/orders?select=payment_courier_pending&tenant_id=eq.2&limit=1:0

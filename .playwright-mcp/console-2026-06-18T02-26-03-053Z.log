@@ -1,0 +1,3 @@
+[     394ms] [WARNING] GoTrueClient@sb-wnvttwqlumxoiyfarmlx-auth-token:1 (2.103.0) 2026-06-18T02:26:03.446Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ https://meraki-app.vercel.app/_next/static/chunks/111_upqmph5-v.js:23
+[     685ms] [WARNING] Error while trying to use the following icon from the Manifest: https://meraki-app.vercel.app/icons/icon-192.png (Download error or resource isn't a valid image) @ https://meraki-app.vercel.app/products:0
+[   32764ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://wnvttwqlumxoiyfarmlx.supabase.co/rest/v1/orders?select=*&limit=3:0

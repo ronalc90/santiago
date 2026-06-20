@@ -1,0 +1,23 @@
+[     188ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ https://meraki-app.vercel.app/superadmin:0
+[     192ms] [WARNING] GoTrueClient@sb-wnvttwqlumxoiyfarmlx-auth-token:1 (2.103.0) 2026-06-18T02:29:38.717Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ https://meraki-app.vercel.app/_next/static/chunks/111_upqmph5-v.js:23
+[     445ms] [WARNING] Error while trying to use the following icon from the Manifest: https://meraki-app.vercel.app/icons/icon-192.png (Download error or resource isn't a valid image) @ https://meraki-app.vercel.app/superadmin:0
+[  259166ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/users:0
+[  259371ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/audit:0
+[  259625ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/tenant:0
+[  259755ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/billing:0
+[  259875ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/tenants:0
+[  260001ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/billing:0
+[  260143ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/metrics:0
+[  260952ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://meraki-app.vercel.app/api/cron/run-agents:0
+[  261080ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://meraki-app.vercel.app/api/agents:0
+[  261948ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://meraki-app.vercel.app/api/export:0
+[  286389ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/users:0
+[  286506ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/users:0
+[  286634ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/tenants:0
+[  286769ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/tenant:0
+[  322515ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/tenants:0
+[  322629ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/metrics:0
+[  322755ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/superadmin/billing:0
+[  385627ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/users:0
+[  385832ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://meraki-app.vercel.app/api/admin/users:0
+[  386786ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://meraki-app.vercel.app/api/admin/tenant:0

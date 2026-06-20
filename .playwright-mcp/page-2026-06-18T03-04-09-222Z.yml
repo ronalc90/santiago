@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - main [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - heading "Catalogo de Productos" [level=1] [ref=e8]
+            - paragraph [ref=e9]: 0 productos registrados
+          - generic [ref=e10]:
+            - button "Ayuda de Productos" [ref=e11]:
+              - img [ref=e12]
+            - button "Exportar productos" [ref=e15]:
+              - img [ref=e16]
+            - button "Nuevo producto con foto IA" [ref=e19]:
+              - img [ref=e20]
+            - button "Nuevo" [ref=e23]:
+              - img [ref=e24]
+              - generic [ref=e25]: Nuevo
+        - generic [ref=e26]:
+          - img [ref=e27]
+          - textbox "Buscar por nombre, código o categoría..." [ref=e30]
+    - navigation [ref=e33]:
+      - generic [ref=e35]:
+        - link "Inicio" [ref=e36] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e38]
+          - generic [ref=e43]: Inicio
+        - link "Pedidos" [ref=e44] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e46]
+          - generic [ref=e49]: Pedidos
+        - link "Asistente" [ref=e50] [cursor=pointer]:
+          - /url: /assistant
+          - img [ref=e52]
+          - generic [ref=e53]: Asistente
+        - link "Inventario" [ref=e54] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e56]
+          - generic [ref=e60]: Inventario
+        - link "Despacho" [ref=e61] [cursor=pointer]:
+          - /url: /dispatch
+          - img [ref=e63]
+          - generic [ref=e68]: Despacho
+        - link "Config" [ref=e69] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e71]
+          - generic [ref=e74]: Config
+  - alert [ref=e75]

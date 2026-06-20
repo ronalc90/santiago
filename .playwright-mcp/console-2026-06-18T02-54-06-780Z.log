@@ -1,0 +1,13 @@
+[     642ms] [WARNING] GoTrueClient@sb-wnvttwqlumxoiyfarmlx-auth-token:1 (2.103.0) 2026-06-18T02:54:07.421Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ https://meraki-app.vercel.app/_next/static/chunks/111_upqmph5-v.js:23
+[    1028ms] [WARNING] Error while trying to use the following icon from the Manifest: https://meraki-app.vercel.app/icons/icon-192.png (Download error or resource isn't a valid image) @ https://meraki-app.vercel.app/products:0
+[   64583ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://meraki-app.vercel.app/api/agents/run:0
+[   64936ms] [ERROR] Failed to load resource: the server responded with a status of 405 () @ https://meraki-app.vercel.app/api/automations/run:0
+[   65890ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://meraki-app.vercel.app/api/cron/run-agents:0
+[   66015ms] [ERROR] Failed to load resource: the server responded with a status of 405 () @ https://meraki-app.vercel.app/api/cron/run-agents:0
+[   66121ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://meraki-app.vercel.app/api/agents:0
+[   66836ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://meraki-app.vercel.app/api/ai/analyze-product:0
+[   89293ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://meraki-app.vercel.app/api/ai/analyze-product:0
+[   89614ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://meraki-app.vercel.app/api/ai/analyze-product:0
+[  144150ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://wnvttwqlumxoiyfarmlx.supabase.co/rest/v1/:0
+[  171015ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://wnvttwqlumxoiyfarmlx.supabase.co/rest/v1/orders:0
+[  232097ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://wnvttwqlumxoiyfarmlx.supabase.co/rest/v1/orders?id=eq.501:0

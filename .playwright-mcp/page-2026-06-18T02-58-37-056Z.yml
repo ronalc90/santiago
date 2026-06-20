@@ -1,0 +1,183 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 🧪
+        - heading "ZZZ SANDBOX" [level=1] [ref=e7]
+        - button "Colapsar sidebar" [ref=e8]:
+          - img [ref=e9]
+      - navigation [ref=e11]:
+        - link "Dashboard" [ref=e12] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e13]
+          - generic [ref=e18]: Dashboard
+        - link "Pedidos" [ref=e19] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e20]
+          - generic [ref=e23]: Pedidos
+        - link "Asistente IA" [ref=e24] [cursor=pointer]:
+          - /url: /assistant
+          - img [ref=e25]
+          - generic [ref=e26]: Asistente IA
+        - link "Inventario" [ref=e27] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e28]
+          - generic [ref=e32]: Inventario
+        - link "Productos" [ref=e33] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e34]
+          - generic [ref=e37]: Productos
+        - link "Despacho" [ref=e38] [cursor=pointer]:
+          - /url: /dispatch
+          - img [ref=e39]
+          - generic [ref=e44]: Despacho
+        - link "Agentes IA" [ref=e45] [cursor=pointer]:
+          - /url: /agents
+          - img [ref=e46]
+          - generic [ref=e49]: Agentes IA
+        - link "Config" [ref=e50] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e51]
+          - generic [ref=e54]: Config
+        - link "Administración" [ref=e55] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e56]
+          - generic [ref=e59]: Administración
+        - link "Mi licencia" [ref=e60] [cursor=pointer]:
+          - /url: /billing
+          - img [ref=e61]
+          - generic [ref=e63]: Mi licencia
+      - generic [ref=e65]:
+        - generic [ref=e67]: S
+        - generic [ref=e68]:
+          - paragraph [ref=e69]: sandbox@zzz.test
+          - paragraph [ref=e70]: Admin
+        - button "Cerrar sesión" [ref=e71]:
+          - img [ref=e72]
+    - main [ref=e75]:
+      - generic [ref=e77]:
+        - generic [ref=e79]:
+          - img [ref=e81]
+          - generic [ref=e84]:
+            - heading "Asistente Meraki" [level=1] [ref=e85]
+            - paragraph [ref=e86]: Pedidos, inventario, consultas
+          - button "Ayuda del asistente" [ref=e87]:
+            - img [ref=e88]
+          - button "Nuevo día de trabajo / librito" [ref=e91]:
+            - img [ref=e92]
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - img [ref=e97]
+            - paragraph [ref=e100]: Hola, soy tu asistente
+            - paragraph [ref=e101]: "Habla o escribe en tus palabras — toca un ejemplo para empezar:"
+            - button "Ver todo lo que puedo hacer" [ref=e102]:
+              - img [ref=e103]
+              - text: Ver todo lo que puedo hacer
+          - generic [ref=e106]:
+            - 'button "Crear pedido \"Carlos 3203436512 Cr 15 #80-25 clásica miel talla 38 $60.000\"" [ref=e107]':
+              - img [ref=e108]
+              - generic [ref=e111]:
+                - generic [ref=e112]: Crear pedido
+                - generic [ref=e113]: "\"Carlos 3203436512 Cr 15 #80-25 clásica miel talla 38 $60.000\""
+            - 'button "Crear pedido \"Pedido para María, Cll 72 #14-33, vaquita blanca, $85.000\"" [ref=e114]':
+              - img [ref=e115]
+              - generic [ref=e118]:
+                - generic [ref=e119]: Crear pedido
+                - generic [ref=e120]: "\"Pedido para María, Cll 72 #14-33, vaquita blanca, $85.000\""
+            - button "Crear pedido \"Juan 3201234567 Chía, maxisaco cool gris, 110 mil, ya pagó por Nequi\"" [ref=e121]:
+              - img [ref=e122]
+              - generic [ref=e125]:
+                - generic [ref=e126]: Crear pedido
+                - generic [ref=e127]: "\"Juan 3201234567 Chía, maxisaco cool gris, 110 mil, ya pagó por Nequi\""
+            - button "Agregar inventario \"Tengo 10 vaquitas talla 38 en C015 a $15.000 cada una\"" [ref=e128]:
+              - img [ref=e129]
+              - generic [ref=e133]:
+                - generic [ref=e134]: Agregar inventario
+                - generic [ref=e135]: "\"Tengo 10 vaquitas talla 38 en C015 a $15.000 cada una\""
+            - button "Agregar inventario \"Puse 3 maxisacos gris cool en C08 a 45 mil\"" [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e141]:
+                - generic [ref=e142]: Agregar inventario
+                - generic [ref=e143]: "\"Puse 3 maxisacos gris cool en C08 a 45 mil\""
+            - button "Buscar \"¿Dónde están las pantuflas stitch azules?\"" [ref=e144]:
+              - img [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e149]: Buscar
+                - generic [ref=e150]: "\"¿Dónde están las pantuflas stitch azules?\""
+            - button "Buscar \"¿Cuántas vaquitas talla 38 me quedan?\"" [ref=e151]:
+              - img [ref=e152]
+              - generic [ref=e155]:
+                - generic [ref=e156]: Buscar
+                - generic [ref=e157]: "\"¿Cuántas vaquitas talla 38 me quedan?\""
+            - button "Pedidos \"¿Cuántos pedidos hay hoy?\"" [ref=e158]:
+              - img [ref=e159]
+              - generic [ref=e162]:
+                - generic [ref=e163]: Pedidos
+                - generic [ref=e164]: "\"¿Cuántos pedidos hay hoy?\""
+            - button "Pedidos \"Pedidos pendientes de entrega\"" [ref=e165]:
+              - img [ref=e166]
+              - generic [ref=e169]:
+                - generic [ref=e170]: Pedidos
+                - generic [ref=e171]: "\"Pedidos pendientes de entrega\""
+            - button "Cambiar estado \"El pedido de Carlos ya lo entregaron\"" [ref=e172]:
+              - img [ref=e173]
+              - generic [ref=e176]:
+                - generic [ref=e177]: Cambiar estado
+                - generic [ref=e178]: "\"El pedido de Carlos ya lo entregaron\""
+            - button "Cambiar estado \"Bogo me pagó el de María, 85 mil\"" [ref=e179]:
+              - img [ref=e180]
+              - generic [ref=e183]:
+                - generic [ref=e184]: Cambiar estado
+                - generic [ref=e185]: "\"Bogo me pagó el de María, 85 mil\""
+            - 'button "Cambiar estado \"Cancela el pedido #4041302\"" [ref=e186]':
+              - img [ref=e187]
+              - generic [ref=e190]:
+                - generic [ref=e191]: Cambiar estado
+                - generic [ref=e192]: "\"Cancela el pedido #4041302\""
+            - button "Costo producto \"Las pantuflas vaquita me costaron $15.000 cada una\"" [ref=e193]:
+              - img [ref=e194]
+              - generic [ref=e196]:
+                - generic [ref=e197]: Costo producto
+                - generic [ref=e198]: "\"Las pantuflas vaquita me costaron $15.000 cada una\""
+            - button "Costo producto \"Sube el costo de la maxisaco ovejero a 45.000\"" [ref=e199]:
+              - img [ref=e200]
+              - generic [ref=e202]:
+                - generic [ref=e203]: Costo producto
+                - generic [ref=e204]: "\"Sube el costo de la maxisaco ovejero a 45.000\""
+            - button "Gasto general \"Pagué 800 mil de arriendo\"" [ref=e205]:
+              - img [ref=e206]
+              - generic [ref=e209]:
+                - generic [ref=e210]: Gasto general
+                - generic [ref=e211]: "\"Pagué 800 mil de arriendo\""
+            - button "Gasto general \"Gasté 25.000 en bolsas de empaque\"" [ref=e212]:
+              - img [ref=e213]
+              - generic [ref=e216]:
+                - generic [ref=e217]: Gasto general
+                - generic [ref=e218]: "\"Gasté 25.000 en bolsas de empaque\""
+            - button "Devolución \"Me devolvieron el pedido de Carlos, le quedó grande\"" [ref=e219]:
+              - img [ref=e220]
+              - generic [ref=e223]:
+                - generic [ref=e224]: Devolución
+                - generic [ref=e225]: "\"Me devolvieron el pedido de Carlos, le quedó grande\""
+            - button "Defectuoso \"Esta pantufla vaquita azul está rota\"" [ref=e226]:
+              - img [ref=e227]
+              - generic [ref=e229]:
+                - generic [ref=e230]: Defectuoso
+                - generic [ref=e231]: "\"Esta pantufla vaquita azul está rota\""
+            - button "Reporte \"Dame el reporte de hoy\"" [ref=e232]:
+              - img [ref=e233]
+              - generic [ref=e236]:
+                - generic [ref=e237]: Reporte
+                - generic [ref=e238]: "\"Dame el reporte de hoy\""
+            - button "Reporte \"¿Cuánto he vendido este mes?\"" [ref=e239]:
+              - img [ref=e240]
+              - generic [ref=e243]:
+                - generic [ref=e244]: Reporte
+                - generic [ref=e245]: "\"¿Cuánto he vendido este mes?\""
+        - generic [ref=e247]:
+          - button "Grabar mensaje por voz" [ref=e248]:
+            - img [ref=e249]
+          - textbox "Pedido, inventario, consulta..." [ref=e252]
+          - button "Enviar mensaje" [disabled] [ref=e253]:
+            - img [ref=e254]
+  - alert [ref=e257]

@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img "pantufla" [ref=e7]: 🩴
+          - heading "Tu Tienda Meraki" [level=1] [ref=e8]
+          - paragraph [ref=e9]: Gestión de pedidos y despachos
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - generic [ref=e12]: Usuario
+            - textbox "Usuario" [ref=e13]:
+              - /placeholder: Tu nombre de usuario
+              - text: Paola
+          - generic [ref=e14]:
+            - generic [ref=e15]: Contraseña
+            - generic [ref=e16]:
+              - textbox "Contraseña" [ref=e17]:
+                - /placeholder: ••••••••
+              - button "Mostrar contraseña" [ref=e18]:
+                - img [ref=e19]
+          - generic [ref=e22] [cursor=pointer]:
+            - checkbox "Recordar dispositivo" [checked] [ref=e24]
+            - generic [ref=e27]: Recordar dispositivo
+          - button "Ingresar" [ref=e28]
+          - button "¿Olvidaste tu contraseña?" [ref=e30]
+      - paragraph [ref=e31]: Pantuflas y maxisacos con amor desde Colombia 🇨🇴
+  - alert [ref=e32]

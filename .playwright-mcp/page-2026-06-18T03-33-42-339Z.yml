@@ -1,0 +1,354 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 🏍️
+        - heading "PrimeraMayo" [level=1] [ref=e7]
+        - button "Colapsar sidebar" [ref=e8]:
+          - img [ref=e9]
+      - navigation [ref=e11]:
+        - link "Dashboard" [ref=e12] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e13]
+          - generic [ref=e18]: Dashboard
+        - link "Ventas" [ref=e19] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e20]
+          - generic [ref=e23]: Ventas
+        - link "Asistente IA" [ref=e24] [cursor=pointer]:
+          - /url: /assistant
+          - img [ref=e25]
+          - generic [ref=e26]: Asistente IA
+        - link "Inventario" [ref=e27] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e28]
+          - generic [ref=e32]: Inventario
+        - link "Catálogo" [ref=e33] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e34]
+          - generic [ref=e37]: Catálogo
+        - link "Despacho" [ref=e38] [cursor=pointer]:
+          - /url: /dispatch
+          - img [ref=e39]
+          - generic [ref=e44]: Despacho
+        - link "Agentes IA" [ref=e45] [cursor=pointer]:
+          - /url: /agents
+          - img [ref=e46]
+          - generic [ref=e49]: Agentes IA
+        - link "Config" [ref=e50] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e51]
+          - generic [ref=e54]: Config
+        - link "Administración" [ref=e55] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e56]
+          - generic [ref=e59]: Administración
+        - link "Mi licencia" [ref=e60] [cursor=pointer]:
+          - /url: /billing
+          - img [ref=e61]
+          - generic [ref=e63]: Mi licencia
+      - generic [ref=e65]:
+        - generic [ref=e67]: P
+        - generic [ref=e68]:
+          - paragraph [ref=e69]: primeramayo
+          - paragraph [ref=e70]: Admin
+        - button "Cerrar sesión" [ref=e71]:
+          - img [ref=e72]
+    - main [ref=e75]:
+      - generic [ref=e77]:
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - heading "Configuración" [level=1] [ref=e81]
+            - paragraph [ref=e82]: Tu Tienda Meraki
+          - button "Ayuda de Configuración" [ref=e83]:
+            - img [ref=e84]
+            - generic [ref=e87]: Ayuda
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - img [ref=e92]
+              - heading "Perfil" [level=2] [ref=e95]
+            - generic [ref=e97]:
+              - generic [ref=e98]: P
+              - generic [ref=e99]:
+                - paragraph [ref=e100]: primeramayo
+                - paragraph [ref=e101]: Admin
+                - paragraph [ref=e102]: PrimeraMayo
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - img [ref=e106]
+              - heading "Apariencia" [level=2] [ref=e112]
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - paragraph [ref=e117]: Tema
+                - paragraph [ref=e118]: Modo oscuro protege tus ojos de noche. "Sistema" sigue el ajuste del celular/computador.
+                - generic [ref=e119]:
+                  - button "Claro" [ref=e120]:
+                    - img [ref=e121]
+                    - text: Claro
+                  - button "Oscuro" [ref=e127]:
+                    - img [ref=e128]
+                    - text: Oscuro
+                  - button "Sistema" [ref=e130]:
+                    - img [ref=e131]
+                    - text: Sistema
+              - generic [ref=e133]:
+                - paragraph [ref=e134]: Tamaño de letra
+                - paragraph [ref=e135]: Aumenta el texto para leer más fácil.
+                - generic [ref=e136]:
+                  - button "S" [ref=e137]
+                  - button "M" [ref=e138]
+                  - button "L" [ref=e139]
+                  - button "XL" [ref=e140]
+              - generic [ref=e141]:
+                - paragraph [ref=e142]: Densidad
+                - paragraph [ref=e143]: Compacta muestra más información en pantalla.
+                - generic [ref=e144]:
+                  - button "Cómoda" [ref=e145]:
+                    - img [ref=e146]
+                    - text: Cómoda
+                  - button "Compacta" [ref=e151]:
+                    - img [ref=e152]
+                    - text: Compacta
+              - generic [ref=e157]:
+                - generic [ref=e158]:
+                  - paragraph [ref=e159]: Reducir animaciones
+                  - paragraph [ref=e160]: Minimiza transiciones y efectos para mayor comodidad visual.
+                - switch [ref=e161]
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - img [ref=e166]
+              - heading "Preferencias generales" [level=2] [ref=e169]
+            - generic [ref=e171]:
+              - generic [ref=e172]:
+                - paragraph [ref=e173]:
+                  - img [ref=e174]
+                  - text: Formato de moneda
+                - generic [ref=e176]:
+                  - button "Sin decimales ($ 15.000)" [ref=e177]
+                  - button "Con decimales ($ 15.000,00)" [ref=e178]
+              - generic [ref=e179]:
+                - generic [ref=e180]:
+                  - paragraph [ref=e181]: Sonidos de confirmación
+                  - paragraph [ref=e182]: Pequeños beeps al guardar o completar acciones.
+                - switch [checked] [ref=e183]
+              - generic [ref=e185]:
+                - generic [ref=e186]:
+                  - paragraph [ref=e187]: Confirmar antes de borrar
+                  - paragraph [ref=e188]: Pide confirmación antes de eliminar pedidos, productos o inventario.
+                - switch [checked] [ref=e189]
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - img [ref=e194]
+              - heading "Cambiar contraseña" [level=2] [ref=e197]
+            - generic [ref=e199]:
+              - generic [ref=e200]:
+                - generic [ref=e201]: Contraseña actual
+                - textbox "••••••••" [ref=e202]
+              - generic [ref=e203]:
+                - generic [ref=e204]: Nueva contraseña
+                - textbox "••••••••" [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]: Confirmar contraseña
+                - textbox "••••••••" [ref=e208]
+              - button "Cambiar contraseña" [ref=e209]
+          - generic [ref=e210]:
+            - generic [ref=e211]:
+              - img [ref=e213]
+              - heading "API de IA" [level=2] [ref=e216]
+            - generic [ref=e217]:
+              - generic [ref=e218]:
+                - generic [ref=e219]:
+                  - paragraph [ref=e220]: OpenAI API Key
+                  - paragraph [ref=e221]: Requerida para el asistente de pedidos con IA
+                - img [ref=e222]
+              - generic [ref=e224]:
+                - generic [ref=e225]:
+                  - generic [ref=e226]: Pegar API key
+                  - generic [ref=e227]:
+                    - textbox "sk-..." [ref=e228]
+                    - button "Mostrar API key" [ref=e229]:
+                      - img [ref=e230]
+                - generic [ref=e233]:
+                  - button "Guardar" [disabled] [ref=e234]:
+                    - img [ref=e235]
+                    - text: Guardar
+                  - button "Probar conexión" [disabled] [ref=e239]:
+                    - img [ref=e240]
+                    - text: Probar conexión
+              - paragraph [ref=e242]: La clave se almacena de forma segura. Solo se muestran los últimos 4 caracteres.
+          - generic [ref=e243]:
+            - generic [ref=e244]:
+              - img [ref=e246]
+              - heading "Importar datos" [level=2] [ref=e248]
+            - generic [ref=e249]:
+              - paragraph [ref=e250]: Sube un archivo Excel (.xlsx) con pedidos, inventario o productos. El sistema detecta el tipo automáticamente.
+              - generic [ref=e251]:
+                - generic [ref=e252] [cursor=pointer]:
+                  - img [ref=e254]
+                  - generic [ref=e257]:
+                    - paragraph [ref=e258]: Selecciona un archivo Excel
+                    - paragraph [ref=e259]: .xlsx o .xls — El sistema detecta automáticamente el tipo
+                - generic [ref=e260]:
+                  - generic [ref=e261]:
+                    - text: 📦
+                    - paragraph [ref=e262]: Pedidos
+                    - paragraph [ref=e263]: CLIENTE, CELULAR, DIRECCIÓN...
+                  - generic [ref=e264]:
+                    - text: 📋
+                    - paragraph [ref=e265]: Inventario
+                    - paragraph [ref=e266]: MODELO, CANASTA, CANTIDAD...
+                  - generic [ref=e267]:
+                    - text: 🏷️
+                    - paragraph [ref=e268]: Productos
+                    - paragraph [ref=e269]: CÓDIGO, DETALLE, COSTO...
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - img [ref=e273]
+              - heading "Preferencias de impresión" [level=2] [ref=e277]
+            - generic [ref=e279]:
+              - generic [ref=e280]:
+                - paragraph [ref=e281]: Tamaño de letra en guía
+                - paragraph [ref=e282]: Elige un preajuste o arma tu propio tamaño para que todo quepa en la cinta térmica.
+                - generic [ref=e283]:
+                  - button "Pequeño" [ref=e284]
+                  - button "Mediano" [ref=e285]
+                  - button "Grande" [ref=e286]
+                  - button "Personalizado" [ref=e287]
+              - generic [ref=e288]:
+                - paragraph [ref=e289]: Ajuste fino (pt) — tocar cualquier control activa el modo Personalizado
+                - generic [ref=e290]:
+                  - generic [ref=e291]:
+                    - paragraph [ref=e292]: Cabecera
+                    - generic [ref=e293]:
+                      - button "Disminuir Cabecera" [ref=e294]:
+                        - img [ref=e295]
+                      - generic [ref=e296]: 11.0pt
+                      - button "Aumentar Cabecera" [ref=e297]:
+                        - img [ref=e298]
+                  - generic [ref=e299]:
+                    - paragraph [ref=e300]: Cuerpo
+                    - generic [ref=e301]:
+                      - button "Disminuir Cuerpo" [ref=e302]:
+                        - img [ref=e303]
+                      - generic [ref=e304]: 12.0pt
+                      - button "Aumentar Cuerpo" [ref=e305]:
+                        - img [ref=e306]
+                  - generic [ref=e307]:
+                    - paragraph [ref=e308]: Destacado
+                    - generic [ref=e309]:
+                      - button "Disminuir Destacado" [ref=e310]:
+                        - img [ref=e311]
+                      - generic [ref=e312]: 13.0pt
+                      - button "Aumentar Destacado" [ref=e313]:
+                        - img [ref=e314]
+                  - generic [ref=e315]:
+                    - paragraph [ref=e316]: Pie
+                    - generic [ref=e317]:
+                      - button "Disminuir Pie" [ref=e318]:
+                        - img [ref=e319]
+                      - generic [ref=e320]: 9.0pt
+                      - button "Aumentar Pie" [ref=e321]:
+                        - img [ref=e322]
+                - paragraph [ref=e323]: "Rango permitido: 6–24 pt · paso 0.5 pt."
+              - generic [ref=e324]:
+                - paragraph [ref=e325]: Vista previa de la guía
+                - generic [ref=e327]:
+                  - generic [ref=e328]:
+                    - img "Meraki" [ref=e329]
+                    - generic [ref=e330]:
+                      - paragraph [ref=e331]: Tu Tienda
+                      - paragraph [ref=e332]: Meraki
+                  - generic [ref=e334]:
+                    - paragraph [ref=e336]: TM-0001
+                    - paragraph [ref=e338]: Paola Rodríguez
+                    - paragraph [ref=e340]: "3203880422"
+                    - paragraph [ref=e342]: "Calle 123 #45-67"
+                    - paragraph [ref=e344]: Apto 301 · Bogotá
+                    - paragraph [ref=e346]: P12
+                    - paragraph [ref=e348]: 2 pares pantuflas · negro · talla 37
+                    - paragraph [ref=e350]: $ 85.000
+                    - paragraph [ref=e352]: Llamar antes de entregar
+                  - generic [ref=e353]:
+                    - paragraph [ref=e354]: Mayor Información
+                    - paragraph [ref=e355]: "3203880422."
+              - generic [ref=e356]:
+                - generic [ref=e357]:
+                  - paragraph [ref=e358]: Abrir diálogo de impresión automáticamente
+                  - paragraph [ref=e359]: Al abrir una guía, abre directo el diálogo del sistema.
+                - switch [ref=e360]
+              - generic [ref=e362]:
+                - generic [ref=e363]:
+                  - paragraph [ref=e364]: Mostrar logo en guías
+                  - paragraph [ref=e365]: Incluye el logo de Tu Tienda Meraki en la cabecera de cada guía.
+                - switch [checked] [ref=e366]
+              - generic [ref=e368]:
+                - paragraph [ref=e369]:
+                  - img [ref=e370]
+                  - text: Impresora recomendada
+                - paragraph [ref=e374]: XP-56C térmica 58mm. Configurar márgenes en 0mm y tamaño de papel en 58mm.
+          - generic [ref=e375]:
+            - generic [ref=e376]:
+              - img [ref=e378]
+              - heading "Negocio" [level=2] [ref=e382]
+            - generic [ref=e383]:
+              - generic [ref=e384]:
+                - generic [ref=e385]:
+                  - term [ref=e386]: Nombre del negocio
+                  - definition [ref=e387]: Tu Tienda Meraki
+                - generic [ref=e388]:
+                  - term [ref=e389]:
+                    - img [ref=e390]
+                    - text: Teléfono de contacto
+                  - definition [ref=e392]: "3203880422"
+                - generic [ref=e393]:
+                  - term [ref=e394]: Productos
+                  - definition [ref=e395]: Pantuflas · Maxisacos
+              - paragraph [ref=e396]: Para modificar datos del negocio, contacta al administrador.
+          - generic [ref=e397]:
+            - generic [ref=e398]:
+              - img [ref=e400]
+              - heading "Zona peligrosa" [level=2] [ref=e402]
+            - generic [ref=e404]:
+              - generic [ref=e405]:
+                - paragraph [ref=e406]: Eliminar todos los datos de la cuenta
+                - paragraph [ref=e407]: Borra pedidos, inventario, productos, gastos y preferencias. La cuenta queda como nueva. Esta acción es irreversible.
+              - button "Eliminar todos los datos" [ref=e408]:
+                - img [ref=e409]
+                - text: Eliminar todos los datos
+          - generic [ref=e412]:
+            - generic [ref=e413]:
+              - img [ref=e415]
+              - heading "Acerca de" [level=2] [ref=e417]
+            - generic [ref=e418]:
+              - generic [ref=e419]:
+                - generic [ref=e420]:
+                  - term [ref=e421]: Versión
+                  - definition [ref=e422]:
+                    - button "Ver historial de versiones" [ref=e423]:
+                      - text: "1.031"
+                      - img [ref=e424]
+                - generic [ref=e426]:
+                  - term [ref=e427]: Creada por
+                  - definition [ref=e428]: Ronald · Koptup
+                - paragraph [ref=e429]: Toca la versión para ver qué mejoró en cada entrega.
+              - generic [ref=e430]:
+                - paragraph [ref=e431]: ¿Necesitas ayuda o tienes ideas?
+                - link "+57 302 479 4842 WhatsApp" [ref=e432] [cursor=pointer]:
+                  - /url: https://wa.me/573024794842?text=Hola%20Ronald%2C%20te%20escribo%20por%20la%20app%20Meraki
+                  - img [ref=e433]
+                  - generic [ref=e435]: +57 302 479 4842
+                  - generic [ref=e436]: WhatsApp
+                - link "koptup.com Sitio web" [ref=e437] [cursor=pointer]:
+                  - /url: https://koptup.com
+                  - img [ref=e438]
+                  - generic [ref=e441]: koptup.com
+                  - generic [ref=e442]: Sitio web
+          - button "Cerrar sesión Salir de la cuenta" [ref=e444]:
+            - generic [ref=e445]:
+              - img [ref=e447]
+              - generic [ref=e450]:
+                - paragraph [ref=e451]: Cerrar sesión
+                - paragraph [ref=e452]: Salir de la cuenta
+            - img [ref=e453]
+  - alert [ref=e455]

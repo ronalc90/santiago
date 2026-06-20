@@ -1,0 +1,96 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 🩴
+        - heading "Tu Tienda Meraki" [level=1] [ref=e7]
+        - button "Colapsar sidebar" [ref=e8]:
+          - img [ref=e9]
+      - navigation [ref=e11]:
+        - link "Dashboard" [ref=e12] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e13]
+          - generic [ref=e18]: Dashboard
+        - link "Pedidos" [ref=e19] [cursor=pointer]:
+          - /url: /orders
+          - img [ref=e20]
+          - generic [ref=e23]: Pedidos
+        - link "Asistente IA" [ref=e24] [cursor=pointer]:
+          - /url: /assistant
+          - img [ref=e25]
+          - generic [ref=e26]: Asistente IA
+        - link "Inventario" [ref=e27] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e28]
+          - generic [ref=e32]: Inventario
+        - link "Productos" [ref=e33] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e34]
+          - generic [ref=e37]: Productos
+        - link "Despacho" [ref=e38] [cursor=pointer]:
+          - /url: /dispatch
+          - img [ref=e39]
+          - generic [ref=e44]: Despacho
+        - link "Agentes IA" [ref=e45] [cursor=pointer]:
+          - /url: /agents
+          - img [ref=e46]
+          - generic [ref=e49]: Agentes IA
+        - link "Config" [ref=e50] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e51]
+          - generic [ref=e54]: Config
+        - link "Administración" [ref=e55] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e56]
+          - generic [ref=e59]: Administración
+        - link "Mi licencia" [ref=e60] [cursor=pointer]:
+          - /url: /billing
+          - img [ref=e61]
+          - generic [ref=e63]: Mi licencia
+        - link "Plataforma" [ref=e64] [cursor=pointer]:
+          - /url: /superadmin
+          - img [ref=e65]
+          - generic [ref=e69]: Plataforma
+      - generic [ref=e71]:
+        - generic [ref=e73]: R
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: ronald
+          - paragraph [ref=e76]: Superadmin
+        - button "Cerrar sesión" [ref=e77]:
+          - img [ref=e78]
+    - main [ref=e81]:
+      - generic [ref=e83]:
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - img [ref=e86]
+            - heading "Plataforma" [level=1] [ref=e90]
+          - generic [ref=e91]:
+            - button "Correr agentes" [ref=e92]:
+              - img [ref=e93]
+              - text: Correr agentes
+            - generic [ref=e96]:
+              - paragraph [ref=e97]:
+                - img [ref=e98]
+                - text: Ingresos
+              - paragraph [ref=e100]: $ 0
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - img [ref=e103]
+            - heading "Nuevo negocio (tenant)" [level=2] [ref=e104]
+          - generic [ref=e105]:
+            - textbox "Nombre del negocio" [ref=e106]
+            - textbox "slug (opcional)" [ref=e107]
+            - textbox "Industria (ej. motos)" [ref=e108]
+            - textbox "Logo (emoji)" [ref=e109]
+            - textbox "Email del admin" [ref=e110]
+            - textbox "Contraseña del admin" [ref=e111]
+            - combobox [ref=e112]:
+              - option "Free" [selected]
+              - option "Pro"
+              - option "Enterprise"
+          - button "Crear negocio" [ref=e113]
+        - generic [ref=e114]:
+          - heading "Negocios (0)" [level=2] [ref=e115]
+          - list [ref=e116]:
+            - listitem [ref=e117]: Sin negocios.
+  - alert [ref=e118]
