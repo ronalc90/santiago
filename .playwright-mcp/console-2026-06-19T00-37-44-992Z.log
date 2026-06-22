@@ -293,3 +293,4 @@ No ingreses ni pegues ningún código que no entiendas. @ https://www.gstatic.co
 [138903354ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://clients6.google.com/drive/v2beta/files/1o5dIXjqQ-EApPJJxvBRobT9HFedCNuXh?fields=headRevisionId&supportsTeamDrives=true&includeTeamDriveItems=true&key=AIzaSyCN_sSPJMpYrAzC5AtTrltNC8oRmLtoqBk&%24unique=gc144:0
 [138903358ms] [ERROR] Analytics logging failed: XhrHttpError: Request Failed, status=0, url=/analytics?authuser=0 @ https://ssl.gstatic.com/colaboratory-static/common/7463dc3dae860203afb5657afc3b424d/external_binary_es6_l10n__es_419.js:2804
 [138903358ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://colab.research.google.com/analytics?authuser=0:0
+[145268568ms] [LOG] Cerrando "Empleo_Minero_Argentina_EDA_Grupo5.ipynb" @ https://ssl.gstatic.com/colaboratory-static/common/7463dc3dae860203afb5657afc3b424d/external_binary_es6_l10n__es_419.js:2247

@@ -13,6 +13,7 @@ import { CostSyncCard } from '@/components/settings/cost-sync-card';
 import { MeliCard } from '@/components/settings/meli-card';
 import { DiscoveryCard } from '@/components/settings/discovery-card';
 import { LandingPromptsForm } from '@/components/settings/landing-prompts-form';
+import { VersionCard } from '@/components/settings/version-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
       <DiscoveryCard initial={discoveryConfig} />
       <PromptsForm initial={prompts} />
       <LandingPromptsForm slots={slotPrompts} />
+      <VersionCard />
     </div>
   );
 }
