@@ -14,10 +14,6 @@ import { getEnv } from '@/lib/config/env';
 
 export const dynamic = 'force-dynamic';
 
-const DROPI_LABEL: Record<string, string> = {
-  DISPONIBLE: 'Dropi', NO_DISPONIBLE: 'No Dropi', A_IMPORTAR: 'A importar', DESCONOCIDO: '—',
-};
-
 interface SP {
   noCO?: string;
   dropi?: string;
@@ -137,7 +133,15 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                           <ExternalLink className="h-3 w-3 text-muted-foreground" />
                         </a>
                       ) : (
-                        <Badge variant={c.dropiStatus === 'A_IMPORTAR' ? 'yellow' : 'gray'}>{DROPI_LABEL[c.dropiStatus]}</Badge>
+                        <a
+                          href={dropiPanelSearchUrl(c.name)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                          title="Buscar este producto en tu panel de Dropi"
+                        >
+                          buscar <ExternalLink className="h-3 w-3" />
+                        </a>
                       )}
                     </TableCell>
                     <TableCell className="text-xs">{c._count.creatives}</TableCell>

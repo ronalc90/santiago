@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  e88373d: { title: 'Precios en COP correctos en landings/IA + diagnóstico de Shopify vacío', detail: 'Arregla "70.000"→70 (parseCop), pasa el precio formateado a la IA con instrucción de exactitud, y avisa claro cuando tu Shopify no tiene productos.' },
   '555131d': { title: 'El catálogo Dropi se llena solo desde Shopify en cada búsqueda', detail: 'La discovery refresca el catálogo desde Shopify y cruza en la misma corrida, sin botón ni CSV.' },
   '8510808': { title: '«Con Dropi» arreglado: cruce por contención + lectura sin read_inventory', detail: 'Dos arreglos para que «Con Dropi» muestre productos: el cruce de nombres pasa a contención (los títulos largos de ML ya cruzan) y el espejo de Shopify ya no depende del scope read_inventory.' },
   '263ad59': { title: 'Sync diario del espejo Dropi + link al panel de Dropi', detail: 'El espejo de Shopify se sincroniza a diario junto a los costos, y el badge «Dropi» enlaza a tu panel de Dropi.' },

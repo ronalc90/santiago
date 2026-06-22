@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "e88373d",
+    "date": "2026-06-22",
+    "subject": "fix(landings+dropi): precios en COP correctos + diagnóstico claro de Shopify vacío"
+  },
+  {
     "hash": "555131d",
     "date": "2026-06-22",
     "subject": "feat(dropi): el catálogo se llena solo desde Shopify en cada búsqueda"
