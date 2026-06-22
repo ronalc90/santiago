@@ -129,10 +129,10 @@ export async function fetchDropiProducts(maxPages = 50, pageSize = 100): Promise
       const isAuth = Number(json.status) === 401 || res.status === 401 || /access denied|denied|unauthor/i.test(msg);
       if (isAuth) {
         throw new Error(
-          `Dropi denegó el acceso: el token de Integración está restringido por IP` +
-            (callerIp ? ` (la petición salió desde ${callerIp})` : '') +
-            `. En Dropi → Integraciones, genera/edita el token whitelisteando la IP de salida del servidor que llama. ` +
-            `Ojo: en Vercel la IP es dinámica; conviene correr esta sincronización desde un host con IP fija.`,
+          `Dropi denegó el acceso (Access denied)` +
+            (callerIp ? ` desde ${callerIp}` : '') +
+            `. Dropi no autoriza el consumo directo de su API para integraciones propias (lo confirmó su soporte). ` +
+            `Usa el catálogo por CSV: exporta tus productos/favoritos desde el panel de Dropi e impórtalos aquí.`,
         );
       }
       throw new Error(`Dropi rechazó la consulta: ${msg}.`);

@@ -100,25 +100,20 @@ export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: Discov
 
         <div className="space-y-2 border-t pt-4">
           <Label className="text-xs">Catálogo Dropi</Label>
-          {dropiApiConfigured ? (
-            <>
-              <p className="text-xs text-muted-foreground">
-                Conectado por API: trae el catálogo automáticamente y cruza los candidatos. Corre cuando quieras (o a diario si configuras el cron).
-              </p>
-              <Button variant="outline" onClick={syncDropiApi} disabled={syncing}>
-                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sincronizar catálogo Dropi (API)
-              </Button>
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Para traerlo automáticamente, genera el token de Integración en app.dropi.co → Integraciones y ponlo en DROPI_INTEGRATION_KEY. Mientras tanto, impórtalo por CSV abajo.
-            </p>
-          )}
-          <p className="pt-1 text-xs text-muted-foreground">Alternativa por CSV — cabecera: name, sku, category, cost, stock, image.</p>
+          <p className="text-xs text-muted-foreground">
+            Dropi no permite consumir su API directamente para integraciones propias (su soporte lo confirmó). El camino soportado es
+            exportar tu catálogo/favoritos a CSV desde el panel de Dropi e importarlo aquí: se cruza por nombre con los candidatos.
+          </p>
+          <p className="text-xs text-muted-foreground">Cabecera del CSV: name, sku, category, cost, stock, image.</p>
           <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
           <Button variant="outline" onClick={importCsv} disabled={importing || !csv.trim()}>
             {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar catálogo Dropi (CSV)
           </Button>
+          {dropiApiConfigured && (
+            <Button variant="ghost" size="sm" onClick={syncDropiApi} disabled={syncing} title="Solo funciona si Dropi habilitó tu integración para consumir su API">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Probar sync por API (solo si Dropi habilitó tu integración)
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

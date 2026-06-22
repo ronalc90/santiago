@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "d5c1faf",
+    "date": "2026-06-21",
+    "subject": "fix(dropi): mensaje claro cuando el token está restringido por IP"
+  },
+  {
     "hash": "ade4431",
     "date": "2026-06-21",
     "subject": "fix(dropi): usar el endpoint real de Integraciones (catálogo ahora funciona)"
