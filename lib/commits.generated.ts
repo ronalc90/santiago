@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "92b73b7",
+    "date": "2026-06-21",
+    "subject": "feat(ajustes): versión por commit con explicación clara y fecha (actual: 2656)"
+  },
+  {
     "hash": "a019b66",
     "date": "2026-06-21",
     "subject": "fix(ui): dinero en COP, señales deducidas solo-lectura y guía de Dropi"

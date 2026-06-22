@@ -1,28 +1,26 @@
 import { COMMITS } from '@/lib/commits.generated';
 
 /**
- * Versión y cambios de WinSpy. Cada commit del proyecto es UNA versión, con una
- * explicación clara (lenguaje de negocio) y su fecha. La versión más reciente es
- * la 2656; cada commit anterior baja de uno en uno. El número es ESTABLE por
- * commit (se calcula desde el más antiguo + un offset), así que al sumar commits
- * nuevos los antiguos conservan su versión.
+ * Versión y cambios de WinSpy. La VERSIÓN es el número de commit: si hay 58
+ * commits, vamos en la v0.58. Cada commit es una versión (v0.1, v0.2, …, v0.58),
+ * la más reciente es la actual. El número es estable por commit (ordinal desde
+ * el primer commit).
  *
  * Las fechas/hashes salen del historial real (lib/commits.generated.ts, generado
  * con `npm run gen:commits`). Aquí se añade la explicación entendible por commit.
  */
 export interface Release {
-  version: number;
+  /** "0.N" donde N es el número de commit (1 = el primero). */
+  version: string;
   date: string;
   hash: string;
   title: string;
   detail: string;
 }
 
-const NEWEST_VERSION = 2656;
-const VERSION_OFFSET = NEWEST_VERSION - (COMMITS.length - 1);
-
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  '92b73b7': { title: 'Una versión por cada cambio, clara y con fecha', detail: 'El apartado «Versión y cambios» muestra cada cambio del proyecto como una versión, con su explicación entendible y su fecha.' },
   a019b66: { title: 'Dinero en pesos (COP), señales automáticas y aviso de Dropi', detail: 'Todo el dinero del negocio se muestra en pesos colombianos. Las señales que el sistema detecta solo de los anuncios («se vende en CO», «creativo extranjero sin usar») quedan de solo lectura, y se avisa cuándo falta importar el catálogo Dropi para que el filtro «Con Dropi» funcione.' },
   a90b853: { title: 'Historial completo de versiones y commits', detail: 'El apartado de versiones pasa a mostrar todo el historial del proyecto, no solo las últimas versiones.' },
   '33b514b': { title: 'Modo lectura y tema guardado en tu cuenta', detail: 'Se agrega un tercer tema (lectura, tipo papel sepia) además de claro y oscuro, y la preferencia queda guardada en tu cuenta para cualquier dispositivo.' },
@@ -87,7 +85,8 @@ const DETAILS: Record<string, { title: string; detail: string }> = {
 export const RELEASES: Release[] = COMMITS.map((c, i) => {
   const d = DETAILS[c.hash];
   return {
-    version: VERSION_OFFSET + (COMMITS.length - 1 - i),
+    // El más reciente (i=0) es el commit nº COMMITS.length → v0.{length}.
+    version: `0.${COMMITS.length - i}`,
     date: c.date,
     hash: c.hash,
     title: d?.title ?? c.subject,
@@ -95,5 +94,5 @@ export const RELEASES: Release[] = COMMITS.map((c, i) => {
   };
 });
 
-/** Versión actual (la más reciente). */
-export const APP_VERSION = String(RELEASES[0]?.version ?? NEWEST_VERSION);
+/** Versión actual (la más reciente) = "0.{nº de commits}". */
+export const APP_VERSION = RELEASES[0]?.version ?? '0.1';
