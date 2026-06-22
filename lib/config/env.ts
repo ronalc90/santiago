@@ -88,18 +88,16 @@ const envSchema = z.object({
   COST_SYNC_CRON: z.string().default('0 7 * * *'),
 
   // --- Dropi (catálogo de productos vía API de Integraciones) ----------------
-  // Dropi SÍ expone una API de integraciones (api.dropi.co): login con email/clave
-  // → token bearer, o un token de Integraciones (header `dropi-integration-key`)
-  // generado en app.dropi.co → Integraciones. Sin credenciales, el catálogo se
-  // importa por CSV (fallback). El costo (margen) sigue llegando vía Shopify.
-  // Las rutas son PARAMETRIZABLES porque Dropi no publica abiertamente el path del
-  // catálogo: ajústalas si tu cuenta usa otras (ver la doc de tu panel de Dropi).
+  // Dropi expone una API de Integraciones (api.dropi.co). El catálogo se trae con
+  // el TOKEN DE INTEGRACIÓN (header `dropi-integration-key`) que se genera en
+  // app.dropi.co → Integraciones; NO requiere login email/clave ni whitelist de
+  // IP (así lo hacen los plugins oficiales tipo Dropify). Sin token, se usa el
+  // CSV. El costo (margen) sigue llegando vía Shopify.
   DROPI_API_BASE_URL: z.string().url().default('https://api.dropi.co'),
-  DROPI_EMAIL: z.string().optional().default(''),
-  DROPI_PASSWORD: z.string().optional().default(''),
   DROPI_INTEGRATION_KEY: z.string().optional().default(''),
-  DROPI_LOGIN_PATH: z.string().default('/api/login'),
-  DROPI_PRODUCTS_PATH: z.string().default('/api/products/index'),
+  // Ruta del catálogo (la usan los plugins reales). Parametrizable por si tu país
+  // usa otro host/ruta (.com.py/.pe/.pa, etc.).
+  DROPI_PRODUCTS_PATH: z.string().default('/integrations/products/index'),
   // Cron (BullMQ) para sincronizar el catálogo Dropi a diario. Vacío = solo manual.
   DROPI_SYNC_CRON: z.string().default(''),
 

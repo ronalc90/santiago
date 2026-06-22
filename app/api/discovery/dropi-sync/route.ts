@@ -13,7 +13,7 @@ export async function POST() {
   if (auth instanceof NextResponse) return auth;
   if (!isDropiApiConfigured()) {
     return NextResponse.json(
-      { error: 'Falta configurar la API de Dropi (DROPI_INTEGRATION_KEY, o DROPI_EMAIL + DROPI_PASSWORD).' },
+      { error: 'Falta el token de Dropi (DROPI_INTEGRATION_KEY). Genéralo en app.dropi.co → Integraciones.' },
       { status: 409 },
     );
   }

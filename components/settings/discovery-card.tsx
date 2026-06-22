@@ -111,7 +111,7 @@ export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: Discov
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Para traerlo automáticamente, configura las credenciales de la API de Dropi (DROPI_INTEGRATION_KEY, o DROPI_EMAIL + DROPI_PASSWORD). Mientras tanto, impórtalo por CSV abajo.
+              Para traerlo automáticamente, genera el token de Integración en app.dropi.co → Integraciones y ponlo en DROPI_INTEGRATION_KEY. Mientras tanto, impórtalo por CSV abajo.
             </p>
           )}
           <p className="pt-1 text-xs text-muted-foreground">Alternativa por CSV — cabecera: name, sku, category, cost, stock, image.</p>

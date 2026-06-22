@@ -24,6 +24,17 @@ describe('parseDropiProducts — tolerante a la forma de la respuesta', () => {
     expect(out[0].imageUrl).toBe('http://img/1.jpg');
   });
 
+  it('forma real de Dropi: {isSuccess, objects:[{id, name, sale_price, gallery}]}', () => {
+    const out = parseDropiProducts({
+      isSuccess: true,
+      objects: [
+        { id: 12345, name: 'Reloj Inteligente', sale_price: 32000, stock: 80, gallery: [{ url: 'http://img/r.jpg' }] },
+      ],
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: 'Reloj Inteligente', sku: '12345', cost: 32000, stock: 80, imageUrl: 'http://img/r.jpg' });
+  });
+
   it('respuesta vacía o no reconocida → lista vacía', () => {
     expect(parseDropiProducts({})).toEqual([]);
     expect(parseDropiProducts(null)).toEqual([]);

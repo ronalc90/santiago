@@ -2,16 +2,18 @@ import { getEnv } from '@/lib/config/env';
 
 /**
  * Cliente de la API de Integraciones de Dropi (api.dropi.co) para traer el
- * catálogo de productos de forma automática (alternativa al CSV manual).
+ * catálogo de productos automáticamente (alternativa al CSV).
  *
- * Autenticación (según la doc de integraciones de Dropi):
- *  - Token de Integraciones: header `dropi-integration-key` (se genera en
- *    app.dropi.co → Integraciones). Es lo más directo y estable.
- *  - O login email/clave → token bearer (válido ~24h) en `Authorization: Bearer`.
+ * Flujo REAL (el que usan los plugins oficiales tipo Dropify, verificado contra
+ * el plugin open-source wc-dropi-integration):
+ *  - Auth: header `dropi-integration-key` = el TOKEN de Integración que generas en
+ *    app.dropi.co → Integraciones. No hay login email/clave ni whitelist de IP.
+ *  - Catálogo: POST {base}/integrations/products/index con
+ *    { startData(page), pageSize, order_by, order_type, keywords, active,
+ *      no_count, integration, get_stock } → { isSuccess, objects: [...] }.
  *
- * Las rutas y el formato exacto de respuesta no son públicos, así que el cliente
- * es TOLERANTE (acepta varias formas de paginación y nombres de campo) y las
- * rutas se configuran por env. Si el endpoint difiere, se ajusta sin tocar código.
+ * El parser es tolerante (nombres de campo en es/en, envoltorios) por si el
+ * esquema varía entre países/versiones.
  */
 export interface DropiProduct {
   name: string;
@@ -22,10 +24,9 @@ export interface DropiProduct {
   imageUrl: string | null;
 }
 
-/** ¿Hay credenciales para usar la API? Si no, se usa el CSV. */
+/** ¿Hay token para usar la API? Si no, se usa el CSV. */
 export function isDropiApiConfigured(): boolean {
-  const env = getEnv();
-  return Boolean(env.DROPI_INTEGRATION_KEY || (env.DROPI_EMAIL && env.DROPI_PASSWORD));
+  return Boolean(getEnv().DROPI_INTEGRATION_KEY);
 }
 
 type Json = Record<string, unknown>;
@@ -50,30 +51,6 @@ function pick(o: Json, ...keys: string[]): unknown {
   return undefined;
 }
 
-/** Login email/clave → token bearer. */
-async function login(): Promise<string> {
-  const env = getEnv();
-  const res = await fetch(`${env.DROPI_API_BASE_URL}${env.DROPI_LOGIN_PATH}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: env.DROPI_EMAIL, password: env.DROPI_PASSWORD }),
-  });
-  if (!res.ok) throw new Error(`Login Dropi falló (HTTP ${res.status}). Revisa DROPI_EMAIL/DROPI_PASSWORD y DROPI_LOGIN_PATH.`);
-  const data = asRecord(await res.json().catch(() => ({})));
-  const token =
-    pick(data, 'token', 'access_token', 'accessToken') ?? pick(asRecord(data.data), 'token', 'access_token');
-  if (!token || typeof token !== 'string') throw new Error('Login Dropi: la respuesta no trae token.');
-  return token;
-}
-
-function authHeaders(token: string | null): Record<string, string> {
-  const env = getEnv();
-  const h: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'application/json' };
-  if (env.DROPI_INTEGRATION_KEY) h['dropi-integration-key'] = env.DROPI_INTEGRATION_KEY;
-  if (token) h.Authorization = `Bearer ${token}`;
-  return h;
-}
-
 /** Extrae la lista de productos de respuestas con formatos distintos. */
 function extractList(data: unknown): Json[] {
   if (Array.isArray(data)) return data.map(asRecord);
@@ -90,13 +67,6 @@ function extractList(data: unknown): Json[] {
   return [];
 }
 
-/** Parsea una respuesta del catálogo (cualquier forma soportada) a productos. */
-export function parseDropiProducts(data: unknown): DropiProduct[] {
-  return extractList(data)
-    .map(mapProduct)
-    .filter((p): p is DropiProduct => p !== null);
-}
-
 function mapProduct(raw: Json): DropiProduct | null {
   const name = str(pick(raw, 'name', 'nombre', 'title', 'titulo', 'product_name'));
   if (!name) return null;
@@ -104,34 +74,61 @@ function mapProduct(raw: Json): DropiProduct | null {
   const firstImg = Array.isArray(gallery) ? str(asRecord(gallery[0]).url ?? gallery[0]) : null;
   return {
     name,
-    sku: str(pick(raw, 'sku', 'reference', 'referencia', 'code', 'codigo')),
+    // En Dropi el identificador del producto es `id`; lo guardamos como referencia.
+    sku: str(pick(raw, 'sku', 'reference', 'referencia', 'code', 'codigo', 'id')),
     category: str(pick(raw, 'category', 'categoria', 'category_name')) ?? str(asRecord(pick(raw, 'category')).name),
+    // `sale_price` = precio al dropshipper (nuestro costo para el margen).
     cost: toInt(pick(raw, 'sale_price', 'price', 'precio', 'cost', 'costo', 'suggested_price')),
     stock: toInt(pick(raw, 'stock', 'inventory', 'inventario', 'quantity', 'existencias')),
     imageUrl: str(pick(raw, 'image', 'imagen', 'image_url', 'imageUrl', 'main_image', 'foto')) ?? firstImg,
   };
 }
 
+/** Parsea una respuesta del catálogo (cualquier forma soportada) a productos. */
+export function parseDropiProducts(data: unknown): DropiProduct[] {
+  return extractList(data)
+    .map(mapProduct)
+    .filter((p): p is DropiProduct => p !== null);
+}
+
 /**
- * Trae el catálogo de productos de Dropi, paginando hasta `maxPages`. Se detiene
- * cuando una página viene vacía o más corta que `pageSize`.
+ * Trae el catálogo de productos de Dropi, paginando hasta `maxPages`. Pide los
+ * más nuevos primero (order_by created_at desc). Se detiene cuando una página
+ * viene vacía o más corta que `pageSize`.
  */
 export async function fetchDropiProducts(maxPages = 50, pageSize = 100): Promise<DropiProduct[]> {
   const env = getEnv();
-  const token = env.DROPI_INTEGRATION_KEY ? null : await login();
-  const headers = authHeaders(token);
+  const key = env.DROPI_INTEGRATION_KEY;
+  if (!key) throw new Error('Falta DROPI_INTEGRATION_KEY (genera el token en app.dropi.co → Integraciones).');
+
+  const url = `${env.DROPI_API_BASE_URL}${env.DROPI_PRODUCTS_PATH}`;
+  const headers = { 'Content-Type': 'application/json;charset=UTF-8', 'dropi-integration-key': key };
   const seen = new Set<string>();
   const out: DropiProduct[] = [];
 
   for (let page = 1; page <= maxPages; page += 1) {
-    const res = await fetch(`${env.DROPI_API_BASE_URL}${env.DROPI_PRODUCTS_PATH}`, {
+    const res = await fetch(url, {
       method: 'POST',
       headers,
-      // Distintas variantes de paginación: la API ignora las que no use.
-      body: JSON.stringify({ pageSize, page, startData: (page - 1) * pageSize, limit: pageSize, offset: (page - 1) * pageSize }),
+      body: JSON.stringify({
+        startData: page,
+        pageSize,
+        order_by: 'created_at',
+        order_type: 'desc',
+        keywords: '',
+        active: true,
+        no_count: true,
+        integration: true,
+        get_stock: false,
+      }),
     });
-    if (!res.ok) throw new Error(`Catálogo Dropi falló (HTTP ${res.status}). Revisa DROPI_PRODUCTS_PATH/credenciales.`);
-    const rawList = extractList(await res.json().catch(() => ({})));
+    if (!res.ok) {
+      throw new Error(`Catálogo Dropi falló (HTTP ${res.status}). Verifica el token (DROPI_INTEGRATION_KEY) y la ruta (DROPI_PRODUCTS_PATH).`);
+    }
+    const json = asRecord(await res.json().catch(() => ({})));
+    if (json.isSuccess === false) throw new Error(`Dropi rechazó la consulta: ${String(json.message ?? 'sin detalle')}.`);
+
+    const rawList = extractList(json);
     if (rawList.length === 0) break;
     for (const raw of rawList) {
       const p = mapProduct(raw);
@@ -140,8 +137,7 @@ export async function fetchDropiProducts(maxPages = 50, pageSize = 100): Promise
         out.push(p);
       }
     }
-    // Fin de paginación: la página vino más corta que el tamaño pedido.
-    if (rawList.length < pageSize) break;
+    if (rawList.length < pageSize) break; // última página
   }
   return out;
 }
