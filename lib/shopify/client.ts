@@ -72,6 +72,34 @@ interface ProductsGqlResponse {
   };
 }
 
+/** Producto de Shopify para el espejo del catálogo Dropi (no requiere read_inventory). */
+export interface ShopifyCatalogRow {
+  title: string;
+  handle: string;
+  sku: string | null;
+  cost: number | null; // unitCost si hay scope read_inventory; si no, null
+  imageUrl: string | null;
+  productType: string | null;
+}
+
+interface CatalogGqlResponse {
+  data?: {
+    products?: {
+      pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
+      nodes?: Array<{
+        id?: string;
+        title?: string;
+        handle?: string;
+        productType?: string | null;
+        featuredImage?: { url?: string | null } | null;
+        variants?: { nodes?: Array<{ sku?: string | null; inventoryItem?: { unitCost?: { amount?: string } | null } | null }> };
+      }>;
+    };
+  };
+  errors?: Array<{ message?: string; extensions?: { code?: string } }>;
+  extensions?: { cost?: { throttleStatus?: { maximumAvailable?: number; currentlyAvailable?: number; restoreRate?: number } } };
+}
+
 const MAX_THROTTLE_RETRIES = 4;
 
 /** True si hay credenciales para publicar por Admin API (gating de la feature). */
@@ -230,6 +258,73 @@ export class ShopifyClient {
       cursor = products.pageInfo.endCursor ?? null;
     }
     return { rows, missingInventoryScope: false };
+  }
+
+  /**
+   * Lista TODOS los productos (título, handle, sku, imagen, costo) para el espejo
+   * del catálogo Dropi. A diferencia de fetchAllProductCosts, NO depende de
+   * `read_inventory`: pide el costo, pero si Shopify lo deniega por falta de ese
+   * scope, reintenta SIN el costo (así el catálogo se llena igual con read_products).
+   */
+  async fetchAllProducts(): Promise<ShopifyCatalogRow[]> {
+    const url = `https://${this.domain}/admin/api/${this.version}/graphql.json`;
+    const buildQuery = (withCost: boolean) =>
+      `query($cursor: String){ products(first: 100, after: $cursor){ pageInfo{ hasNextPage endCursor } nodes{ id title handle productType featuredImage{ url } variants(first: 1){ nodes{ sku ${withCost ? 'inventoryItem{ unitCost{ amount } }' : ''} } } } } }`;
+    const rows: ShopifyCatalogRow[] = [];
+    let withCost = true;
+    let cursor: string | null = null;
+    let throttleRetries = 0;
+    let pages = 0;
+
+    while (pages < 200) {
+      const body = (await this.post(url, JSON.stringify({ query: buildQuery(withCost), variables: { cursor } }))) as CatalogGqlResponse;
+
+      if (body.errors?.length) {
+        if (body.errors.some((e) => e.extensions?.code === 'THROTTLED' || /throttled/i.test(e.message ?? ''))) {
+          if (throttleRetries >= MAX_THROTTLE_RETRIES) throw new ShopifyApiError('Shopify GraphQL: throttled tras varios reintentos.', 'rate_limit');
+          throttleRetries += 1;
+          await sleep(throttleWaitMs(body));
+          continue;
+        }
+        // Falta read_inventory: reintentar SIN el costo (no abortar; el catálogo
+        // solo necesita los nombres). Solo aplica una vez (withCost ya en false).
+        if (
+          withCost &&
+          body.errors.some((e) => {
+            const msg = (e.message ?? '').toLowerCase();
+            return (e.extensions?.code === 'ACCESS_DENIED' || msg.includes('access denied')) && msg.includes('read_inventory');
+          })
+        ) {
+          withCost = false;
+          continue;
+        }
+        throw new ShopifyApiError(`Shopify GraphQL: ${body.errors[0]?.message ?? 'error'}`, 'server');
+      }
+      throttleRetries = 0;
+
+      const products = body.data?.products;
+      if (!products) break;
+      for (const node of products.nodes ?? []) {
+        const title = node.title ?? '';
+        if (!title) continue;
+        const variant = node.variants?.nodes?.[0];
+        const amount = variant?.inventoryItem?.unitCost?.amount;
+        const n = amount != null ? Number(amount) : NaN;
+        const cost = amount != null && amount !== '' && Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+        rows.push({
+          title,
+          handle: node.handle ?? '',
+          sku: variant?.sku ?? null,
+          cost,
+          imageUrl: node.featuredImage?.url ?? null,
+          productType: node.productType ?? null,
+        });
+      }
+      pages += 1;
+      if (!products.pageInfo?.hasNextPage) break;
+      cursor = products.pageInfo.endCursor ?? null;
+    }
+    return rows;
   }
 
   /** POST con timeout y reintentos acotados (solo 429/5xx). Clasifica los errores. */

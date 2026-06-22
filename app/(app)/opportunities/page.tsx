@@ -70,11 +70,13 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         </p>
       )}
 
-      {noDropiCatalog && (
+      {noDropiCatalog ? (
         <p className="rounded-md border border-dashed bg-secondary/30 p-3 text-xs text-muted-foreground">
-          ⚠️ Aún no has importado el catálogo Dropi, por eso la columna «Dropi» sale en «—» y el filtro «Con Dropi» no muestra nada.
-          Impórtalo en <Link href="/settings" className="font-medium underline">Ajustes → Descubrimiento → Catálogo Dropi (CSV)</Link> para cruzar los candidatos.
+          ⚠️ Aún no has sincronizado el catálogo Dropi, por eso la columna «Dropi» sale en «—» y el filtro «Con Dropi» no muestra nada.
+          Hazlo en <Link href="/settings" className="font-medium underline">Ajustes → Descubrimiento → «Sincronizar catálogo desde Shopify»</Link> (o por CSV) para cruzar los candidatos.
         </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">Catálogo Dropi: {dropiCatalogCount} producto(s) (espejo de Shopify).</p>
       )}
 
       {candidates.length === 0 ? (

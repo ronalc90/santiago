@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { normalizeName } from '@/lib/discovery/normalize';
 import { fetchDropiProducts } from '@/lib/integrations/dropi';
 import { ShopifyClient } from '@/lib/shopify/client';
+import { nameSimilarity } from '@/lib/discovery/name-match';
 
 /**
  * Catálogo de Dropi. Dropi no autoriza el consumo directo de su API para
@@ -115,26 +116,17 @@ export async function syncDropiCatalogFromApi(): Promise<DropiImportResult & { m
  * importaste a tu tienda (lo que de verdad puedes vender).
  */
 export async function syncDropiCatalogFromShopify(): Promise<DropiImportResult & { matched: number }> {
-  const { rows } = await new ShopifyClient().fetchAllProductCosts();
+  const rows = await new ShopifyClient().fetchAllProducts();
   let upserted = 0;
   for (const r of rows) {
     if (!r.title) continue;
-    const ok = await upsertCatalogItem({ name: r.title, sku: r.sku, category: null, cost: r.unitCost, stock: null, imageUrl: null });
+    const ok = await upsertCatalogItem({ name: r.title, sku: r.sku, category: r.productType, cost: r.cost, stock: null, imageUrl: r.imageUrl });
     if (ok) upserted += 1;
   }
   const matched = await matchCandidatesToDropi().catch(() => 0);
   return { received: rows.length, upserted, matched };
 }
 
-/** Solapamiento de tokens (Jaccard) entre dos nombres normalizados. */
-function tokenOverlap(a: string, b: string): number {
-  const sa = new Set(a.split(' ').filter(Boolean));
-  const sb = new Set(b.split(' ').filter(Boolean));
-  if (!sa.size || !sb.size) return 0;
-  let inter = 0;
-  for (const t of sa) if (sb.has(t)) inter += 1;
-  return inter / new Set([...sa, ...sb]).size;
-}
 
 /**
  * Cruza TODOS los candidatos contra el catálogo Dropi: match exacto por nombre
@@ -157,8 +149,8 @@ export async function matchCandidatesToDropi(): Promise<number> {
     if (!item) {
       let best = 0;
       for (const it of items) {
-        const score = tokenOverlap(c.normalizedName, it.normalizedName);
-        if (score > best && score >= 0.6) { best = score; item = it; }
+        const { score, shared } = nameSimilarity(c.normalizedName, it.normalizedName);
+        if (shared >= 2 && score >= 0.6 && score > best) { best = score; item = it; }
       }
     }
     if (item) {
