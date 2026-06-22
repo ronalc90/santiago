@@ -29,6 +29,11 @@ export function isDropiApiConfigured(): boolean {
   return Boolean(getEnv().DROPI_INTEGRATION_KEY);
 }
 
+/** Enlace al panel de Dropi buscando el producto por nombre (de donde sale el dato). */
+export function dropiPanelSearchUrl(query: string): string {
+  return `${getEnv().DROPI_PANEL_URL}?keywords=${encodeURIComponent(query.trim())}`;
+}
+
 type Json = Record<string, unknown>;
 const asRecord = (v: unknown): Json => (v && typeof v === 'object' ? (v as Json) : {});
 

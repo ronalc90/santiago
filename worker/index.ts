@@ -31,6 +31,7 @@ import { getRedis } from '../lib/queue/connection';
 import { processLanding, failLanding } from '../lib/services/landing';
 import { runAdIngest } from '../lib/services/ad-ingest';
 import { syncShopifyCosts } from '../lib/services/cost-sync';
+import { syncDropiCatalogFromShopify } from '../lib/services/dropi-catalog';
 import { syncMeliSaturation } from '../lib/services/meli';
 import { runDiscovery, getActiveSources } from '../lib/services/discovery';
 import { isShopifyConfigured } from '../lib/shopify/client';
@@ -76,8 +77,18 @@ const costSyncWorker = new Worker<CostSyncJobData>(
     console.log('▶️  Sincronizando costos desde Shopify…');
     const r = await syncShopifyCosts();
     if (!r.configured) console.log('ℹ️  Costos: Shopify no está configurado; nada que sincronizar.');
-    else if (r.missingScope) console.warn('⚠️  Costos: falta el scope read_inventory en la app de Shopify.');
-    else console.log(`✅  Costos: ${r.updated} actualizados, ${r.matched} emparejados, ${r.withoutCost} sin costo (de ${r.total}).`);
+    else {
+      if (r.missingScope) console.warn('⚠️  Costos: falta el scope read_inventory en la app de Shopify.');
+      else console.log(`✅  Costos: ${r.updated} actualizados, ${r.matched} emparejados, ${r.withoutCost} sin costo (de ${r.total}).`);
+      // Espejo del catálogo Dropi vía Shopify (mismo origen de datos). No debe
+      // tumbar el job de costos si falla.
+      try {
+        const d = await syncDropiCatalogFromShopify();
+        console.log(`✅  Catálogo Dropi (espejo Shopify): ${d.upserted} productos, ${d.matched} candidatos emparejados.`);
+      } catch (e) {
+        console.warn('⚠️  Catálogo Dropi (espejo Shopify) falló:', e instanceof Error ? e.message : e);
+      }
+    }
     return r;
   },
   { connection: getRedis(), concurrency: 1 },

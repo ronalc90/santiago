@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { prisma } from '@/lib/db';
+import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { OpportunityBadge } from '@/components/shared/opportunity-badge';
@@ -41,7 +42,14 @@ export default async function OpportunityDetail({ params }: { params: { id: stri
             {c.score4x25 != null && <span className="text-sm font-semibold">Score {Math.round(c.score4x25)}</span>}
             <OpportunityBadge band={c.scoreBand} />
             {c.enCO ? <Badge variant="green">en CO{c.saturationCO != null ? ` · ${c.saturationCO}` : ''}</Badge> : <Badge variant="gray">no CO</Badge>}
-            <Badge variant={c.dropiStatus === 'DISPONIBLE' ? 'green' : c.dropiStatus === 'A_IMPORTAR' ? 'yellow' : 'gray'}>{DROPI_LABEL[c.dropiStatus]}</Badge>
+            {c.dropiStatus === 'DISPONIBLE' ? (
+              <a href={dropiPanelSearchUrl(c.name)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1" title="Buscar este producto en tu panel de Dropi">
+                <Badge variant="green">Dropi</Badge>
+                <ExternalLink className="h-3 w-3 text-muted-foreground" />
+              </a>
+            ) : (
+              <Badge variant={c.dropiStatus === 'A_IMPORTAR' ? 'yellow' : 'gray'}>{DROPI_LABEL[c.dropiStatus]}</Badge>
+            )}
           </div>
         </div>
         <ConvertButton id={c.id} productId={c.productId} />

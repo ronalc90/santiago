@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -121,9 +123,20 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={c.dropiStatus === 'DISPONIBLE' ? 'green' : c.dropiStatus === 'A_IMPORTAR' ? 'yellow' : 'gray'}>
-                        {DROPI_LABEL[c.dropiStatus]}
-                      </Badge>
+                      {c.dropiStatus === 'DISPONIBLE' ? (
+                        <a
+                          href={dropiPanelSearchUrl(c.name)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1"
+                          title="Buscar este producto en tu panel de Dropi"
+                        >
+                          <Badge variant="green">Dropi</Badge>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                        </a>
+                      ) : (
+                        <Badge variant={c.dropiStatus === 'A_IMPORTAR' ? 'yellow' : 'gray'}>{DROPI_LABEL[c.dropiStatus]}</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs">{c._count.creatives}</TableCell>
                   </TableRow>

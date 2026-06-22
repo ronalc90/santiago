@@ -98,6 +98,9 @@ const envSchema = z.object({
   // Ruta del catálogo (la usan los plugins reales). Parametrizable por si tu país
   // usa otro host/ruta (.com.py/.pe/.pa, etc.).
   DROPI_PRODUCTS_PATH: z.string().default('/integrations/products/index'),
+  // Panel de Dropi para enlazar el producto (búsqueda por nombre). Cambia el host
+  // según tu país (.com.py/.pe/.pa, etc.).
+  DROPI_PANEL_URL: z.string().url().default('https://app.dropi.co/dashboard/products'),
   // Cron (BullMQ) para sincronizar el catálogo Dropi a diario. Vacío = solo manual.
   DROPI_SYNC_CRON: z.string().default(''),
 
