@@ -11,8 +11,9 @@ const updateSchema = z.object({
   status: z.enum(['DETECTADO', 'VALIDADO', 'LANDING_CREADA', 'LANZADO', 'ESCALANDO']).optional(),
   market: z.string().regex(/^[A-Za-z]{2,4}$/, 'mercado inválido').optional(),
   currency: z.string().regex(/^[A-Za-z]{2,4}$/, 'moneda inválida').optional(),
-  sellsInColombia: z.boolean().optional(),
-  hasUnusedForeignCreative: z.boolean().optional(),
+  // `sellsInColombia` y `hasUnusedForeignCreative` NO se aceptan aquí: son
+  // señales DERIVADAS de los anuncios (las setea la ingesta del spy), no input
+  // manual. Mantenerlas solo-lectura evita que un dato medido se pise a mano.
   dropiAvailability: z.enum(['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO']).optional(),
   salePrice: z.number().int().nonnegative().nullable().optional(),
   manualCost: z.number().int().nonnegative().nullable().optional(),
@@ -27,7 +28,7 @@ const updateSchema = z.object({
  * la próxima medición del worker (la búsqueda usa saturationKeyword || name); el
  * costo por título se reconcilia en el siguiente cost-sync de Shopify.
  */
-const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'saturationKeyword', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability', 'hasUnusedForeignCreative'] as const;
+const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'saturationKeyword', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability'] as const;
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireApiUser();

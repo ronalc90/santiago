@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
+import { formatCop } from '@/lib/format';
 
 interface Ad {
   id: string;
@@ -162,7 +163,7 @@ export function SpyTable() {
                   <TableCell><Badge variant="outline">{ad.country}</Badge></TableCell>
                   <TableCell className="max-w-[260px] truncate text-muted-foreground" title={ad.copyText ?? ''}>{ad.copyText}</TableCell>
                   <TableCell>{ad.daysActive}</TableCell>
-                  <TableCell>{ad.estimatedSpend > 0 ? `$${ad.estimatedSpend.toLocaleString()}` : '—'}</TableCell>
+                  <TableCell>{ad.estimatedSpend > 0 ? formatCop(ad.estimatedSpend) : '—'}</TableCell>
                   <TableCell className="font-semibold">{ad.winnerScore.toLocaleString()}</TableCell>
                   <TableCell><ClassificationBadge value={ad.classification} /></TableCell>
                   <TableCell>

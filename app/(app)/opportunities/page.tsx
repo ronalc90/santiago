@@ -32,7 +32,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   const VALID_SOURCES = ['mercadolibre', 'trends', 'meta', 'tiktok', 'mock'];
   if (searchParams.fuente && VALID_SOURCES.includes(searchParams.fuente)) where.sources = { has: searchParams.fuente };
 
-  const [candidates, status] = await Promise.all([
+  const [candidates, status, dropiCatalogCount] = await Promise.all([
     prisma.opportunityCandidate.findMany({
       where,
       orderBy: [{ score4x25: 'desc' }, { updatedAt: 'desc' }],
@@ -40,7 +40,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       include: { _count: { select: { creatives: true } } },
     }),
     getDiscoveryStatus(),
+    prisma.dropiCatalogItem.count(),
   ]);
+  const noDropiCatalog = dropiCatalogCount === 0;
   const paidActive = env.META_DISCOVERY === 'on' || env.TIKTOK_DISCOVERY === 'on';
 
   return (
@@ -66,10 +68,19 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         </p>
       )}
 
+      {noDropiCatalog && (
+        <p className="rounded-md border border-dashed bg-secondary/30 p-3 text-xs text-muted-foreground">
+          ⚠️ Aún no has importado el catálogo Dropi, por eso la columna «Dropi» sale en «—» y el filtro «Con Dropi» no muestra nada.
+          Impórtalo en <Link href="/settings" className="font-medium underline">Ajustes → Descubrimiento → Catálogo Dropi (CSV)</Link> para cruzar los candidatos.
+        </p>
+      )}
+
       {candidates.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            No hay candidatos con esos filtros. Pulsa «Buscar ahora» (o espera al descubrimiento diario).
+            {searchParams.dropi && noDropiCatalog
+              ? 'No hay candidatos «Con Dropi» porque aún no importas el catálogo Dropi (Ajustes → Descubrimiento → Catálogo Dropi CSV). Sin catálogo, nada se marca como disponible.'
+              : 'No hay candidatos con esos filtros. Pulsa «Buscar ahora» (o espera al descubrimiento diario).'}
           </CardContent>
         </Card>
       ) : (

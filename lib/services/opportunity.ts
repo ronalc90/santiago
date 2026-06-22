@@ -1,4 +1,5 @@
 import { DropiAvailability } from '@prisma/client';
+import { formatCop } from '@/lib/format';
 import {
   OpportunityRules,
   DEFAULT_OPPORTUNITY_RULES,
@@ -183,7 +184,6 @@ export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT
   const cod = r.margin.cod;
   const signals = { unitCost: s.unitCost, shippingCost: s.shippingCost, salePrice: s.salePrice, dropiAvailability: s.dropiAvailability, cod };
   const shipping = s.shippingCost ?? 0;
-  const fmtCop = (n: number) => Math.round(n).toLocaleString('es-CO');
 
   const fromCost = (unitCost: number, price: number, estimated: boolean, confidence: number, reason: string): DimensionResult => {
     const eff = effectiveCodMargin(unitCost, shipping, price, cod);
@@ -192,8 +192,8 @@ export function marginScore(s: OpportunitySignals, r: OpportunityRules = DEFAULT
     const score = Math.round(0.6 * sMargin + 0.4 * sRoi);
     const reasons = [
       reason,
-      `margen efectivo COD ${(eff.margenPct * 100).toFixed(0)}% · ROI ${eff.roi.toFixed(1)}x (devol. ${Math.round(cod.returnRate * 100)}%)`,
-      `profit potential ≈ $${fmtCop(eff.profitPerOrder)}/pedido`,
+      `margen efectivo COD ${(eff.margenPct * 100).toFixed(0)}% · ROI ${eff.roi.toFixed(1)}x (no entrega ${Math.round(cod.returnRate * 100)}%)`,
+      `profit potential ≈ ${formatCop(eff.profitPerOrder)}/pedido`,
     ];
     if (s.dropiAvailability === 'NO_DISPONIBLE') reasons.push('ojo: no disponible en Dropi (sin logística)');
     return { score, confidence, estimated, signals, reasons };

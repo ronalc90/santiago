@@ -88,11 +88,11 @@ export function OpportunityRulesForm({ initial }: { initial: OpportunityRules })
         <div>
           <Label className="text-xs text-muted-foreground">Margen efectivo COD (pago contra entrega)</Label>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            El margen descuenta devoluciones, flete de vuelta y comisión de recaudo: refleja la rentabilidad real, no la bruta.
+            En CO la pérdida grande es la NO entrega (cancelaciones/rechazos, ~20-25%), no la devolución tras recibir. El margen efectivo descuenta esos pedidos (pierdes ida + vuelta del flete, no el producto), el flete de vuelta y la comisión de recaudo: refleja la rentabilidad real, no la bruta.
           </p>
           <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid grid-cols-1 items-center gap-1 sm:grid-cols-2">
-              <Label className="text-sm">Tasa de devolución (%)</Label>
+              <Label className="text-sm">Tasa de no entrega (%)</Label>
               <Input
                 type="number"
                 min={0}

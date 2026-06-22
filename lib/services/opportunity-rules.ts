@@ -39,11 +39,16 @@ export interface OpportunityRules {
     availabilityScore: Record<DropiAvailability, number | null>;
     /**
      * Economía del pago contra entrega (COD). El margen bruto sobreestima la
-     * rentabilidad en CO: el margen EFECTIVO descuenta devoluciones, flete de
-     * vuelta y comisión de recaudo.
+     * rentabilidad en CO: el margen EFECTIVO descuenta los pedidos NO entregados
+     * (cancelaciones/rechazos: pierdes ida + vuelta del flete, no el producto),
+     * el flete de vuelta y la comisión de recaudo.
      */
     cod: {
-      /** Fracción de pedidos devueltos (0-1). En CO suele ser 0.15–0.40. */
+      /**
+       * Fracción de pedidos que NO se entregan (cancelaciones, rechazos,
+       * "no contesta"; 0-1). En CO suele ser 0.20–0.35. Es la pérdida grande del
+       * COD; la devolución tras recibir es mínima (el cliente ve antes de pagar).
+       */
       returnRate: number;
       /** Comisión de recaudo COD sobre el precio cobrado (0-1). */
       gatewayPct: number;

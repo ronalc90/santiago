@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "a90b853",
+    "date": "2026-06-21",
+    "subject": "feat(ajustes): changelog con TODAS las versiones y el historial completo de commits"
+  },
+  {
     "hash": "33b514b",
     "date": "2026-06-21",
     "subject": "feat(ui): modo lectura + tema configurable y persistente por usuario"

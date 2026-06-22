@@ -9,6 +9,7 @@ import { AdActions } from '@/components/spy/ad-actions';
 import { CreativeImage } from '@/components/spy/creative-image';
 import { formatDate } from '@/lib/utils';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
+import { formatCop } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
               <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                 <Metric label="País" value={ad.country} />
                 <Metric label="Días activos" value={String(ad.daysActive)} />
-                <Metric label="Gasto est." value={ad.estimatedSpend > 0 ? `$${ad.estimatedSpend.toLocaleString()}` : '—'} />
+                <Metric label="Gasto est." value={ad.estimatedSpend > 0 ? formatCop(ad.estimatedSpend) : '—'} />
                 <Metric label="Winner Score" value={ad.winnerScore.toLocaleString()} />
               </div>
               {ad.estimatedSpend <= 0 && (

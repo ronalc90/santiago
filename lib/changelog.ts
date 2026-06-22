@@ -17,6 +17,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.4.0',
+    date: '2026-06-21',
+    title: 'Moneda COP, señales y Dropi',
+    changes: [
+      'Todo el dinero del negocio se muestra en pesos colombianos (Intl es-CO): gasto del Spy, costo de Shopify y profit potential. Antes salía con «$» suelto o sin formato.',
+      'Las señales que el sistema deduce de los anuncios («se vende en CO» y «creativo extranjero sin usar») pasan a solo-lectura; editables solo las que tú decides (precio, costo, envío, keyword de saturación y Dropi).',
+      'Margen COD: la «tasa de devolución» ahora se llama «tasa de no entrega» — en Colombia la pérdida grande son las cancelaciones/rechazos (~20-25%), no la devolución tras recibir.',
+      'Oportunidades: aviso claro cuando el catálogo Dropi no está importado (por eso el filtro «Con Dropi» salía vacío) con el enlace para importarlo.',
+    ],
+  },
+  {
     version: '0.3.0',
     date: '2026-06-21',
     title: 'Apariencia',

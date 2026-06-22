@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
+import { formatMoney } from '@/lib/format';
 
 const STATUSES = ['DETECTADO', 'VALIDADO', 'LANDING_CREADA', 'LANZADO', 'ESCALANDO'];
 const DROPI = ['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO'];
@@ -96,7 +97,7 @@ export function ProductManager({ product }: { product: ProductState }) {
         {numberField(`Precio de venta (${s.currency})`, 'salePrice', savedSalePrice, 'ej: 89900')}
         {s.shopifyUnitCost != null ? (
           <p className="text-xs text-muted-foreground">
-            Costo Shopify: <span className="font-medium">{s.shopifyUnitCost.toLocaleString('es-CO')} {s.currency}</span> (sincronizado · se usa para el margen)
+            Costo Shopify: <span className="font-medium">{formatMoney(s.shopifyUnitCost, s.currency)}</span> (sincronizado · se usa para el margen)
           </p>
         ) : (
           numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify')
@@ -120,13 +121,18 @@ export function ProductManager({ product }: { product: ProductState }) {
             <p className="text-xs text-muted-foreground">Competencia ML: {s.saturationCount.toLocaleString('es-CO')} publicaciones (medido)</p>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="sells-co" className="text-xs">Se vende en CO</Label>
-          <Switch id="sells-co" checked={s.sellsInColombia} onCheckedChange={(v) => patch({ sellsInColombia: v })} />
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="unused-foreign" className="text-xs">Creativo extranjero sin usar</Label>
-          <Switch id="unused-foreign" checked={s.hasUnusedForeignCreative} onCheckedChange={(v) => patch({ hasUnusedForeignCreative: v })} />
+        {/* Señales DERIVADAS de los anuncios (las detecta el spy): solo-lectura.
+            No son input manual; se actualizan solas al ingerir/sincronizar anuncios. */}
+        <div className="space-y-1.5 rounded-md border border-dashed p-3">
+          <p className="text-xs font-medium text-muted-foreground">Señales automáticas (según los anuncios)</p>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs">Se vende en CO</span>
+            {s.sellsInColombia ? <Badge variant="green">Sí</Badge> : <Badge variant="gray">No</Badge>}
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs">Creativo extranjero sin usar</span>
+            {s.hasUnusedForeignCreative ? <Badge variant="yellow">Sí</Badge> : <Badge variant="gray">No</Badge>}
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Notas</Label>
