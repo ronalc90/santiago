@@ -30,6 +30,8 @@ model User {
   name         String?
   passwordHash String
   role         Role      @default(MEMBER)
+  /// Preferencia de apariencia: "light" | "dark" | "reading". Persistente por usuario.
+  theme        String    @default("dark")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

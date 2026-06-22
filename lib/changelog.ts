@@ -17,6 +17,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.3.0',
+    date: '2026-06-21',
+    title: 'Apariencia',
+    changes: [
+      'Tres modos de tema: claro, oscuro y lectura (papel sepia, alto contraste e interlineado relajado para sesiones largas).',
+      'La preferencia de tema se guarda por usuario en la base de datos y se aplica en cualquier dispositivo (antes era solo local del navegador).',
+      'Selector de tema en el menú lateral y en Ajustes → Apariencia.',
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-06-21',
     title: 'Scoring honesto',

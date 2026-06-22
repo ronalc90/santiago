@@ -47,9 +47,34 @@
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
   }
+
+  /* Modo lectura: papel sepia cálido, alto contraste de texto y tipografía
+     relajada para reducir la fatiga visual en sesiones largas. */
+  .reading {
+    --background: 39 43% 93%;
+    --foreground: 30 25% 18%;
+    --card: 39 50% 96%;
+    --card-foreground: 30 25% 18%;
+    --popover: 39 50% 96%;
+    --popover-foreground: 30 25% 18%;
+    --primary: 25 45% 25%;
+    --primary-foreground: 39 43% 96%;
+    --secondary: 39 33% 87%;
+    --secondary-foreground: 30 25% 22%;
+    --muted: 39 33% 87%;
+    --muted-foreground: 30 12% 40%;
+    --accent: 39 33% 84%;
+    --accent-foreground: 30 25% 22%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 39 43% 96%;
+    --border: 39 25% 79%;
+    --input: 39 25% 79%;
+    --ring: 25 45% 35%;
+  }
 }
 
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground; }
+  .reading body { line-height: 1.7; letter-spacing: 0.01em; }
 }

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { getEnv } from '@/lib/config/env';
+import { asTheme, Theme } from '@/lib/theme';
 
 export const SESSION_COOKIE = 'winspy_session';
 
@@ -40,6 +41,7 @@ export type SessionUser = {
   email: string;
   name: string | null;
   role: 'ADMIN' | 'MEMBER';
+  theme: Theme;
 };
 
 /**
@@ -56,5 +58,5 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
   const u = session.user;
-  return { id: u.id, email: u.email, name: u.name, role: u.role };
+  return { id: u.id, email: u.email, name: u.name, role: u.role, theme: asTheme(u.theme) };
 }

@@ -8,9 +8,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const userName = user.name ?? user.email;
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar userName={userName} />
+      <Sidebar userName={userName} theme={user.theme} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <MobileNav userName={userName} />
+        <MobileNav userName={userName} theme={user.theme} />
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl p-4 sm:p-6">{children}</div>
         </main>

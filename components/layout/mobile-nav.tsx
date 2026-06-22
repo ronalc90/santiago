@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
+import type { Theme } from '@/lib/theme';
 
 /**
  * Barra superior + menú lateral (drawer) para móvil/tablet (<md). El botón
  * hamburguesa abre un Dialog de Radix reestilizado como panel pegado a la
  * izquierda, que reutiliza el mismo SidebarNav que el sidebar de escritorio.
  */
-export function MobileNav({ userName }: { userName: string }) {
+export function MobileNav({ userName, theme }: { userName: string; theme: Theme }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -29,7 +30,7 @@ export function MobileNav({ userName }: { userName: string }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="left-0 top-0 h-screen max-h-screen w-60 max-w-[85vw] translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none border-y-0 border-l-0 border-r p-0 data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left">
           <DialogTitle className="sr-only">Navegación</DialogTitle>
-          <SidebarNav userName={userName} onNavigate={() => setOpen(false)} />
+          <SidebarNav userName={userName} theme={theme} onNavigate={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>

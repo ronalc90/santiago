@@ -14,6 +14,8 @@ import { MeliCard } from '@/components/settings/meli-card';
 import { DiscoveryCard } from '@/components/settings/discovery-card';
 import { LandingPromptsForm } from '@/components/settings/landing-prompts-form';
 import { VersionCard } from '@/components/settings/version-card';
+import { AppearanceCard } from '@/components/settings/appearance-card';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +30,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
     getDiscoveryConfig(),
     getSlotPromptsForUI(),
   ]);
+  const user = await requireUser();
   const shopifyConfigured = isShopifyConfigured();
   const meliConfigured = isMeliConfigured();
   const prompts = PROMPT_DEFS.map((d) => ({
@@ -43,6 +46,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
         <h1 className="text-2xl font-bold">Ajustes</h1>
         <p className="text-sm text-muted-foreground">Reglas del Winner Score y prompts de IA. Al guardar las reglas, se reclasifican todos los anuncios.</p>
       </div>
+      <AppearanceCard theme={user.theme} />
       <ScoringRulesForm initial={rules} />
       <OpportunityRulesForm initial={opportunityRules} />
       <CostSyncCard status={costStatus} shopifyConfigured={shopifyConfigured} />

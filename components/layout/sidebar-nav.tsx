@@ -4,7 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Telescope, Trophy, Package, ImageIcon, Store, Settings, DollarSign, HelpCircle, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { ThemeSwitcher } from '@/components/layout/theme-switcher';
+import type { Theme } from '@/lib/theme';
 
 export const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,7 +25,7 @@ export const NAV = [
  * así la lista NAV vive en un solo sitio. `onNavigate` permite cerrar el drawer
  * al pulsar un enlace en móvil.
  */
-export function SidebarNav({ userName, onNavigate }: { userName: string; onNavigate?: () => void }) {
+export function SidebarNav({ userName, theme, onNavigate }: { userName: string; theme: Theme; onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -62,7 +63,9 @@ export function SidebarNav({ userName, onNavigate }: { userName: string; onNavig
       </nav>
       <div className="border-t p-2">
         <div className="truncate px-3 py-2 text-xs text-muted-foreground">{userName}</div>
-        <ThemeToggle />
+        <div className="px-1 pb-1">
+          <ThemeSwitcher initial={theme} />
+        </div>
         <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={logout}>
           <LogOut className="h-4 w-4" /> Salir
         </Button>
