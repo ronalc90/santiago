@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "ade4431",
+    "date": "2026-06-21",
+    "subject": "fix(dropi): usar el endpoint real de Integraciones (catálogo ahora funciona)"
+  },
+  {
     "hash": "f3d78eb",
     "date": "2026-06-21",
     "subject": "feat(dropi): traer el catálogo de Dropi por API (automático) + sync y botón"

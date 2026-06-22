@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  ade4431: { title: 'Catálogo de Dropi: endpoint real de Integraciones', detail: 'Se corrige la integración con Dropi al endpoint real (/integrations/products/index) con el token de Integración; mensaje claro si el token está restringido por IP.' },
   f3d78eb: { title: 'Catálogo de Dropi por API (primer intento)', detail: 'Primer cliente para traer el catálogo de Dropi automáticamente (luego corregido con el endpoint real de Integraciones).' },
   '65a3b40': { title: 'La versión es el número de commit (v0.N)', detail: 'Cada commit es una versión: con N commits hechos, la actual es la v0.N.' },
   '92b73b7': { title: 'Una versión por cada cambio, clara y con fecha', detail: 'El apartado «Versión y cambios» muestra cada cambio del proyecto como una versión, con su explicación entendible y su fecha.' },

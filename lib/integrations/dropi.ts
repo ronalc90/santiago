@@ -122,11 +122,21 @@ export async function fetchDropiProducts(maxPages = 50, pageSize = 100): Promise
         get_stock: false,
       }),
     });
-    if (!res.ok) {
-      throw new Error(`Catálogo Dropi falló (HTTP ${res.status}). Verifica el token (DROPI_INTEGRATION_KEY) y la ruta (DROPI_PRODUCTS_PATH).`);
-    }
     const json = asRecord(await res.json().catch(() => ({})));
-    if (json.isSuccess === false) throw new Error(`Dropi rechazó la consulta: ${String(json.message ?? 'sin detalle')}.`);
+    if (!res.ok || json.isSuccess === false) {
+      const msg = String(json.message ?? `HTTP ${res.status}`);
+      const callerIp = json.ip ? String(json.ip) : null;
+      const isAuth = Number(json.status) === 401 || res.status === 401 || /access denied|denied|unauthor/i.test(msg);
+      if (isAuth) {
+        throw new Error(
+          `Dropi denegó el acceso: el token de Integración está restringido por IP` +
+            (callerIp ? ` (la petición salió desde ${callerIp})` : '') +
+            `. En Dropi → Integraciones, genera/edita el token whitelisteando la IP de salida del servidor que llama. ` +
+            `Ojo: en Vercel la IP es dinámica; conviene correr esta sincronización desde un host con IP fija.`,
+        );
+      }
+      throw new Error(`Dropi rechazó la consulta: ${msg}.`);
+    }
 
     const rawList = extractList(json);
     if (rawList.length === 0) break;
