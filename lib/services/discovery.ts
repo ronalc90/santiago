@@ -5,7 +5,8 @@ import { getOpportunityRules } from '@/lib/services/settings';
 import { computeOpportunity } from '@/lib/services/opportunity';
 import { persistCreative } from '@/lib/services/creative';
 import { getDiscoveryConfig, DiscoveryConfig } from '@/lib/services/discovery-config';
-import { matchCandidatesToDropi } from '@/lib/services/dropi-catalog';
+import { matchCandidatesToDropi, syncDropiCatalogFromShopify } from '@/lib/services/dropi-catalog';
+import { isShopifyConfigured } from '@/lib/shopify/client';
 import { normalizeName } from '@/lib/discovery/normalize';
 import { candidateToSignals } from '@/lib/discovery/score';
 import { embedTexts, cosine } from '@/lib/discovery/embeddings';
@@ -249,8 +250,13 @@ export async function runDiscovery(): Promise<DiscoveryResult> {
     upserted += 1;
   }
 
-  // Cruce con el catálogo Dropi (si hay CSV importado).
-  const dropiMatched = await matchCandidatesToDropi().catch(() => 0);
+  // Cruce con el catálogo Dropi. Si Shopify está configurado, refresca primero el
+  // catálogo DESDE Shopify (que Dropi alimenta) y de paso cruza —así «Con Dropi»
+  // se llena solo en cada búsqueda, sin tocar nada. Si no, solo cruza contra lo
+  // ya cargado (CSV). Nunca debe tumbar la discovery si Shopify falla.
+  const dropiMatched = isShopifyConfigured()
+    ? (await syncDropiCatalogFromShopify().catch(() => ({ matched: 0 }))).matched
+    : await matchCandidatesToDropi().catch(() => 0);
 
   const res: DiscoveryResult = { mock, sources: sources.map((s) => s.id), found: raw.length, candidates: byKey.size, upserted, dropiMatched, embeddingsFailed: embeddingsFailed || undefined, warning, at };
   await prisma.setting.upsert({

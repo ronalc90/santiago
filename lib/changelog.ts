@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  '8510808': { title: '«Con Dropi» arreglado: cruce por contención + lectura sin read_inventory', detail: 'Dos arreglos para que «Con Dropi» muestre productos: el cruce de nombres pasa a contención (los títulos largos de ML ya cruzan) y el espejo de Shopify ya no depende del scope read_inventory.' },
   '263ad59': { title: 'Sync diario del espejo Dropi + link al panel de Dropi', detail: 'El espejo de Shopify se sincroniza a diario junto a los costos, y el badge «Dropi» enlaza a tu panel de Dropi.' },
   '10c6df2': { title: 'Espejo del catálogo Dropi vía Shopify', detail: 'WinSpy lee los productos de tu Shopify (que Dropi alimenta) y los usa como catálogo Dropi para cruzar candidatos. Camino automático que Dropi sí soporta.' },
   '59cd90d': { title: 'Catálogo Dropi por CSV (Dropi no da API directa)', detail: 'Dropi confirmó que no da acceso directo a su API para integraciones propias; el catálogo vuelve a ser por CSV como camino soportado.' },
