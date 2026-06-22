@@ -20,3 +20,14 @@ export function formatMoney(amount: number | null | undefined, currency = 'COP')
   if (currency === 'COP') return formatCop(value);
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value);
 }
+
+/**
+ * Parsea un monto en COP a ENTERO. El peso colombiano no usa centavos y emplea
+ * "." como separador de miles, así que "70.000", "$ 70.000 COP" y 70000 → 70000
+ * (nunca 70). Quita TODO lo no numérico. Evita el clásico bug de Number("70.000")=70.
+ */
+export function parseCop(input: unknown): number {
+  if (typeof input === 'number') return Number.isFinite(input) && input >= 0 ? Math.round(input) : 0;
+  const digits = String(input ?? '').replace(/[^0-9]/g, '');
+  return digits ? Number(digits) : 0;
+}

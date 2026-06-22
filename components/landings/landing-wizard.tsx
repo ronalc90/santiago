@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { parseCop, formatMoney } from '@/lib/format';
 import { toast } from '@/components/ui/use-toast';
 import type { LandingSectionCopy } from '@/lib/services/landing-spec';
 
@@ -136,8 +137,14 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nombre del producto"><Input value={form.productName} onChange={(e) => set('productName', e.target.value)} /></Field>
               <Field label="Tipo de oferta"><Input value={form.offerType} onChange={(e) => set('offerType', e.target.value)} placeholder="2x1, 50% OFF…" /></Field>
-              <Field label="Precio oferta"><Input type="number" value={form.offerPrice} onChange={(e) => set('offerPrice', e.target.value)} /></Field>
-              <Field label="Precio regular"><Input type="number" value={form.regularPrice} onChange={(e) => set('regularPrice', e.target.value)} /></Field>
+              <Field label="Precio oferta">
+                <Input inputMode="numeric" value={form.offerPrice} onChange={(e) => set('offerPrice', e.target.value)} placeholder="ej: 70.000" />
+                {form.offerPrice.trim() && <p className="text-xs text-muted-foreground">= {formatMoney(parseCop(form.offerPrice), form.currency || 'COP')}</p>}
+              </Field>
+              <Field label="Precio regular">
+                <Input inputMode="numeric" value={form.regularPrice} onChange={(e) => set('regularPrice', e.target.value)} placeholder="ej: 120.000" />
+                {form.regularPrice.trim() && <p className="text-xs text-muted-foreground">= {formatMoney(parseCop(form.regularPrice), form.currency || 'COP')}</p>}
+              </Field>
               <Field label="País"><Input value={form.country} onChange={(e) => set('country', e.target.value.toUpperCase())} maxLength={4} /></Field>
               <Field label="Moneda"><Input value={form.currency} onChange={(e) => set('currency', e.target.value.toUpperCase())} maxLength={4} /></Field>
             </div>
@@ -171,7 +178,7 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
         {step === 3 && (
           <div className="space-y-2 text-sm">
             <Summary label="Producto" value={form.productName} />
-            <Summary label="Oferta" value={`${form.offerType} · ${form.offerPrice || '—'} ${form.currency} (antes ${form.regularPrice || '—'})`} />
+            <Summary label="Oferta" value={`${form.offerType} · ${form.offerPrice.trim() ? formatMoney(parseCop(form.offerPrice), form.currency || 'COP') : '—'} (antes ${form.regularPrice.trim() ? formatMoney(parseCop(form.regularPrice), form.currency || 'COP') : '—'})`} />
             <Summary label="País / público" value={`${form.country} · ${form.audience}`} />
             <Summary label="Ángulo" value={form.angle} />
             <Summary label="Foto producto" value={productPhoto?.name ?? 'no'} />

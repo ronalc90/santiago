@@ -47,8 +47,17 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
     const res = await fetch('/api/discovery/dropi-shopify-sync', { method: 'POST' });
     setSyncingShopify(false);
     const d = await res.json().catch(() => ({}));
-    if (res.ok) toast({ title: 'Catálogo sincronizado desde Shopify', description: `${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
-    else toast({ variant: 'destructive', title: 'No se pudo sincronizar', description: d.error });
+    if (res.ok && (d.received ?? 0) === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Tu Shopify no tiene productos',
+        description: 'El espejo no encontró productos en tu tienda. Importa tu catálogo de Dropi a Shopify (integración oficial Dropi→Shopify) y vuelve a intentar.',
+      });
+    } else if (res.ok) {
+      toast({ title: 'Catálogo sincronizado desde Shopify', description: `${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
+    } else {
+      toast({ variant: 'destructive', title: 'No se pudo sincronizar', description: d.error });
+    }
   }
 
   async function saveCfg() {

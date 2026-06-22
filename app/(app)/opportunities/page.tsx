@@ -83,7 +83,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             {searchParams.dropi && noDropiCatalog
-              ? 'No hay candidatos «Con Dropi» porque aún no importas el catálogo Dropi (Ajustes → Descubrimiento → Catálogo Dropi CSV). Sin catálogo, nada se marca como disponible.'
+              ? 'No hay candidatos «Con Dropi» porque el catálogo aún está vacío. Pulsa «Buscar ahora»: si Shopify está conectado, el catálogo se sincroniza solo desde tu tienda y se cruza con los candidatos.'
               : 'No hay candidatos con esos filtros. Pulsa «Buscar ahora» (o espera al descubrimiento diario).'}
           </CardContent>
         </Card>

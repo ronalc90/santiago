@@ -10,6 +10,7 @@
  * El prompt incorpora el "style analysis" (8 elementos extraídos de la imagen
  * de referencia) para mantener coherencia visual entre las 9 piezas.
  */
+import { formatMoney } from '@/lib/format';
 
 /** Copy por sección (1..9) generado por IA, para alinear el texto de cada imagen. */
 export interface LandingSectionCopy {
@@ -115,8 +116,8 @@ PRODUCT CONTEXT:
 - Target audience: ${inputs.audience}
 - Selling angle: ${inputs.angle}
 - Offer type: ${inputs.offerType}
-- Offer price: ${inputs.offerPrice} ${inputs.currency}
-- Regular price: ${inputs.regularPrice} ${inputs.currency}
+- Offer price (EXACT, render verbatim): ${formatMoney(inputs.offerPrice, inputs.currency)}
+- Regular price (EXACT, render verbatim): ${formatMoney(inputs.regularPrice, inputs.currency)}
 - Country/market: ${inputs.country}
 ${styleBlock}${copyBlock}
 
@@ -131,6 +132,10 @@ REQUIREMENTS:
   If you are unsure how a word is spelled, replace it with the shortest correct
   synonym. Re-read EVERY rendered word letter by letter and fix any typo, missing
   accent or doubled/dropped letter before finalizing.
+- PRICES MUST BE EXACT: if a price appears on the image, render the EXACT figure
+  shown above, digit by digit, KEEPING the thousands separators (e.g. write
+  "$70.000", never "$70", "70" or "$70.00"). Never round, truncate, drop zeros or
+  change the currency. In Colombian pesos there are NO cents.
 - Vertical format suitable for Shopify product page (portrait ~5:6).
 - Professional, high-resolution, conversion-focused composition.
 ${complianceTiktok ? COMPLIANCE_TIKTOK_RULES : ''}`.trim();

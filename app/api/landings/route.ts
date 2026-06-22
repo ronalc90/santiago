@@ -3,13 +3,18 @@ import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
 import { createLandingProject } from '@/lib/services/landing';
 import { fileToBuffer } from '@/lib/http';
+import { parseCop } from '@/lib/format';
 
 export const runtime = 'nodejs';
 
+// Precio en COP: tolera "70.000"/"$ 70.000 COP" → 70000 (no 70). El COP no tiene
+// centavos, así que se parsea como entero quitando todo lo no numérico.
+const copAmount = z.union([z.string(), z.number()]).transform((v) => parseCop(v));
+
 const inputsSchema = z.object({
   productName: z.string().min(1),
-  offerPrice: z.coerce.number().nonnegative(),
-  regularPrice: z.coerce.number().nonnegative(),
+  offerPrice: copAmount,
+  regularPrice: copAmount,
   country: z.string().regex(/^[A-Za-z]{2,4}$/, 'país inválido'),
   currency: z.string().regex(/^[A-Za-z]{2,4}$/, 'moneda inválida'),
   audience: z.string().min(1),
