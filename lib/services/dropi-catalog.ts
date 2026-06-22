@@ -2,12 +2,19 @@ import { DropiAvailability } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { normalizeName } from '@/lib/discovery/normalize';
 import { fetchDropiProducts } from '@/lib/integrations/dropi';
+import { ShopifyClient } from '@/lib/shopify/client';
 
 /**
- * Catálogo de Dropi: por API de Integraciones (automático, `syncDropiCatalogFromApi`)
- * o por CSV (`importDropiCsv`, fallback). Llena DropiCatalogItem y cruza los
- * candidatos por nombre (exacto normalizado y, si no, fuzzy por solapamiento de
- * tokens) para marcar su dropiStatus.
+ * Catálogo de Dropi. Dropi no autoriza el consumo directo de su API para
+ * integraciones propias, así que se llena por:
+ *  - Espejo de Shopify (`syncDropiCatalogFromShopify`): lee los productos de tu
+ *    Shopify, que Dropi ya alimenta (integración oficial Dropi→Shopify). Es el
+ *    camino automático recomendado.
+ *  - CSV (`importDropiCsv`): exportas el catálogo de Dropi e importas.
+ *  - API de Integraciones (`syncDropiCatalogFromApi`): solo si Dropi habilita tu
+ *    cuenta para consumir su API (hoy no lo hacen para integraciones propias).
+ * En todos los casos se cruzan los candidatos por nombre (exacto normalizado y,
+ * si no, fuzzy por solapamiento de tokens) para marcar su dropiStatus.
  */
 
 /** Parser CSV tolerante (cabecera + comillas dobles básicas). */
@@ -99,6 +106,24 @@ export async function syncDropiCatalogFromApi(): Promise<DropiImportResult & { m
   for (const p of products) if (await upsertCatalogItem(p)) upserted += 1;
   const matched = await matchCandidatesToDropi().catch(() => 0);
   return { received: products.length, upserted, matched };
+}
+
+/**
+ * Espejo del catálogo Dropi vía Shopify: lee los productos de tu Shopify (que
+ * Dropi alimenta por su integración oficial) y los usa como catálogo Dropi.
+ * Camino AUTOMÁTICO soportado, sin tocar la API de Dropi. Trae solo lo que ya
+ * importaste a tu tienda (lo que de verdad puedes vender).
+ */
+export async function syncDropiCatalogFromShopify(): Promise<DropiImportResult & { matched: number }> {
+  const { rows } = await new ShopifyClient().fetchAllProductCosts();
+  let upserted = 0;
+  for (const r of rows) {
+    if (!r.title) continue;
+    const ok = await upsertCatalogItem({ name: r.title, sku: r.sku, category: null, cost: r.unitCost, stock: null, imageUrl: null });
+    if (ok) upserted += 1;
+  }
+  const matched = await matchCandidatesToDropi().catch(() => 0);
+  return { received: rows.length, upserted, matched };
 }
 
 /** Solapamiento de tokens (Jaccard) entre dos nombres normalizados. */

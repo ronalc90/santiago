@@ -23,7 +23,7 @@ const SWITCHES: { key: SourceKey; label: string; hint: string }[] = [
   { key: 'embeddings', label: 'Dedupe por embeddings', hint: 'OpenAI · costo bajo, agrupa casi-idénticos' },
 ];
 
-export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: DiscoveryConfigDTO; dropiApiConfigured: boolean }) {
+export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }: { initial: DiscoveryConfigDTO; dropiApiConfigured: boolean; shopifyConfigured: boolean }) {
   const [sources, setSources] = useState(initial.sources);
   const [countries, setCountries] = useState(initial.countries.join(', '));
   const [keywords, setKeywords] = useState(initial.keywords.join('\n'));
@@ -31,6 +31,7 @@ export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: Discov
   const [csv, setCsv] = useState('');
   const [importing, setImporting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncingShopify, setSyncingShopify] = useState(false);
 
   async function syncDropiApi() {
     setSyncing(true);
@@ -38,6 +39,15 @@ export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: Discov
     setSyncing(false);
     const d = await res.json().catch(() => ({}));
     if (res.ok) toast({ title: 'Catálogo Dropi sincronizado', description: `${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
+    else toast({ variant: 'destructive', title: 'No se pudo sincronizar', description: d.error });
+  }
+
+  async function syncFromShopify() {
+    setSyncingShopify(true);
+    const res = await fetch('/api/discovery/dropi-shopify-sync', { method: 'POST' });
+    setSyncingShopify(false);
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) toast({ title: 'Catálogo sincronizado desde Shopify', description: `${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
     else toast({ variant: 'destructive', title: 'No se pudo sincronizar', description: d.error });
   }
 
@@ -101,10 +111,15 @@ export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: Discov
         <div className="space-y-2 border-t pt-4">
           <Label className="text-xs">Catálogo Dropi</Label>
           <p className="text-xs text-muted-foreground">
-            Dropi no permite consumir su API directamente para integraciones propias (su soporte lo confirmó). El camino soportado es
-            exportar tu catálogo/favoritos a CSV desde el panel de Dropi e importarlo aquí: se cruza por nombre con los candidatos.
+            Dropi no permite consumir su API directamente (su soporte lo confirmó). El camino automático es vía Shopify: Dropi ya alimenta tu
+            tienda, así que WinSpy lee esos productos y los cruza con los candidatos. Trae solo lo que ya importaste (lo que puedes vender).
           </p>
-          <p className="text-xs text-muted-foreground">Cabecera del CSV: name, sku, category, cost, stock, image.</p>
+          <Button onClick={syncFromShopify} disabled={syncingShopify || !shopifyConfigured} title={shopifyConfigured ? 'Leer tus productos de Shopify (alimentados por Dropi)' : 'Conecta Shopify primero'}>
+            {syncingShopify ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sincronizar catálogo desde Shopify
+          </Button>
+          {!shopifyConfigured && <p className="text-xs text-muted-foreground">Conecta Shopify (arriba en Costos) para habilitarlo.</p>}
+
+          <p className="pt-2 text-xs text-muted-foreground">Alternativa por CSV — exporta tu catálogo de Dropi e impórtalo. Cabecera: name, sku, category, cost, stock, image.</p>
           <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
           <Button variant="outline" onClick={importCsv} disabled={importing || !csv.trim()}>
             {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar catálogo Dropi (CSV)

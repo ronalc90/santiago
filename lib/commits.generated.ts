@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "59cd90d",
+    "date": "2026-06-22",
+    "subject": "fix(dropi): camino por CSV; Dropi no autoriza API directa (confirmado por soporte)"
+  },
+  {
     "hash": "d5c1faf",
     "date": "2026-06-21",
     "subject": "fix(dropi): mensaje claro cuando el token está restringido por IP"

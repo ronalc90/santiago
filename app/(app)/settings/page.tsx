@@ -52,7 +52,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { m
       <OpportunityRulesForm initial={opportunityRules} />
       <CostSyncCard status={costStatus} shopifyConfigured={shopifyConfigured} />
       <MeliCard configured={meliConfigured} connection={meliConnection} status={meliStatus} notice={searchParams.meli} />
-      <DiscoveryCard initial={discoveryConfig} dropiApiConfigured={isDropiApiConfigured()} />
+      <DiscoveryCard initial={discoveryConfig} dropiApiConfigured={isDropiApiConfigured()} shopifyConfigured={shopifyConfigured} />
       <PromptsForm initial={prompts} />
       <LandingPromptsForm slots={slotPrompts} />
       <VersionCard />
