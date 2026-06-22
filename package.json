@@ -1,6 +1,6 @@
 {
   "name": "winspy",
-  "version": "0.59.0",
+  "version": "0.60.0",
   "private": true,
   "description": "Plataforma interna de e-commerce/dropshipping: Spy de anuncios, generador de landings con IA y dashboard.",
   "engines": {

@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "65a3b40",
+    "date": "2026-06-21",
+    "subject": "feat(ajustes): la versión es el número de commit (v0.N)"
+  },
+  {
     "hash": "92b73b7",
     "date": "2026-06-21",
     "subject": "feat(ajustes): versión por commit con explicación clara y fecha (actual: 2656)"

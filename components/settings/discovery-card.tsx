@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Loader2, Save, Upload } from 'lucide-react';
+import { Loader2, Save, Upload, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,13 +23,23 @@ const SWITCHES: { key: SourceKey; label: string; hint: string }[] = [
   { key: 'embeddings', label: 'Dedupe por embeddings', hint: 'OpenAI · costo bajo, agrupa casi-idénticos' },
 ];
 
-export function DiscoveryCard({ initial }: { initial: DiscoveryConfigDTO }) {
+export function DiscoveryCard({ initial, dropiApiConfigured }: { initial: DiscoveryConfigDTO; dropiApiConfigured: boolean }) {
   const [sources, setSources] = useState(initial.sources);
   const [countries, setCountries] = useState(initial.countries.join(', '));
   const [keywords, setKeywords] = useState(initial.keywords.join('\n'));
   const [savingCfg, setSavingCfg] = useState(false);
   const [csv, setCsv] = useState('');
   const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  async function syncDropiApi() {
+    setSyncing(true);
+    const res = await fetch('/api/discovery/dropi-sync', { method: 'POST' });
+    setSyncing(false);
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) toast({ title: 'Catálogo Dropi sincronizado', description: `${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
+    else toast({ variant: 'destructive', title: 'No se pudo sincronizar', description: d.error });
+  }
 
   async function saveCfg() {
     setSavingCfg(true);
@@ -88,12 +98,26 @@ export function DiscoveryCard({ initial }: { initial: DiscoveryConfigDTO }) {
           {savingCfg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar configuración
         </Button>
 
-        <div className="space-y-1.5 border-t pt-4">
-          <Label className="text-xs">Catálogo Dropi (CSV) — Dropi no da API</Label>
-          <p className="text-xs text-muted-foreground">Cabecera con columnas: name, sku, category, cost, stock, image. Se cruza por nombre con los candidatos.</p>
+        <div className="space-y-2 border-t pt-4">
+          <Label className="text-xs">Catálogo Dropi</Label>
+          {dropiApiConfigured ? (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Conectado por API: trae el catálogo automáticamente y cruza los candidatos. Corre cuando quieras (o a diario si configuras el cron).
+              </p>
+              <Button variant="outline" onClick={syncDropiApi} disabled={syncing}>
+                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sincronizar catálogo Dropi (API)
+              </Button>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Para traerlo automáticamente, configura las credenciales de la API de Dropi (DROPI_INTEGRATION_KEY, o DROPI_EMAIL + DROPI_PASSWORD). Mientras tanto, impórtalo por CSV abajo.
+            </p>
+          )}
+          <p className="pt-1 text-xs text-muted-foreground">Alternativa por CSV — cabecera: name, sku, category, cost, stock, image.</p>
           <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
           <Button variant="outline" onClick={importCsv} disabled={importing || !csv.trim()}>
-            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar catálogo Dropi
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar catálogo Dropi (CSV)
           </Button>
         </div>
       </CardContent>

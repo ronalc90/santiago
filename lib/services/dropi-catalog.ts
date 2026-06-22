@@ -1,11 +1,13 @@
 import { DropiAvailability } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { normalizeName } from '@/lib/discovery/normalize';
+import { fetchDropiProducts } from '@/lib/integrations/dropi';
 
 /**
- * Catálogo de Dropi por CSV (Dropi NO da API a terceros). Importa el CSV a
- * DropiCatalogItem y cruza los candidatos por nombre (exacto normalizado y, si no,
- * fuzzy por solapamiento de tokens) para marcar su dropiStatus.
+ * Catálogo de Dropi: por API de Integraciones (automático, `syncDropiCatalogFromApi`)
+ * o por CSV (`importDropiCsv`, fallback). Llena DropiCatalogItem y cruza los
+ * candidatos por nombre (exacto normalizado y, si no, fuzzy por solapamiento de
+ * tokens) para marcar su dropiStatus.
  */
 
 /** Parser CSV tolerante (cabecera + comillas dobles básicas). */
@@ -58,24 +60,45 @@ export async function importDropiCsv(csv: string): Promise<DropiImportResult> {
   for (const r of rows) {
     const name = pick(r, 'name', 'nombre', 'producto', 'title', 'titulo');
     if (!name) continue;
-    const key = normalizeName(name);
-    if (!key) continue;
-    const data = {
+    const ok = await upsertCatalogItem({
       name,
       sku: pick(r, 'sku', 'codigo', 'code') || null,
       category: pick(r, 'category', 'categoria') || null,
       cost: toInt(pick(r, 'cost', 'costo', 'price', 'precio')),
       stock: toInt(pick(r, 'stock', 'inventario', 'existencias')),
       imageUrl: pick(r, 'image', 'imagen', 'imageurl', 'image_url', 'foto') || null,
-    };
-    await prisma.dropiCatalogItem.upsert({
-      where: { normalizedName: key },
-      create: { normalizedName: key, ...data },
-      update: data,
     });
-    upserted += 1;
+    if (ok) upserted += 1;
   }
   return { received: rows.length, upserted };
+}
+
+/** Upsert de un producto del catálogo Dropi en DropiCatalogItem. */
+async function upsertCatalogItem(p: {
+  name: string;
+  sku: string | null;
+  category: string | null;
+  cost: number | null;
+  stock: number | null;
+  imageUrl: string | null;
+}): Promise<boolean> {
+  const key = normalizeName(p.name);
+  if (!key) return false;
+  const data = { name: p.name, sku: p.sku, category: p.category, cost: p.cost, stock: p.stock, imageUrl: p.imageUrl };
+  await prisma.dropiCatalogItem.upsert({ where: { normalizedName: key }, create: { normalizedName: key, ...data }, update: data });
+  return true;
+}
+
+/**
+ * Sincroniza el catálogo Dropi desde su API de Integraciones (automático) y
+ * re-cruza los candidatos. Requiere credenciales (ver isDropiApiConfigured).
+ */
+export async function syncDropiCatalogFromApi(): Promise<DropiImportResult & { matched: number }> {
+  const products = await fetchDropiProducts();
+  let upserted = 0;
+  for (const p of products) if (await upsertCatalogItem(p)) upserted += 1;
+  const matched = await matchCandidatesToDropi().catch(() => 0);
+  return { received: products.length, upserted, matched };
 }
 
 /** Solapamiento de tokens (Jaccard) entre dos nombres normalizados. */

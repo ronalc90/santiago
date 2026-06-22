@@ -87,8 +87,21 @@ const envSchema = z.object({
   // Vacío = desactivado. Default: 07:00 (solo corre si Shopify está configurado).
   COST_SYNC_CRON: z.string().default('0 7 * * *'),
 
-  // NOTA: Dropi NO expone API a terceros. El costo (margen) llega a Shopify por la
-  // integración oficial Dropi→Shopify y WinSpy lo lee de Shopify (inventoryItem.unitCost).
+  // --- Dropi (catálogo de productos vía API de Integraciones) ----------------
+  // Dropi SÍ expone una API de integraciones (api.dropi.co): login con email/clave
+  // → token bearer, o un token de Integraciones (header `dropi-integration-key`)
+  // generado en app.dropi.co → Integraciones. Sin credenciales, el catálogo se
+  // importa por CSV (fallback). El costo (margen) sigue llegando vía Shopify.
+  // Las rutas son PARAMETRIZABLES porque Dropi no publica abiertamente el path del
+  // catálogo: ajústalas si tu cuenta usa otras (ver la doc de tu panel de Dropi).
+  DROPI_API_BASE_URL: z.string().url().default('https://api.dropi.co'),
+  DROPI_EMAIL: z.string().optional().default(''),
+  DROPI_PASSWORD: z.string().optional().default(''),
+  DROPI_INTEGRATION_KEY: z.string().optional().default(''),
+  DROPI_LOGIN_PATH: z.string().default('/api/login'),
+  DROPI_PRODUCTS_PATH: z.string().default('/api/products/index'),
+  // Cron (BullMQ) para sincronizar el catálogo Dropi a diario. Vacío = solo manual.
+  DROPI_SYNC_CRON: z.string().default(''),
 
   // --- MercadoLibre (saturación CO: nº de publicaciones) ---------------------
   // App gratis en developers.mercadolibre.com. La conexión es por OAuth desde

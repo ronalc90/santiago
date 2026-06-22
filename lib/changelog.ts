@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  '65a3b40': { title: 'La versión es el número de commit (v0.N)', detail: 'Cada commit es una versión: con N commits hechos, la actual es la v0.N.' },
   '92b73b7': { title: 'Una versión por cada cambio, clara y con fecha', detail: 'El apartado «Versión y cambios» muestra cada cambio del proyecto como una versión, con su explicación entendible y su fecha.' },
   a019b66: { title: 'Dinero en pesos (COP), señales automáticas y aviso de Dropi', detail: 'Todo el dinero del negocio se muestra en pesos colombianos. Las señales que el sistema detecta solo de los anuncios («se vende en CO», «creativo extranjero sin usar») quedan de solo lectura, y se avisa cuándo falta importar el catálogo Dropi para que el filtro «Con Dropi» funcione.' },
   a90b853: { title: 'Historial completo de versiones y commits', detail: 'El apartado de versiones pasa a mostrar todo el historial del proyecto, no solo las últimas versiones.' },
