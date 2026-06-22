@@ -52,9 +52,11 @@ const pick = (row: Record<string, string>, ...keys: string[]): string => {
   for (const k of keys) if (row[k]?.trim()) return row[k].trim();
   return '';
 };
+// COP entero: el peso usa "." de miles y no tiene centavos, así que "70.000" →
+// 70000 (no 70). Se quita TODO lo no numérico. Vacío → null (desconocido).
 const toInt = (s: string): number | null => {
-  const n = Number(String(s).replace(/[^0-9.-]/g, ''));
-  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+  const digits = String(s ?? '').replace(/[^0-9]/g, '');
+  return digits ? Number(digits) : null;
 };
 
 export interface DropiImportResult {

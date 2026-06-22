@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Telescope, Trophy, Package, ImageIcon, Store, Settings, DollarSign, HelpCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Telescope, Trophy, Package, Boxes, ImageIcon, Store, Settings, DollarSign, HelpCircle, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/layout/theme-switcher';
@@ -11,6 +11,7 @@ export const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/spy', label: 'Spy de anuncios', icon: Telescope },
   { href: '/opportunities', label: 'Oportunidades', icon: Trophy },
+  { href: '/catalogo', label: 'Catálogo Dropi', icon: Boxes },
   { href: '/products', label: 'Productos', icon: Package },
   { href: '/landings', label: 'Landings', icon: ImageIcon },
   { href: '/stores', label: 'Tiendas', icon: Store },
