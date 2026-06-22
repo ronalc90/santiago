@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
 import { importDropiCsv, matchCandidatesToDropi } from '@/lib/services/dropi-catalog';
 
-const schema = z.object({ csv: z.string().min(1).max(2_000_000) });
+const schema = z.object({ csv: z.string().min(1).max(8_000_000) });
 
 /** Importa el catálogo Dropi por CSV (Dropi no da API) y re-cruza los candidatos. */
 export async function POST(req: Request) {

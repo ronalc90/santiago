@@ -77,14 +77,35 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
     else toast({ variant: 'destructive', title: 'Error al guardar', description: d.error });
   }
 
-  async function importCsv() {
-    if (!csv.trim()) return;
+  async function doImport(csvText: string) {
+    if (!csvText.trim()) {
+      toast({ variant: 'destructive', title: 'Archivo vacío', description: 'El CSV no tiene contenido.' });
+      return;
+    }
     setImporting(true);
-    const res = await fetch('/api/discovery/dropi-import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv }) });
+    const res = await fetch('/api/discovery/dropi-import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: csvText }) });
     setImporting(false);
     const d = await res.json().catch(() => ({}));
-    if (res.ok) toast({ title: 'Catálogo Dropi importado', description: `${d.upserted ?? 0} ítems · ${d.matched ?? 0} candidatos emparejados` });
+    if (res.ok) toast({ title: 'Catálogo Dropi importado', description: `${d.received ?? 0} filas · ${d.upserted ?? 0} productos · ${d.matched ?? 0} candidatos emparejados` });
     else toast({ variant: 'destructive', title: 'Error al importar', description: d.error });
+  }
+
+  function importCsv() {
+    void doImport(csv);
+  }
+
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permite re-subir el mismo archivo
+    if (!file) return;
+    if (file.size > 8_000_000) {
+      toast({ variant: 'destructive', title: 'Archivo muy grande', description: 'Máximo ~8 MB. Si tu export es más grande, divídelo o avísame y lo subimos por partes.' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => void doImport(String(reader.result ?? ''));
+    reader.onerror = () => toast({ variant: 'destructive', title: 'No se pudo leer el archivo' });
+    reader.readAsText(file);
   }
 
   return (
@@ -128,11 +149,25 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
           </Button>
           {!shopifyConfigured && <p className="text-xs text-muted-foreground">Conecta Shopify (arriba en Costos) para habilitarlo.</p>}
 
-          <p className="pt-2 text-xs text-muted-foreground">Alternativa por CSV — exporta tu catálogo de Dropi e impórtalo. Cabecera: name, sku, category, cost, stock, image.</p>
-          <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
-          <Button variant="outline" onClick={importCsv} disabled={importing || !csv.trim()}>
-            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar catálogo Dropi (CSV)
-          </Button>
+          <p className="pt-2 text-xs text-muted-foreground">
+            Catálogo por CSV: exporta tus productos/favoritos desde Dropi e impórtalos aquí; luego búscalos y fíltralos en «Catálogo Dropi» (menú).
+            Cabecera tolerante: name/nombre, sku/codigo, category/categoria, cost/precio, stock, image/imagen.
+          </p>
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            onChange={onFile}
+            disabled={importing}
+            className="block w-full text-xs file:mr-3 file:rounded-md file:border file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium hover:file:bg-secondary/70"
+          />
+          {importing && <p className="text-xs text-muted-foreground"><Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> Importando…</p>}
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer">…o pegar el contenido</summary>
+            <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="mt-2 min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
+            <Button variant="outline" className="mt-2" onClick={importCsv} disabled={importing || !csv.trim()}>
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar CSV pegado
+            </Button>
+          </details>
           {dropiApiConfigured && (
             <Button variant="ghost" size="sm" onClick={syncDropiApi} disabled={syncing} title="Solo funciona si Dropi habilitó tu integración para consumir su API">
               {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Probar sync por API (solo si Dropi habilitó tu integración)

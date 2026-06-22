@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "ff2c5b7",
+    "date": "2026-06-22",
+    "subject": "feat(catalogo): navegador y filtro del catálogo Dropi importado"
+  },
+  {
     "hash": "bb49eec",
     "date": "2026-06-22",
     "subject": "feat(oportunidades): link «buscar en Dropi» en cada candidato"

@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  ff2c5b7: { title: 'Catálogo Dropi: buscar y filtrar el catálogo importado', detail: 'Nueva página «Catálogo Dropi» para buscar por nombre, filtrar por categoría y ordenar por costo lo que importes por CSV.' },
   bb49eec: { title: 'Link «buscar en Dropi» en cada candidato', detail: 'Cada candidato (no solo los cruzados) enlaza a tu panel de Dropi buscando ese producto por nombre.' },
   e88373d: { title: 'Precios en COP correctos en landings/IA + diagnóstico de Shopify vacío', detail: 'Arregla "70.000"→70 (parseCop), pasa el precio formateado a la IA con instrucción de exactitud, y avisa claro cuando tu Shopify no tiene productos.' },
   '555131d': { title: 'El catálogo Dropi se llena solo desde Shopify en cada búsqueda', detail: 'La discovery refresca el catálogo desde Shopify y cruza en la misma corrida, sin botón ni CSV.' },
