@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "gen:commits": "node scripts/gen-commits.mjs",
     "worker": "NODE_OPTIONS=--conditions=react-server tsx worker/index.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
