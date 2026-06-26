@@ -116,9 +116,24 @@ export default function AyudaPage() {
       </div>
 
       <Card>
+        <CardHeader><CardTitle className="text-base">Glosario rápido (qué significan los números)</CardTitle></CardHeader>
+        <CardContent>
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div><dt className="font-medium text-foreground">Winner Score</dt><dd className="text-muted-foreground">La «nota» de un anuncio. Más alto = mejor señal de ganador. Sin gasto público de Meta en CO es un proxy de longevidad/alcance (no de dinero gastado): sube con los días hasta cierto punto y luego baja (demasiado viejo = saturado).</dd></div>
+            <div><dt className="font-medium text-foreground">Score 4×25</dt><dd className="text-muted-foreground">Puntaje de oportunidad de un producto (0-100), de 4 factores: Demanda · Competencia CO · Margen efectivo · Creativos.</dd></div>
+            <div><dt className="font-medium text-foreground">🌊 Cascade (winner global)</dt><dd className="text-muted-foreground">Producto ya probado en varios países que aún NO llega a Colombia: ventana para entrar primero.</dd></div>
+            <div><dt className="font-medium text-foreground">Margen efectivo COD</dt><dd className="text-muted-foreground">La ganancia real del contra entrega: descuenta la no entrega (cancelaciones/rechazos), el flete de vuelta y la comisión de recaudo. No es el margen bruto.</dd></div>
+            <div><dt className="font-medium text-foreground">Con Dropi</dt><dd className="text-muted-foreground">El producto está en tu catálogo de Dropi importado (lo puedes despachar con Dropi).</dd></div>
+            <div><dt className="font-medium text-foreground">Saturación CO</dt><dd className="text-muted-foreground">Cuántas publicaciones similares hay en MercadoLibre Colombia. Más alto = más competencia.</dd></div>
+            <div><dt className="font-medium text-foreground">Ángulo (creativo sin usar)</dt><dd className="text-muted-foreground">Una imagen/video que funciona afuera y nadie usa aún en CO: un enfoque nuevo listo para ti.</dd></div>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle className="text-base">Apariencia</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Cambia entre <b className="text-foreground">modo claro</b> y <b className="text-foreground">oscuro</b> con el botón al final del menú (abajo a la izquierda). Tu preferencia se recuerda en este navegador.
+          Elige el tema (<b className="text-foreground">claro</b>, <b className="text-foreground">oscuro</b> o <b className="text-foreground">lectura</b>) en el selector al final del menú (o en Ajustes → Apariencia). Tu preferencia se guarda en tu cuenta y se aplica en cualquier dispositivo.
         </CardContent>
       </Card>
     </div>

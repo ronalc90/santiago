@@ -103,6 +103,10 @@ export function ProductManager({ product }: { product: ProductState }) {
           numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify')
         )}
         {numberField(`Costo de envío (${s.currency})`, 'shippingCost', savedShipping, 'opcional')}
+        <p className="text-xs text-muted-foreground">
+          Precio, costo y envío alimentan el <span className="font-medium">margen efectivo COD</span>: descuenta la no entrega
+          (cancelaciones/rechazos), el flete de vuelta y la comisión de recaudo. Esos parámetros se ajustan en Ajustes.
+        </p>
         <div className="space-y-1.5">
           <Label className="text-xs">Keyword de saturación (MercadoLibre)</Label>
           <Input

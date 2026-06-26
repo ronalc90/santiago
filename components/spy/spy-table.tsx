@@ -110,7 +110,9 @@ export function SpyTable() {
         </div>
         <div className="flex items-center gap-2">
           <Switch id="unused" checked={onlyUnusedForeign} onCheckedChange={setOnlyUnusedForeign} />
-          <Label htmlFor="unused" className="text-xs">Creativo extranjero sin usar en CO</Label>
+          <Label htmlFor="unused" className="text-xs" title="Una imagen/video que ya funciona en otros países pero que nadie usa todavía en Colombia: un ángulo nuevo listo para que lo aproveches.">
+            Creativo extranjero sin usar en CO
+          </Label>
         </div>
         <div className="flex items-center gap-2">
           <Switch id="notco" checked={notInColombia} onCheckedChange={setNotInColombia} />
@@ -175,7 +177,7 @@ export function SpyTable() {
                   <TableCell>
                     <div className="flex gap-1">
                       {ad.sellsInColombia ? <Badge variant="green">CO</Badge> : <Badge variant="gray">no CO</Badge>}
-                      {ad.hasUnusedForeignCreative && <Badge variant="yellow">ángulo</Badge>}
+                      {ad.hasUnusedForeignCreative && <Badge variant="yellow" title="Ángulo nuevo: creativo que funciona afuera y aún nadie usa en CO.">ángulo</Badge>}
                     </div>
                   </TableCell>
                   <TableCell>

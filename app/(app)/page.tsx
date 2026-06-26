@@ -102,7 +102,13 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top winners */}
         <Card>
-          <CardHeader><CardTitle>Top 5 por Winner Score</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>
+              <span title="Winner Score: la «nota» del anuncio. Más alto = mejor señal de ganador. Sin gasto público de Meta en CO es un proxy de longevidad/alcance, no de dinero invertido.">
+                Top 5 por Winner Score
+              </span>
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {topAds.length === 0 && <p className="text-sm text-muted-foreground">Sin datos. Importa resultados del spy.</p>}
             {topAds.map((ad) => (
