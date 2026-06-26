@@ -11,6 +11,11 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "c12366b",
+    "date": "2026-06-26",
+    "subject": "feat(productos): loop de validación con resultados reales"
+  },
+  {
     "hash": "0b3fb24",
     "date": "2026-06-26",
     "subject": "feat(spy): serie temporal de anuncios (AdSnapshot) + Velocity/momentum"

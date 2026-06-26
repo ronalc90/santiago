@@ -23,6 +23,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   });
   if (!product) notFound();
 
+  // Store Replication: cuántas TIENDAS distintas corren este producto. Más tiendas
+  // = más validado por el mercado (un winner que todos están copiando).
+  const distinctStores = new Set(product.ads.map((a) => a.storeName.trim().toLowerCase())).size;
+  const distinctCountries = new Set(product.ads.map((a) => a.country.toUpperCase())).size;
+
   return (
     <div className="space-y-6">
       <Link href="/products" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -62,7 +67,21 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Anuncios ligados (Spy)</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle>Anuncios ligados (Spy)</CardTitle>
+                {product.ads.length > 0 && (
+                  <span
+                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                    title="Cuántas tiendas distintas corren este producto. Más tiendas = más validado por el mercado (un winner que todos copian)."
+                  >
+                    Replicación: <span className="font-medium text-foreground">{distinctStores} tienda(s)</span>
+                    {distinctCountries > 1 ? ` · ${distinctCountries} países` : ''}
+                    {distinctStores >= 3 && <Badge variant="green">validado por el mercado</Badge>}
+                  </span>
+                )}
+              </div>
+            </CardHeader>
             <CardContent className="space-y-2">
               {product.ads.length === 0 && <p className="text-sm text-muted-foreground">Sin anuncios ligados.</p>}
               {product.ads.map((ad) => (
