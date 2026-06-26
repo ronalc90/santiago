@@ -130,14 +130,20 @@ export function SpyTable() {
               <TableHead>Tienda</TableHead>
               <TableHead>País</TableHead>
               <TableHead>Copy</TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('daysActive')}>
-                <span className="inline-flex items-center gap-1">Días <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead>
+                <button type="button" onClick={() => toggleSort('daysActive')} className="inline-flex items-center gap-1 hover:text-foreground" aria-label="Ordenar por días activos">
+                  Días <ArrowUpDown className="h-3 w-3" />
+                </button>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('estimatedSpend')} title="Gasto o impresiones estimados cuando Meta los publica. Para anuncios comerciales en CO casi siempre no hay dato público (—).">
-                <span className="inline-flex items-center gap-1">Gasto/Impr. (est.) <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead>
+                <button type="button" onClick={() => toggleSort('estimatedSpend')} className="inline-flex items-center gap-1 hover:text-foreground" title="Gasto o impresiones estimados cuando Meta los publica. Para anuncios comerciales en CO casi siempre no hay dato público (—)." aria-label="Ordenar por gasto/impresiones estimados">
+                  Gasto/Impr. (est.) <ArrowUpDown className="h-3 w-3" />
+                </button>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('winnerScore')} title="Señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), es un proxy de longevidad/alcance, no de inversión: sube con los días hasta cierto punto y luego baja (un anuncio demasiado viejo está saturado).">
-                <span className="inline-flex items-center gap-1">Winner Score <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead>
+                <button type="button" onClick={() => toggleSort('winnerScore')} className="inline-flex items-center gap-1 hover:text-foreground" title="Señal de anuncio ganador. Cuando Meta no publica el gasto (anuncios comerciales en CO), es un proxy de longevidad/alcance, no de inversión: sube con los días hasta cierto punto y luego baja (un anuncio demasiado viejo está saturado)." aria-label="Ordenar por Winner Score">
+                  Winner Score <ArrowUpDown className="h-3 w-3" />
+                </button>
               </TableHead>
               <TableHead>Clasificación</TableHead>
               <TableHead>Señales</TableHead>

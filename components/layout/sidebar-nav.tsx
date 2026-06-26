@@ -7,17 +7,34 @@ import { Button } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/layout/theme-switcher';
 import type { Theme } from '@/lib/theme';
 
-export const NAV = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/spy', label: 'Spy de anuncios', icon: Telescope },
-  { href: '/opportunities', label: 'Oportunidades', icon: Trophy },
-  { href: '/catalogo', label: 'Catálogo Dropi', icon: Boxes },
-  { href: '/products', label: 'Productos', icon: Package },
-  { href: '/landings', label: 'Landings', icon: ImageIcon },
-  { href: '/stores', label: 'Tiendas', icon: Store },
-  { href: '/settings', label: 'Ajustes', icon: Settings },
-  { href: '/costos', label: 'Costos', icon: DollarSign },
-  { href: '/ayuda', label: 'Ayuda', icon: HelpCircle },
+/** Menú agrupado por etapa del flujo de trabajo, para que un usuario nuevo
+ *  entienda el orden: descubrir → operar → admin. */
+export const NAV_SECTIONS: { title: string | null; items: { href: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
+  { title: null, items: [{ href: '/', label: 'Dashboard', icon: LayoutDashboard }] },
+  {
+    title: 'Descubrir',
+    items: [
+      { href: '/spy', label: 'Spy de anuncios', icon: Telescope },
+      { href: '/opportunities', label: 'Oportunidades', icon: Trophy },
+      { href: '/catalogo', label: 'Catálogo Dropi', icon: Boxes },
+    ],
+  },
+  {
+    title: 'Operar',
+    items: [
+      { href: '/products', label: 'Mis productos', icon: Package },
+      { href: '/landings', label: 'Landings', icon: ImageIcon },
+    ],
+  },
+  {
+    title: 'Admin e info',
+    items: [
+      { href: '/stores', label: 'Competidores', icon: Store },
+      { href: '/costos', label: 'Costos', icon: DollarSign },
+      { href: '/settings', label: 'Ajustes', icon: Settings },
+      { href: '/ayuda', label: 'Ayuda', icon: HelpCircle },
+    ],
+  },
 ];
 
 /**
@@ -42,25 +59,32 @@ export function SidebarNav({ userName, theme, onNavigate }: { userName: string; 
       <div className="flex h-14 items-center border-b px-4">
         <span className="text-lg font-bold tracking-tight">Win<span className="text-sky-400">Spy</span></span>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {NAV.map((item) => {
-          const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-3 overflow-y-auto p-2">
+        {NAV_SECTIONS.map((section, si) => (
+          <div key={section.title ?? `s${si}`} className="space-y-1">
+            {section.title && (
+              <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{section.title}</p>
+            )}
+            {section.items.map((item) => {
+              const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       <div className="border-t p-2">
         <div className="truncate px-3 py-2 text-xs text-muted-foreground">{userName}</div>

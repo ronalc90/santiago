@@ -72,12 +72,13 @@ export function CatalogTable() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="space-y-1">
-          <Label className="text-xs">Buscar</Label>
-          <Input placeholder="Nombre del producto…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:w-64" />
+          <Label htmlFor="catalog-search" className="text-xs">Buscar</Label>
+          <Input id="catalog-search" placeholder="Nombre del producto…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:w-64" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Categoría</Label>
+          <Label htmlFor="catalog-category" className="text-xs">Categoría</Label>
           <select
+            id="catalog-category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="h-10 w-full rounded-md border bg-background px-3 text-sm sm:w-56"
@@ -100,12 +101,16 @@ export function CatalogTable() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('name')}>
-                <span className="inline-flex items-center gap-1">Producto <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead>
+                <button type="button" onClick={() => toggleSort('name')} className="inline-flex items-center gap-1 hover:text-foreground" aria-label="Ordenar por producto">
+                  Producto <ArrowUpDown className="h-3 w-3" />
+                </button>
               </TableHead>
               <TableHead>Categoría</TableHead>
-              <TableHead className="cursor-pointer text-right" onClick={() => toggleSort('cost')}>
-                <span className="inline-flex items-center gap-1">Costo <ArrowUpDown className="h-3 w-3" /></span>
+              <TableHead className="text-right">
+                <button type="button" onClick={() => toggleSort('cost')} className="ml-auto inline-flex items-center gap-1 hover:text-foreground" aria-label="Ordenar por costo">
+                  Costo <ArrowUpDown className="h-3 w-3" />
+                </button>
               </TableHead>
               <TableHead className="text-right">Stock</TableHead>
               <TableHead></TableHead>

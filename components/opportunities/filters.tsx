@@ -3,9 +3,9 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 const TOGGLES = [
-  { key: 'noCO', label: 'Solo no-CO' },
-  { key: 'dropi', label: 'Con Dropi' },
-  { key: 'creativos', label: 'Con creativos' },
+  { key: 'noCO', label: 'Solo no-CO', hint: 'Solo productos que aún NO se venden en Colombia (ventana para entrar primero).' },
+  { key: 'dropi', label: 'Con Dropi', hint: 'Solo los que están en tu catálogo de Dropi importado (los puedes despachar con Dropi).' },
+  { key: 'creativos', label: 'Con creativos', hint: 'Solo candidatos que ya traen imágenes/videos de campañas reales.' },
 ];
 const SOURCES = ['mercadolibre', 'trends', 'meta', 'tiktok'];
 
@@ -25,11 +25,12 @@ export function OpportunityFilters() {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {TOGGLES.map((t) => (
-        <Button key={t.key} size="sm" variant={sp.get(t.key) ? 'default' : 'outline'} onClick={() => set(t.key, sp.get(t.key) ? null : '1')}>
+        <Button key={t.key} size="sm" variant={sp.get(t.key) ? 'default' : 'outline'} title={t.hint} onClick={() => set(t.key, sp.get(t.key) ? null : '1')}>
           {t.label}
         </Button>
       ))}
       <select
+        aria-label="Filtrar por fuente"
         value={sp.get('fuente') ?? ''}
         onChange={(e) => set('fuente', e.target.value || null)}
         className="h-9 rounded-md border bg-background px-2 text-sm"

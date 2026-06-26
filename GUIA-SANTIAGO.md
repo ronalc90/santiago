@@ -39,7 +39,20 @@ A la izquierda siempre tienes el menú. Esto hace cada botón:
 
 ![Menú lateral](docs/img/01-menu.svg)
 
-> 🟦 **Si te pierdes, vuelve siempre al menú de la izquierda.** Es el mismo en todas las pantallas.
+| Botón | Para qué sirve |
+|---|---|
+| **Dashboard** | Tu tablero de inicio: cómo va todo de un vistazo. |
+| **Spy de anuncios** | Anuncios reales de la competencia, con su «nota» (Winner Score). |
+| **Oportunidades** | Productos ganadores que la app **descubre sola** (de MercadoLibre y más), con su puntaje. |
+| **Catálogo Dropi** | El catálogo de Dropi que **importaste** (CSV): búscalo y fíltralo por categoría/costo. |
+| **Productos** | Tus productos en proceso (precio, costo, margen, estado). |
+| **Landings** | Tus páginas de venta generadas con IA. |
+| **Tiendas** | Competidores que sigues. |
+| **Ajustes** | Reglas del puntaje, conexiones (Shopify/MercadoLibre), importar Dropi, versión. |
+| **Costos** | Cuánto cuesta operar (en pesos y dólares). |
+| **Ayuda** | Esta guía dentro de la app. |
+
+> 🟦 **Si te pierdes, vuelve siempre al menú de la izquierda.** Es el mismo en todas las pantallas. Abajo del menú puedes cambiar el **tema** (claro/oscuro/lectura).
 
 ---
 

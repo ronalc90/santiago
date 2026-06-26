@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useId, isValidElement, cloneElement, type ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -203,7 +203,11 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1.5"><Label>{label}</Label>{children}</div>;
+  const id = useId();
+  // Asocia el label con el campo (htmlFor/id). Si hay un solo elemento, le inyecta
+  // el id; si hay varios (campo + pista), el label queda visible sin asociar.
+  const child = isValidElement(children) ? cloneElement(children as ReactElement, { id }) : children;
+  return <div className="space-y-1.5"><Label htmlFor={id}>{label}</Label>{child}</div>;
 }
 function Summary({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between gap-4 border-b py-1.5"><span className="text-muted-foreground">{label}</span><span className="text-right font-medium">{value}</span></div>;

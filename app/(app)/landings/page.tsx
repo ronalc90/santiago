@@ -30,7 +30,13 @@ export default async function LandingsPage() {
         <Link href="/landings/new"><Button><Plus className="h-4 w-4" /> Nueva landing</Button></Link>
       </div>
       {landings.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Sin landings todavía.</CardContent></Card>
+        <Card>
+          <CardContent className="space-y-3 p-8 text-center text-muted-foreground">
+            <p>Aún no has creado ninguna página de venta.</p>
+            <p className="text-sm">Crea una con IA (9 imágenes + HTML) desde cero, o desde el detalle de un producto.</p>
+            <Link href="/landings/new" className="inline-block"><Button><Plus className="h-4 w-4" /> Crear mi primera landing</Button></Link>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3">
           {landings.map((l) => {

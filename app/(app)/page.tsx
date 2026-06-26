@@ -47,6 +47,30 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">Vista general del negocio.</p>
       </div>
 
+      {adsDetected === 0 && landings === 0 && (
+        <Card className="border-sky-500/40 bg-sky-500/5">
+          <CardContent className="p-4">
+            <p className="mb-2 text-sm font-semibold">🚀 Primeros pasos</p>
+            <ol className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+              <li>
+                <span className="font-medium text-foreground">1. Descubre productos:</span> trae anuncios reales en{' '}
+                <Link href="/spy" className="text-sky-500 hover:underline">Spy</Link> o candidatos en{' '}
+                <Link href="/opportunities" className="text-sky-500 hover:underline">Oportunidades</Link>.
+              </li>
+              <li>
+                <span className="font-medium text-foreground">2. Conviértelos</span> en{' '}
+                <Link href="/products" className="text-sky-500 hover:underline">Mis productos</Link> y revisa su puntaje y margen.
+              </li>
+              <li>
+                <span className="font-medium text-foreground">3. Crea la</span>{' '}
+                <Link href="/landings" className="text-sky-500 hover:underline">landing</Link> con IA y publícala en Shopify.
+              </li>
+            </ol>
+            <p className="mt-2 text-xs text-muted-foreground">¿Dudas? Abre la <Link href="/ayuda" className="underline">Guía</Link>.</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Kpi icon={<Telescope className="h-4 w-4" />} label="Anuncios detectados" value={adsDetected} hint={`${adsNew} nuevos`} />

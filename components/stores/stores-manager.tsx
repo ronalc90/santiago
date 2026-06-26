@@ -54,8 +54,8 @@ export function StoresManager({ initial }: { initial: StoreRow[] }) {
                 <p className="text-xs text-muted-foreground">{s.adsCount} anuncio(s)</p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <a href={normalizeAdLibraryUrl(s.adLibraryUrl, { query: s.name, country: s.country })} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><ExternalLink className="h-4 w-4" /></a>
-                <Button variant="ghost" size="icon" onClick={() => remove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <a href={normalizeAdLibraryUrl(s.adLibraryUrl, { query: s.name, country: s.country })} target="_blank" rel="noreferrer" aria-label={`Ver ${s.name} en Meta Ad Library`} className="text-muted-foreground hover:text-foreground"><ExternalLink className="h-4 w-4" /></a>
+                <Button variant="ghost" size="icon" aria-label={`Eliminar ${s.name}`} onClick={() => remove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </CardContent>
           </Card>

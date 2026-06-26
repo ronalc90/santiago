@@ -238,7 +238,7 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
                 <span className="font-medium">{img.slot}. {TITLES[img.type] ?? img.type}</span>
                 <Badge variant={img.status === 'COMPLETED' ? 'green' : img.status === 'FAILED' ? 'destructive' : 'secondary'} className="ml-1">{img.status}</Badge>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => regenerate(img.slot)} title="Regenerar"><RefreshCw className="h-3.5 w-3.5" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => regenerate(img.slot)} title="Regenerar" aria-label={`Regenerar imagen ${img.slot}: ${TITLES[img.type] ?? img.type}`}><RefreshCw className="h-3.5 w-3.5" /></Button>
             </CardContent>
           </Card>
         ))}
