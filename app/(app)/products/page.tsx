@@ -66,6 +66,14 @@ export default async function ProductsPage() {
                         </Badge>
                       ) : null;
                     })()}
+                    {p.realRoas != null && (
+                      <Badge
+                        variant={p.realRoas >= 1.5 ? 'green' : p.realRoas < 1 ? 'red' : 'yellow'}
+                        title={`Resultado real: ROAS ${p.realRoas}`}
+                      >
+                        {p.realRoas >= 1.5 ? '✅ validado' : p.realRoas < 1 ? '❌ pierde' : '⚠️ marginal'}
+                      </Badge>
+                    )}
                     <OpportunityBadge band={p.opportunityBand} />
                     <Badge variant="outline">{p.market}</Badge>
                     <Badge variant="secondary">{DROPI_LABEL[p.dropiAvailability]}</Badge>

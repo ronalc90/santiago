@@ -29,6 +29,10 @@ interface ProductState {
   shippingCost: number | null;
   saturationCount: number | null;
   saturationKeyword: string | null;
+  realRoas: number | null;
+  realCpa: number | null;
+  realUnitsSold: number | null;
+  realReturnRate: number | null; // 0-1
   notes: string;
 }
 
@@ -41,15 +45,26 @@ export function ProductManager({ product }: { product: ProductState }) {
   const savedManualCost = useRef(product.manualCost);
   const savedShipping = useRef(product.shippingCost);
   const savedKeyword = useRef(product.saturationKeyword);
+  const savedRoas = useRef(product.realRoas);
+  const savedCpa = useRef(product.realCpa);
+  const savedUnits = useRef(product.realUnitsSold);
+  const savedReturn = useRef(product.realReturnRate);
 
-  /** Input numérico de costo/precio con patch solo si cambió (evita recompute innecesario). */
-  function numberField(label: string, key: 'salePrice' | 'manualCost' | 'shippingCost', ref: typeof savedSalePrice, placeholder: string) {
+  /** Input numérico de costo/precio/resultado con patch solo si cambió (evita recompute innecesario). */
+  function numberField(
+    label: string,
+    key: 'salePrice' | 'manualCost' | 'shippingCost' | 'realRoas' | 'realCpa' | 'realUnitsSold',
+    ref: typeof savedSalePrice,
+    placeholder: string,
+    step?: string,
+  ) {
     return (
       <div className="space-y-1.5">
         <Label className="text-xs">{label}</Label>
         <Input
           type="number"
           min={0}
+          step={step}
           value={s[key] ?? ''}
           onChange={(e) => setS({ ...s, [key]: e.target.value === '' ? null : Number(e.target.value) })}
           onBlur={() => {
@@ -137,6 +152,39 @@ export function ProductManager({ product }: { product: ProductState }) {
             <span className="text-xs">Creativo extranjero sin usar</span>
             {s.hasUnusedForeignCreative ? <Badge variant="yellow">Sí</Badge> : <Badge variant="gray">No</Badge>}
           </div>
+        </div>
+        <div className="space-y-2 rounded-md border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium">Resultados reales <span className="font-normal text-muted-foreground">(cierra el loop)</span></p>
+            {s.realRoas != null && (
+              <Badge variant={s.realRoas >= 1.5 ? 'green' : s.realRoas < 1 ? 'red' : 'yellow'}>
+                {s.realRoas >= 1.5 ? '✅ Validado' : s.realRoas < 1 ? '❌ Pierde plata' : '⚠️ Marginal'}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {numberField('ROAS real', 'realRoas', savedRoas, 'ej: 2.5', '0.1')}
+            {numberField(`CPA real (${s.currency})`, 'realCpa', savedCpa, 'costo por venta')}
+            {numberField('Unidades vendidas', 'realUnitsSold', savedUnits, 'ej: 120')}
+            <div className="space-y-1.5">
+              <Label className="text-xs">No entrega real (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={s.realReturnRate != null ? Math.round(s.realReturnRate * 100) : ''}
+                onChange={(e) => setS({ ...s, realReturnRate: e.target.value === '' ? null : Number(e.target.value) / 100 })}
+                onBlur={() => {
+                  if (s.realReturnRate !== savedReturn.current) {
+                    savedReturn.current = s.realReturnRate;
+                    patch({ realReturnRate: s.realReturnRate });
+                  }
+                }}
+                placeholder="ej: 25"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">La «no entrega real» reemplaza el default en el margen efectivo COD: el score aprende de tus números.</p>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Notas</Label>

@@ -78,6 +78,7 @@ export async function recomputeAllProductsOpportunity(): Promise<number> {
             saturationCount: product.saturationCount ?? null,
             dropiAvailability: product.dropiAvailability,
             hasUnusedForeignCreative: product.hasUnusedForeignCreative,
+            realReturnRate: product.realReturnRate ?? null,
           },
           product.ads,
           scoring.minDiasOtroPais,

@@ -144,6 +144,7 @@ describe('saturación → dimensión Competencia', () => {
     shippingCost: null,
     salePrice: null,
     dropiAvailability: 'DESCONOCIDO',
+    codReturnRateOverride: null,
     numVideos: 0,
     numImages: 0,
     maxCreativeDaysActive: 0,

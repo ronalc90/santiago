@@ -189,6 +189,19 @@ model Product {
   /// Keyword editable para medir la saturación; si está vacía, se usa el nombre.
   saturationKeyword   String?
 
+  // --- Resultados reales (loop de validación; los ingresa el usuario) ---
+  /// ROAS real (retorno sobre la inversión publicitaria). Valida si gana o pierde.
+  realRoas          Float?
+  /// CPA real (costo por venta efectiva), en la moneda del producto.
+  realCpa           Int?
+  /// Unidades vendidas reales.
+  realUnitsSold     Int?
+  /// Tasa de NO entrega real (cancelaciones/rechazos, 0-1). Si está, el margen
+  /// efectivo COD la usa en vez del default de las reglas (cierra el loop).
+  realReturnRate    Float?
+  /// Cuándo se actualizaron los resultados reales.
+  resultUpdatedAt   DateTime?
+
   notes             String?
 
   ownerId           String?

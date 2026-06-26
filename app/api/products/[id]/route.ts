@@ -19,8 +19,15 @@ const updateSchema = z.object({
   manualCost: z.number().int().nonnegative().nullable().optional(),
   shippingCost: z.number().int().nonnegative().nullable().optional(),
   saturationKeyword: z.string().trim().max(200).nullable().optional(),
+  // Resultados reales (loop de validación). `realReturnRate` es 0-1 y afecta el margen.
+  realRoas: z.number().nonnegative().nullable().optional(),
+  realCpa: z.number().int().nonnegative().nullable().optional(),
+  realUnitsSold: z.number().int().nonnegative().nullable().optional(),
+  realReturnRate: z.number().min(0).max(1).nullable().optional(),
   notes: z.string().optional(),
 });
+
+const RESULT_FIELDS = ['realRoas', 'realCpa', 'realUnitsSold', 'realReturnRate'] as const;
 
 /**
  * Campos cuyo cambio afecta el score de oportunidad → recalcular.
@@ -28,7 +35,7 @@ const updateSchema = z.object({
  * la próxima medición del worker (la búsqueda usa saturationKeyword || name); el
  * costo por título se reconcilia en el siguiente cost-sync de Shopify.
  */
-const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'saturationKeyword', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability'] as const;
+const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'saturationKeyword', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability', 'realReturnRate'] as const;
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireApiUser();
@@ -55,6 +62,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data.saturationCount = null;
     data.saturationUpdatedAt = null;
   }
+  // Marca cuándo se actualizaron los resultados reales.
+  if (RESULT_FIELDS.some((f) => f in parsed.data)) data.resultUpdatedAt = new Date();
   const product = await prisma.product.update({ where: { id: params.id }, data });
   // Si cambió una señal del score, recalcular la oportunidad (no bloquea ante fallo).
   if (OPPORTUNITY_SIGNAL_FIELDS.some((f) => f in parsed.data)) {

@@ -26,6 +26,7 @@ const base: OpportunitySignals = {
   shippingCost: null,
   salePrice: null,
   dropiAvailability: 'DESCONOCIDO',
+  codReturnRateOverride: null,
   numVideos: 0,
   numImages: 0,
   maxCreativeDaysActive: 0,
@@ -107,6 +108,13 @@ describe('marginScore — cascada', () => {
   });
   it('nivel 4: nada → null', () => {
     expect(marginScore(base, R).score).toBeNull();
+  });
+  it('loop de validación: una no entrega REAL alta baja el margen vs el default', () => {
+    const s = { unitCost: 30000, salePrice: 90000, shippingCost: 12000 };
+    const conDefault = marginScore(sig(s), R);
+    const conReal = marginScore(sig({ ...s, codReturnRateOverride: 0.5 }), R);
+    expect(conReal.score!).toBeLessThan(conDefault.score!);
+    expect((conReal.reasons ?? []).join(' ')).toContain('REAL');
   });
 });
 

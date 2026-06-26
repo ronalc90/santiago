@@ -45,6 +45,7 @@ export async function buildOpportunitySignals(productId: string): Promise<Opport
     shippingCost: product.shippingCost ?? null,
     salePrice: product.salePrice ?? null,
     dropiAvailability: product.dropiAvailability,
+    codReturnRateOverride: product.realReturnRate ?? null,
     numVideos: withCreative.filter((a) => creativeType(a) === 'video').length,
     numImages: withCreative.filter((a) => creativeType(a) !== 'video').length,
     maxCreativeDaysActive: maxDays(withCreative),
@@ -62,6 +63,7 @@ export function buildOpportunitySignalsFromAds(
     saturationCount: number | null;
     dropiAvailability: OpportunitySignals['dropiAvailability'];
     hasUnusedForeignCreative: boolean;
+    realReturnRate: number | null;
   },
   ads: { storeName: string; country: string; daysActive: number; creativeUrl: string | null; hasUnusedForeignCreative: boolean; raw: unknown }[],
   minDiasOtroPais: number,
@@ -84,6 +86,7 @@ export function buildOpportunitySignalsFromAds(
     shippingCost: product.shippingCost ?? null,
     salePrice: product.salePrice,
     dropiAvailability: product.dropiAvailability,
+    codReturnRateOverride: product.realReturnRate ?? null,
     numVideos: withCreative.filter((a) => creativeType(a) === 'video').length,
     numImages: withCreative.filter((a) => creativeType(a) !== 'video').length,
     maxCreativeDaysActive: maxDays(withCreative),

@@ -111,6 +111,10 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               shippingCost: product.shippingCost,
               saturationCount: product.saturationCount,
               saturationKeyword: product.saturationKeyword,
+              realRoas: product.realRoas,
+              realCpa: product.realCpa,
+              realUnitsSold: product.realUnitsSold,
+              realReturnRate: product.realReturnRate,
               notes: product.notes ?? '',
             }}
           />

@@ -36,6 +36,7 @@ export function candidateToSignals(c: AggregatedCandidate): OpportunitySignals {
     shippingCost: null,
     salePrice: null,
     dropiAvailability: DropiAvailability.DESCONOCIDO,
+    codReturnRateOverride: null,
     numVideos: c.numVideos,
     numImages: c.numImages,
     maxCreativeDaysActive: c.daysActive ?? 0,
