@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  '823b3a5': { title: 'Glosario en Ayuda, tooltips de métricas y foco más visible', detail: 'Glosario de Winner Score/4×25/Cascade/margen COD/Con Dropi; tooltips donde aparecen las métricas; anillo de foco más visible.' },
   '96d6bf0': { title: 'Menú por flujo, onboarding y accesibilidad', detail: 'Menú agrupado (Descubrir/Operar/Admin), banner de primeros pasos, labels y foco accesibles, y skip-link.' },
   '0a91501': { title: 'Subir archivo CSV del catálogo Dropi', detail: 'Importar el catálogo Dropi acepta subir el archivo (no solo pegar el texto).' },
   ff2c5b7: { title: 'Catálogo Dropi: buscar y filtrar el catálogo importado', detail: 'Nueva página «Catálogo Dropi» para buscar por nombre, filtrar por categoría y ordenar por costo lo que importes por CSV.' },

@@ -44,7 +44,7 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
 
       const existing = await prisma.ad.findUnique({ where: { adId: ad.ad_id } });
 
-      await prisma.ad.upsert({
+      const upserted = await prisma.ad.upsert({
         where: { adId: ad.ad_id },
         create: {
           adId: ad.ad_id,
@@ -86,6 +86,12 @@ export async function ingestAds(ads: IngestAd[]): Promise<IngestResult> {
           lastSeenAt: new Date(),
         },
       });
+
+      // Foto en el tiempo del anuncio (una por sincronización): construye la serie
+      // temporal para medir Velocity. No bloquea la ingesta si falla.
+      await prisma.adSnapshot
+        .create({ data: { adId: upserted.id, winnerScore, daysActive: ad.days_active, estimatedSpend: ad.estimated_spend, classification } })
+        .catch(() => {});
 
       if (existing) result.updated += 1;
       else result.created += 1;

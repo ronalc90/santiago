@@ -111,6 +111,7 @@ model Ad {
 
   productId      String?
   product        Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  snapshots      AdSnapshot[]
 
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -120,6 +121,22 @@ model Ad {
   @@index([winnerScore])
   @@index([country])
   @@map("ads")
+}
+
+/// Foto en el tiempo del estado de un anuncio (una por sincronización). Construye
+/// la serie temporal para medir Velocity/momentum (si un anuncio escala o se apaga).
+model AdSnapshot {
+  id             String           @id @default(cuid())
+  adId           String
+  ad             Ad               @relation(fields: [adId], references: [id], onDelete: Cascade)
+  winnerScore    Float
+  daysActive     Int
+  estimatedSpend Float            @default(0)
+  classification AdClassification
+  capturedAt     DateTime         @default(now())
+
+  @@index([adId, capturedAt])
+  @@map("ad_snapshots")
 }
 
 // ---------------------------------------------------------------------------

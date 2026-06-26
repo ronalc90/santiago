@@ -10,15 +10,22 @@ import { CreativeImage } from '@/components/spy/creative-image';
 import { formatDate } from '@/lib/utils';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 import { formatCop } from '@/lib/format';
+import { computeVelocity } from '@/lib/services/velocity';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdDetailPage({ params }: { params: { id: string } }) {
-  const ad = await prisma.ad.findUnique({ where: { id: params.id }, include: { store: true, product: true } });
+  const ad = await prisma.ad.findUnique({
+    where: { id: params.id },
+    include: { store: true, product: true, snapshots: { orderBy: { capturedAt: 'asc' }, take: 90 } },
+  });
   if (!ad) notFound();
 
   const normalizedUrl = normalizeAdLibraryUrl(ad.adLibraryUrl, { query: ad.storeName, country: ad.country });
   const isDemo = !normalizedUrl.includes('id=');
+  const velocity = computeVelocity(
+    ad.snapshots.map((s) => ({ capturedAt: s.capturedAt, winnerScore: s.winnerScore, daysActive: s.daysActive })),
+  );
 
   return (
     <div className="space-y-6">
@@ -61,6 +68,35 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
                 <p className="text-xs text-muted-foreground">
                   Este es un anuncio de demostración: el enlace abre una búsqueda en la Ad Library, no un anuncio real. Sincroniza anuncios reales para ver enlaces directos.
                 </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                <span title="Velocity: si el anuncio escala o se apaga, medido por las fotos guardadas en cada sincronización.">Tendencia (Velocity)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {velocity.trend === 'insuficiente' ? (
+                <p className="text-sm text-muted-foreground">
+                  Recopilando datos… La tendencia (si el anuncio escala o se apaga) aparece tras varias sincronizaciones.
+                  {velocity.points > 0 ? ` Por ahora: ${velocity.points} foto(s) en ${velocity.spanDays.toFixed(0)} día(s).` : ''}
+                </p>
+              ) : (
+                <div className="space-y-1 text-sm">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <Badge variant={velocity.trend === 'subiendo' ? 'green' : velocity.trend === 'bajando' ? 'red' : 'gray'}>
+                      {velocity.trend === 'subiendo' ? '↑ Subiendo' : velocity.trend === 'bajando' ? '↓ Bajando' : '→ Estable'}
+                    </Badge>
+                    <span className="text-muted-foreground">en {velocity.spanDays.toFixed(0)} día(s) · {velocity.points} fotos</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Winner Score {velocity.deltaScore >= 0 ? '+' : ''}{Math.round(velocity.deltaScore).toLocaleString()} · días activos +{velocity.deltaDaysActive}
+                    {velocity.deltaDaysActive >= velocity.spanDays - 1 ? ' (sigue corriendo sin pausas)' : ' (con pausas o reinicios)'}.
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
