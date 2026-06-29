@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseCop, formatMoney } from '@/lib/format';
 import { toast } from '@/components/ui/use-toast';
+import { AiInfo } from '@/components/shared/ai-info';
 import type { LandingSectionCopy } from '@/lib/services/landing-spec';
 
 interface ProductOpt { id: string; name: string; market: string; currency: string; }
@@ -135,8 +136,15 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
             <Button type="button" variant="outline" className="w-full" onClick={autofillWithAI} disabled={autofilling || !form.productName}>
               {autofilling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Autocompletar con IA
             </Button>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="min-w-0">«Autocompletar» rellena estos campos con IA; revísalos.</span>
+              <AiInfo promptKey="suggest_product_system" label="Sugerencia de producto" />
+            </p>
             {sections.length > 0 && (
-              <p className="text-xs text-muted-foreground">✓ {sections.length} secciones de copy generadas; se usarán en los prompts de imagen.</p>
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="min-w-0">✓ {sections.length} secciones de copy generadas por IA; se usan en los prompts de imagen.</span>
+                <AiInfo promptKey="landing_copy_system" label="Copy de la landing" />
+              </p>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nombre del producto"><Input value={form.productName} onChange={(e) => set('productName', e.target.value)} /></Field>

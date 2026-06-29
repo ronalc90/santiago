@@ -1,11 +1,17 @@
 'use client';
 import { Info } from 'lucide-react';
 
-export function AiInfo({ promptKey, label }: { promptKey: string; label: string }) {
-  const title = `Texto generado por IA con el prompt «${label}». Clic para editarlo en Ajustes.`;
+/**
+ * Indicador «ℹ️» junto a contenido generado por IA: explica de qué prompt salió y
+ * enlaza a Ajustes para editarlo. Pasa `promptKey` (→ ancla #prompt-<key>) o un
+ * `anchor` directo (p. ej. para el bloque de prompts de imagen).
+ */
+export function AiInfo({ promptKey, label, anchor }: { promptKey?: string; label: string; anchor?: string }) {
+  const target = anchor ?? `prompt-${promptKey}`;
+  const title = `Generado por IA con «${label}». Clic para editar el prompt en Ajustes.`;
   return (
     <a
-      href={`/settings#prompt-${promptKey}`}
+      href={`/settings#${target}`}
       title={title}
       aria-label={title}
       className="inline-flex items-center text-muted-foreground hover:text-foreground"

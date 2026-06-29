@@ -34,7 +34,7 @@ export function LandingPromptsForm({ slots }: { slots: SlotPromptDTO[] }) {
   }
 
   return (
-    <Card>
+    <Card id="landing-image-prompts" className="scroll-mt-20">
       <CardHeader>
         <CardTitle>Prompts por imagen (las 9)</CardTitle>
         <p className="text-sm text-muted-foreground">

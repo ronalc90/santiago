@@ -9,6 +9,7 @@ import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
 import { LANDING_STATUS, LANDING_IMAGE_STATUS } from '@/lib/landings/labels';
+import { AiInfo } from '@/components/shared/ai-info';
 
 interface Img { id: string; slot: number; type: string; status: string; url: string | null; error: string | null; }
 const TITLES: Record<string, string> = {
@@ -142,7 +143,10 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
             <h1 className="truncate text-xl font-bold sm:text-2xl">{name}</h1>
             <Badge variant={LANDING_STATUS[status]?.variant ?? 'secondary'}>{LANDING_STATUS[status]?.label ?? status}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">{completed}/9 imágenes completadas</p>
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="min-w-0">{completed}/9 imágenes completadas (generadas por IA)</span>
+            <AiInfo anchor="landing-image-prompts" label="Prompts por imagen (las 9)" />
+          </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <a href={`/api/landings/${id}/download`} className="w-full sm:w-auto">
