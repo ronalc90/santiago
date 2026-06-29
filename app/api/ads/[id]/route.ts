@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
 
+// `sellsInColombia` y `hasUnusedForeignCreative` son señales DERIVADAS del anuncio
+// (las setea la ingesta del spy), no input manual: NO se aceptan aquí.
 const patchSchema = z.object({
-  sellsInColombia: z.boolean().optional(),
-  hasUnusedForeignCreative: z.boolean().optional(),
   productId: z.string().nullable().optional(),
 });
 

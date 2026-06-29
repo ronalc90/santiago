@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  ee7197c: { title: 'Store Replication (validado por el mercado)', detail: 'En el detalle del producto, cuántas tiendas distintas corren el mismo producto; con ≥3 aparece «validado por el mercado».' },
   c12366b: { title: 'Loop de validación con resultados reales', detail: 'Registras ROAS/CPA/ventas/no entrega real; la no entrega real realimenta el margen y un badge marca validado/marginal/pierde plata.' },
   '0b3fb24': { title: 'Serie temporal de anuncios (AdSnapshot) + Velocity', detail: 'Cada sincronización guarda una foto del anuncio; en el detalle aparece la tendencia (subiendo/estable/bajando) cuando hay serie suficiente.' },
   '823b3a5': { title: 'Glosario en Ayuda, tooltips de métricas y foco más visible', detail: 'Glosario de Winner Score/4×25/Cascade/margen COD/Con Dropi; tooltips donde aparecen las métricas; anillo de foco más visible.' },

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Sparkles } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,9 +19,6 @@ export function AdActions(props: {
   defaultProductName: string;
 }) {
   const router = useRouter();
-  const [sellsCO, setSellsCO] = useState(props.sellsInColombia);
-  const [unused, setUnused] = useState(props.hasUnusedForeignCreative);
-  const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
 
@@ -30,17 +27,6 @@ export function AdActions(props: {
   const [description, setDescription] = useState('');
   const [audience, setAudience] = useState('');
   const [angle, setAngle] = useState('');
-
-  async function patch(data: Record<string, unknown>) {
-    setSaving(true);
-    await fetch(`/api/ads/${props.adId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    setSaving(false);
-    router.refresh();
-  }
 
   async function suggestWithAI() {
     setSuggesting(true);
@@ -76,8 +62,8 @@ export function AdActions(props: {
         name,
         description: description || undefined,
         notes: notes || undefined,
-        sellsInColombia: sellsCO,
-        hasUnusedForeignCreative: unused,
+        sellsInColombia: props.sellsInColombia,
+        hasUnusedForeignCreative: props.hasUnusedForeignCreative,
         fromAdId: props.adId,
       }),
     });
@@ -93,15 +79,15 @@ export function AdActions(props: {
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">Las detecta el sistema desde el anuncio (no se editan a mano).</p>
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="sells" className="min-w-0">Se vende en Colombia</Label>
-        <Switch id="sells" className="shrink-0" checked={sellsCO} onCheckedChange={(v) => { setSellsCO(v); patch({ sellsInColombia: v }); }} />
+        <span className="min-w-0 text-sm">Se vende en Colombia</span>
+        {props.sellsInColombia ? <Badge variant="green" className="shrink-0">Sí</Badge> : <Badge variant="gray" className="shrink-0">No</Badge>}
       </div>
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="unused2" className="min-w-0">Creativo extranjero sin usar en CO</Label>
-        <Switch id="unused2" className="shrink-0" checked={unused} onCheckedChange={(v) => { setUnused(v); patch({ hasUnusedForeignCreative: v }); }} />
+        <span className="min-w-0 text-sm">Creativo extranjero sin usar en CO</span>
+        {props.hasUnusedForeignCreative ? <Badge variant="yellow" className="shrink-0">Sí</Badge> : <Badge variant="gray" className="shrink-0">No</Badge>}
       </div>
-      {saving && <p className="text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin" /> Guardando…</p>}
       <div className="border-t pt-4">
         {props.productId ? (
           <Link href={`/products/${props.productId}`}><Button variant="outline" className="w-full">Ver producto: {props.productName}</Button></Link>

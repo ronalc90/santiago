@@ -124,7 +124,7 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Señales del negocio</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Señales y acciones</CardTitle></CardHeader>
             <CardContent>
               <AdActions
                 adId={ad.id}
