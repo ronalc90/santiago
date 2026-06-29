@@ -11,6 +11,16 @@ export interface CommitEntry {
 
 export const COMMITS: CommitEntry[] = [
   {
+    "hash": "c900d57",
+    "date": "2026-06-29",
+    "subject": "feat(ux): indicador ℹ️ de IA en wizard y detalle de landing"
+  },
+  {
+    "hash": "1a0a4fc",
+    "date": "2026-06-29",
+    "subject": "feat(ux/movil): responsive a prueba de desbordes + placeholder ℹ️ de IA"
+  },
+  {
     "hash": "5bc1ca9",
     "date": "2026-06-29",
     "subject": "fix(spy): señales del anuncio (se vende en CO / creativo sin usar) en solo-lectura"
