@@ -14,11 +14,20 @@ export function formatCop(amount: number | null | undefined): string {
   return copFormatter.format(typeof amount === 'number' && Number.isFinite(amount) ? amount : 0);
 }
 
+// Cachea un formatter por moneda: crear Intl.NumberFormat es caro y formatMoney
+// se llama en bucles de tabla. La ruta COP reutiliza copFormatter.
+const moneyFormatters = new Map<string, Intl.NumberFormat>();
+
 /** Moneda genérica (default COP). Para otras monedas usa 2 decimales. */
 export function formatMoney(amount: number | null | undefined, currency = 'COP'): string {
   const value = typeof amount === 'number' && Number.isFinite(amount) ? amount : 0;
   if (currency === 'COP') return formatCop(value);
-  return new Intl.NumberFormat('es-CO', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value);
+  let formatter = moneyFormatters.get(currency);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency, maximumFractionDigits: 2 });
+    moneyFormatters.set(currency, formatter);
+  }
+  return formatter.format(value);
 }
 
 /**

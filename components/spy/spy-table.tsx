@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 import { formatCop } from '@/lib/format';
+import { DEFAULT_PAGE_SIZE } from '@/lib/config/constants';
 
 interface Ad {
   id: string;
@@ -33,6 +34,7 @@ type SortKey = 'winnerScore' | 'daysActive' | 'estimatedSpend';
 export function SpyTable() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [classification, setClassification] = useState('');
   const [view, setView] = useState<'all' | 'new'>('all');
@@ -43,7 +45,7 @@ export function SpyTable() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,11 +59,20 @@ export function SpyTable() {
     qs.set('sortBy', sortBy);
     qs.set('sortDir', sortDir);
     qs.set('page', String(page));
-    const res = await fetch(`/api/ads?${qs.toString()}`);
-    const data = await res.json();
-    setAds(data.ads ?? []);
-    setTotal(data.total ?? 0);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/ads?${qs.toString()}`);
+      if (!res.ok) throw new Error('respuesta no OK');
+      const data = await res.json();
+      setAds(data.ads ?? []);
+      setTotal(data.total ?? 0);
+      setError(null);
+    } catch {
+      setAds([]);
+      setTotal(0);
+      setError('No se pudieron cargar los anuncios. Reintenta en unos segundos.');
+    } finally {
+      setLoading(false);
+    }
   }, [search, classification, view, minDays, onlyUnusedForeign, notInColombia, sortBy, sortDir, page]);
 
   useEffect(() => {
@@ -106,7 +117,7 @@ export function SpyTable() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">+ Días activos</Label>
-          <Input type="number" min={0} placeholder="ej: 5" value={minDays} onChange={(e) => setMinDays(e.target.value)} className="w-24" />
+          <Input type="number" min={0} placeholder="ej: 5" value={minDays} onChange={(e) => setMinDays(e.target.value)} className="w-full sm:w-24" />
         </div>
         <div className="flex items-center gap-2">
           <Switch id="unused" checked={onlyUnusedForeign} onCheckedChange={setOnlyUnusedForeign} />
@@ -125,7 +136,7 @@ export function SpyTable() {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
@@ -155,6 +166,8 @@ export function SpyTable() {
           <TableBody>
             {loading ? (
               <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></TableCell></TableRow>
+            ) : error ? (
+              <TableRow><TableCell colSpan={9} className="h-24 text-center text-destructive">{error}</TableCell></TableRow>
             ) : ads.length === 0 ? (
               <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">Aún no hay anuncios reales. Pulsa &quot;Sincronizar reales&quot; arriba para traerlos del Meta Ad Library, o importa un export.</TableCell></TableRow>
             ) : (
@@ -196,7 +209,7 @@ export function SpyTable() {
         </Table>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground break-words">
           {total} anuncio(s){total > PAGE_SIZE ? ` · mostrando ${ads.length} (pág. ${page}/${totalPages})` : ''} · Winner Score: señal de anuncio ganador. Sin gasto público (anuncios comerciales en CO) es un proxy de longevidad/alcance, no de inversión: sube con los días hasta cierto punto y luego baja (demasiado tiempo corriendo = saturado).
         </p>
         {totalPages > 1 && (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
+import { getErrorMessage } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { suggestProduct } from '@/lib/services/ai-copy';
 
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ suggestion });
   } catch (err) {
     console.error('[ai:suggest-product]', err);
-    const message = err instanceof Error ? err.message : 'No se pudo generar la sugerencia';
+    const message = getErrorMessage(err, 'No se pudo generar la sugerencia');
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

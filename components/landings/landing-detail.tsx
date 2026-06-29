@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
+import { LANDING_STATUS, LANDING_IMAGE_STATUS } from '@/lib/landings/labels';
 
 interface Img { id: string; slot: number; type: string; status: string; url: string | null; error: string | null; }
 const TITLES: Record<string, string> = {
@@ -139,31 +140,32 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="truncate text-xl font-bold sm:text-2xl">{name}</h1>
-            <Badge variant={status === 'COMPLETED' ? 'green' : isFailed ? 'destructive' : 'secondary'}>{status}</Badge>
+            <Badge variant={LANDING_STATUS[status]?.variant ?? 'secondary'}>{LANDING_STATUS[status]?.label ?? status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{completed}/9 imágenes completadas</p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <a href={`/api/landings/${id}/download`}>
+          <a href={`/api/landings/${id}/download`} className="w-full sm:w-auto">
             <Button disabled={completed === 0}><Download className="h-4 w-4" /> Descargar .zip</Button>
           </a>
-          <a href={`/api/landings/${id}/html`} target="_blank" rel="noreferrer">
+          <a href={`/api/landings/${id}/html`} target="_blank" rel="noreferrer" className="w-full sm:w-auto">
             <Button variant="outline" disabled={completed === 0} title="Ver la landing HTML de ventas (conversión + SEO)">
               <Globe className="h-4 w-4" /> Landing HTML
             </Button>
           </a>
-          <a href={`/api/landings/${id}/shopify`}>
+          <a href={`/api/landings/${id}/shopify`} className="w-full sm:w-auto">
             <Button variant="outline" disabled={completed === 0} title="Exportar un CSV para importar el producto en Shopify">
               <ShoppingBag className="h-4 w-4" /> Exportar a Shopify
             </Button>
           </a>
           {publishedUrl ? (
-            <a href={publishedUrl} target="_blank" rel="noreferrer">
+            <a href={publishedUrl} target="_blank" rel="noreferrer" className="w-full sm:w-auto">
               <Button variant="outline" title="Abrir el producto en Shopify"><Store className="h-4 w-4" /> Ver en Shopify</Button>
             </a>
           ) : (
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => setPublishOpen(true)}
               disabled={completed === 0 || publishing || !canPublishShopify}
               title={canPublishShopify ? 'Crear el producto en tu tienda Shopify' : 'Configura Shopify (y un almacenamiento https) para publicar'}
@@ -171,10 +173,10 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Publicar en Shopify
             </Button>
           )}
-          <Button variant="outline" onClick={() => setRegenAllOpen(true)} disabled={isActive || regeneratingAll} title="Regenerar las 9 imágenes">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => setRegenAllOpen(true)} disabled={isActive || regeneratingAll} title="Regenerar las 9 imágenes">
             {regeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Regenerar todas
           </Button>
-          <Button variant="destructive" onClick={() => setConfirmOpen(true)} disabled={deleting} title="Eliminar landing">
+          <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setConfirmOpen(true)} disabled={deleting} title="Eliminar landing">
             {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
           </Button>
         </div>
@@ -222,7 +224,7 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
                   aria-label={`Ampliar ${TITLES[img.type] ?? img.type}`}
                   className="group absolute inset-0 cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <img src={img.url} alt={img.type} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <img src={img.url} alt={TITLES[img.type] ?? img.type} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
                     <ZoomIn className="h-7 w-7 text-white drop-shadow" />
                   </span>
@@ -234,9 +236,9 @@ export function LandingDetail({ id, name, initialStatus, initialError, initialIm
               )}
             </div>
             <CardContent className="flex items-center justify-between p-2">
-              <div className="text-xs">
+              <div className="min-w-0 text-xs">
                 <span className="font-medium">{img.slot}. {TITLES[img.type] ?? img.type}</span>
-                <Badge variant={img.status === 'COMPLETED' ? 'green' : img.status === 'FAILED' ? 'destructive' : 'secondary'} className="ml-1">{img.status}</Badge>
+                <Badge variant={LANDING_IMAGE_STATUS[img.status]?.variant ?? 'secondary'} className="ml-1 shrink-0">{LANDING_IMAGE_STATUS[img.status]?.label ?? img.status}</Badge>
               </div>
               <Button variant="ghost" size="icon" onClick={() => regenerate(img.slot)} title="Regenerar" aria-label={`Regenerar imagen ${img.slot}: ${TITLES[img.type] ?? img.type}`}><RefreshCw className="h-3.5 w-3.5" /></Button>
             </CardContent>

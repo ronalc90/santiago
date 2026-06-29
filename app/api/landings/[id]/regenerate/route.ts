@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getErrorMessage } from '@/lib/errors';
 import { requireApiUser } from '@/lib/auth/api';
 import { regenerateImage, regenerateAllImages } from '@/lib/services/landing';
 
@@ -20,7 +21,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     else await regenerateImage(params.id, parsed.data.slot);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Error';
+    const msg = getErrorMessage(err, 'Error');
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -41,7 +41,7 @@ export default async function CostosPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto p-0">
           <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
@@ -73,7 +73,7 @@ export default async function CostosPage() {
       {/* Costo por acción */}
       <Card>
         <CardHeader><CardTitle>Costo por acción (peso a peso)</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto p-0">
           <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
@@ -91,7 +91,7 @@ export default async function CostosPage() {
                   <TableCell><Badge variant="outline">{c.unit}</Badge></TableCell>
                   <TableCell className="text-right">{usd(c.usd)}</TableCell>
                   <TableCell className="text-right font-medium">{cop(c.cop)}</TableCell>
-                  <TableCell className="max-w-[360px] text-xs text-muted-foreground">{c.why}</TableCell>
+                  <TableCell className="max-w-[220px] break-words text-xs text-muted-foreground">{c.why}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -110,7 +110,7 @@ export default async function CostosPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto p-0">
           <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
@@ -126,7 +126,7 @@ export default async function CostosPage() {
                   <TableCell className="font-medium">{c.label}</TableCell>
                   <TableCell className="text-right">{c.usd === 0 ? 'Gratis' : usd(c.usd)}</TableCell>
                   <TableCell className="text-right font-medium">{c.usd === 0 ? '—' : cop(c.cop)}</TableCell>
-                  <TableCell className="max-w-[360px] text-xs text-muted-foreground">{c.why}</TableCell>
+                  <TableCell className="max-w-[220px] break-words text-xs text-muted-foreground">{c.why}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

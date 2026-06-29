@@ -4,16 +4,9 @@ import { prisma } from '@/lib/db';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { LANDING_STATUS as STATUS } from '@/lib/landings/labels';
 
 export const dynamic = 'force-dynamic';
-
-const STATUS: Record<string, { label: string; variant: 'green' | 'destructive' | 'secondary' }> = {
-  DRAFT: { label: 'Borrador', variant: 'secondary' },
-  QUEUED: { label: 'En cola', variant: 'secondary' },
-  PROCESSING: { label: 'Generando', variant: 'secondary' },
-  COMPLETED: { label: 'Completada', variant: 'green' },
-  FAILED: { label: 'Fallida', variant: 'destructive' },
-};
 
 export default async function LandingsPage() {
   const landings = await prisma.landingProject.findMany({

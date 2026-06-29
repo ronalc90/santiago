@@ -72,7 +72,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                 <CardTitle>Anuncios ligados (Spy)</CardTitle>
                 {product.ads.length > 0 && (
                   <span
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                    className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground"
                     title="Cuántas tiendas distintas corren este producto. Más tiendas = más validado por el mercado (un winner que todos copian)."
                   >
                     Replicación: <span className="font-medium text-foreground">{distinctStores} tienda(s)</span>

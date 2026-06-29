@@ -13,10 +13,10 @@ interface Rules {
 }
 
 const FIELDS: { key: keyof Rules; label: string; hint: string }[] = [
-  { key: 'lanzarScore', label: '🔴 LANZAR (Winner Score ≥)', hint: 'Gasto/día alto: lanzar ya.' },
+  { key: 'lanzarScore', label: '🟢 LANZAR (Winner Score ≥)', hint: 'Gasto/día alto: lanzar ya.' },
   { key: 'considerarScore', label: '🟡 CONSIDERAR (≥)', hint: 'Buena señal: evaluar.' },
-  { key: 'monitorearScore', label: '🟢 MONITOREAR (≥)', hint: 'Señal temprana.' },
-  { key: 'saturadoDias', label: '⚪ SATURADO (días activos ≥)', hint: 'Demasiado tiempo corriendo.' },
+  { key: 'monitorearScore', label: '⚪ MONITOREAR (≥)', hint: 'Señal temprana.' },
+  { key: 'saturadoDias', label: '🔴 SATURADO (días activos ≥)', hint: 'Demasiado tiempo corriendo.' },
   { key: 'minDiasOtroPais', label: 'Mín. días en otro país', hint: '+ días fuera de CO = demanda real.' },
 ];
 

@@ -74,6 +74,8 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
       }));
       setSections(Array.isArray(c.sections) ? c.sections : []);
       toast({ title: 'Copy generado', description: `Público, descripción, ángulo y ${c.sections?.length ?? 0} secciones rellenadas.` });
+    } catch {
+      toast({ variant: 'destructive', title: 'Error de red', description: 'No se pudo generar el copy. Reintenta en unos segundos.' });
     } finally {
       setAutofilling(false);
     }
@@ -104,6 +106,8 @@ export function LandingWizard({ products, defaultProductId }: { products: Produc
       if (!res.ok) { toast({ variant: 'destructive', title: 'Error', description: data.error }); return; }
       toast({ title: 'Landing en cola', description: 'Generando las 9 imágenes…' });
       router.push(`/landings/${data.project.id}`);
+    } catch {
+      toast({ variant: 'destructive', title: 'Error de red', description: 'No se pudo crear la landing. Reintenta en unos segundos.' });
     } finally {
       setSubmitting(false);
     }
@@ -210,5 +214,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div className="space-y-1.5"><Label htmlFor={id}>{label}</Label>{child}</div>;
 }
 function Summary({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-4 border-b py-1.5"><span className="text-muted-foreground">{label}</span><span className="text-right font-medium">{value}</span></div>;
+  return <div className="flex justify-between gap-4 border-b py-1.5"><span className="text-muted-foreground">{label}</span><span className="min-w-0 break-words text-right font-medium">{value}</span></div>;
 }

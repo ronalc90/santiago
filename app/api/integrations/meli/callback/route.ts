@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiUser } from '@/lib/auth/api';
+import { getErrorMessage } from '@/lib/errors';
 import { getEnv } from '@/lib/config/env';
 import { isMeliConfigured, exchangeCodeForToken, OAUTH_STATE_COOKIE } from '@/lib/integrations/mercadolibre';
 import { saveMeliConnection } from '@/lib/services/meli';
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     await saveMeliConnection(token);
     return redirectTo('connected');
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = getErrorMessage(e);
     console.error('[meli:callback] intercambio falló:', msg);
     // El detalle (p. ej. "respondió 400 (invalid_grant: …)") no es secreto: lo
     // dejamos en la URL para diagnosticar sin depender de los logs.

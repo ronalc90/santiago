@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
+import { getErrorMessage } from '@/lib/errors';
 import { getEnv } from '@/lib/config/env';
 import { normalizeIngestPayload } from '@/lib/validation/ads';
 import { ingestAds } from '@/lib/services/ads';
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     try {
       ads = normalizeIngestPayload(json);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Payload inválido';
+      const msg = getErrorMessage(err, 'Payload inválido');
       return NextResponse.json({ error: msg }, { status: 422 });
     }
 

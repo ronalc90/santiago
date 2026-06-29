@@ -1,6 +1,7 @@
 import { AdSourceProvider, FetchAdsInput, RawAd } from '@/lib/ad-sources/types';
 import { buildAdLibraryUrl } from '@/lib/ad-library';
 import { getEnv } from '@/lib/config/env';
+import { APIFY_BASE } from '@/lib/config/constants';
 
 /**
  * Fuente de anuncios reales vía un actor de Apify que scrapea el Meta Ad Library
@@ -10,7 +11,6 @@ import { getEnv } from '@/lib/config/env';
  * actor y devuelve los items del dataset en la misma respuesta. Mapeamos de
  * forma DEFENSIVA porque el esquema de salida varía entre actores/versiones.
  */
-const APIFY_BASE = 'https://api.apify.com/v2';
 const MAX_RETRIES = 3;
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 // El scraping puede tardar; damos margen amplio.

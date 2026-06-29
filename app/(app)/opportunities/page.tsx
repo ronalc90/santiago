@@ -86,7 +86,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       ) : (
         <Card>
           <CardContent className="overflow-x-auto p-0">
-            <Table>
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Producto</TableHead>
@@ -101,9 +101,11 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
               <TableBody>
                 {candidates.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/opportunities/${c.id}`} className="hover:underline">{c.name}</Link>
-                      {c.category && <span className="block text-xs text-muted-foreground">{c.category}</span>}
+                    <TableCell className="max-w-[150px] font-medium">
+                      <div className="truncate">
+                        <Link href={`/opportunities/${c.id}`} className="hover:underline">{c.name}</Link>
+                        {c.category && <span className="block text-xs text-muted-foreground">{c.category}</span>}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs">{c.countries.join(', ')}</TableCell>
                     <TableCell className="text-xs">{c.sources.join(', ')}</TableCell>

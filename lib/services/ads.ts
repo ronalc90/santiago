@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { IngestAd, sanitizeCopy } from '@/lib/validation/ads';
 import { computeWinnerScoreFromSignals, classifyAd } from '@/lib/services/scoring';
 import { getScoringRules } from '@/lib/services/settings';
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/config/constants';
 
 export interface IngestResult {
   received: number;
@@ -173,7 +174,7 @@ export async function listAds(filters: AdFilters = {}) {
   const orderBy = [{ [sortBy]: sortDir }, ...tiebreakers, { id: 'desc' as const }];
 
   const page = Math.max(1, Math.floor(filters.page ?? 1));
-  const pageSize = Math.min(200, Math.max(1, Math.floor(filters.pageSize ?? 50)));
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(filters.pageSize ?? DEFAULT_PAGE_SIZE)));
 
   const [ads, total] = await prisma.$transaction([
     prisma.ad.findMany({

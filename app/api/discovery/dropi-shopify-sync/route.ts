@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireApiUser } from '@/lib/auth/api';
+import { getErrorMessage } from '@/lib/errors';
 import { isShopifyConfigured } from '@/lib/shopify/client';
 import { syncDropiCatalogFromShopify } from '@/lib/services/dropi-catalog';
 
@@ -23,9 +24,9 @@ export async function POST() {
     const result = await syncDropiCatalogFromShopify();
     return NextResponse.json(result);
   } catch (err) {
-    console.error('[dropi:shopify-sync]', err instanceof Error ? err.message : err);
+    console.error('[dropi:shopify-sync]', getErrorMessage(err));
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No se pudo sincronizar el catálogo desde Shopify.' },
+      { error: getErrorMessage(err, 'No se pudo sincronizar el catálogo desde Shopify.') },
       { status: 502 },
     );
   }

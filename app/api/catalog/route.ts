@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { requireApiUser } from '@/lib/auth/api';
 import { prisma } from '@/lib/db';
+import { DEFAULT_PAGE_SIZE as PAGE_SIZE } from '@/lib/config/constants';
 
 export const runtime = 'nodejs';
-
-const PAGE_SIZE = 50;
 
 /** Lista el catálogo Dropi importado, con búsqueda, filtro por categoría, orden y paginación. */
 export async function GET(req: Request) {

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
 
 /**
@@ -15,6 +16,7 @@ export function DiscoverButton({ paidActive = false }: { paidActive?: boolean })
   const router = useRouter();
   const [starting, setStarting] = useState(false);
   const [running, setRunning] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const wasRunning = useRef(false);
 
   useEffect(() => {
@@ -43,8 +45,14 @@ export function DiscoverButton({ paidActive = false }: { paidActive?: boolean })
     };
   }, [router]);
 
+  /** Pulsar el botón: si hay fuentes de pago, pide confirmación de costo; si no, corre directo. */
+  function handleClick() {
+    if (paidActive) setConfirmOpen(true);
+    else void run();
+  }
+
   async function run() {
-    if (paidActive && !window.confirm('Hay fuentes de PAGO activas (Apify). Esta búsqueda puede generar costo. ¿Continuar?')) return;
+    setConfirmOpen(false);
     setStarting(true);
     const res = await fetch('/api/discovery/run', { method: 'POST' });
     setStarting(false);
@@ -66,8 +74,19 @@ export function DiscoverButton({ paidActive = false }: { paidActive?: boolean })
     );
   }
   return (
-    <Button onClick={run} disabled={starting} className="gap-2">
-      {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Buscar ahora
-    </Button>
+    <>
+      <Button onClick={handleClick} disabled={starting} className="gap-2">
+        {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Buscar ahora
+      </Button>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Fuentes de pago activas"
+        description="Hay fuentes de PAGO activas (Apify). Esta búsqueda puede generar costo. ¿Continuar?"
+        confirmLabel="Continuar"
+        loading={starting}
+        onConfirm={() => void run()}
+      />
+    </>
   );
 }

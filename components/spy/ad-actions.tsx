@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { AiInfo } from '@/components/shared/ai-info';
 
 export function AdActions(props: {
   adId: string;
@@ -96,6 +97,10 @@ export function AdActions(props: {
             <Button variant="outline" className="w-full" onClick={suggestWithAI} disabled={suggesting}>
               {suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Sugerir con IA
             </Button>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="min-w-0">Estos campos los sugiere la IA; revísalos antes de crear el producto.</span>
+              <AiInfo promptKey="suggest_product_system" label="Sugerencia de producto" />
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="p-name">Nombre del producto</Label>
               <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} />

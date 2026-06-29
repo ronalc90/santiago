@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { formatCop } from '@/lib/format';
 import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
+import { DEFAULT_PAGE_SIZE } from '@/lib/config/constants';
 
 interface Item {
   id: string;
@@ -30,7 +31,7 @@ export function CatalogTable() {
   const [sort, setSort] = useState<'name' | 'cost'>('name');
   const [dir, setDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,7 +97,7 @@ export function CatalogTable() {
         </p>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>

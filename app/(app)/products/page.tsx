@@ -7,15 +7,9 @@ import { OpportunityBadge } from '@/components/shared/opportunity-badge';
 import { NewProductDialog } from '@/components/products/new-product-dialog';
 import { MeliSaturationButton } from '@/components/products/meli-saturation-button';
 import { getMeliConnection } from '@/lib/services/meli';
+import { PRODUCT_STATUS_LABEL as STATUS_LABEL, DROPI_BADGE_LABEL as DROPI_LABEL } from '@/lib/products/labels';
 
 export const dynamic = 'force-dynamic';
-
-const STATUS_LABEL: Record<string, string> = {
-  DETECTADO: 'Detectado', VALIDADO: 'Validado', LANDING_CREADA: 'Landing creada', LANZADO: 'Lanzado', ESCALANDO: 'Escalando',
-};
-const DROPI_LABEL: Record<string, string> = {
-  DISPONIBLE: 'Dropi', NO_DISPONIBLE: 'No Dropi', A_IMPORTAR: 'A importar', DESCONOCIDO: '—',
-};
 
 export default async function ProductsPage() {
   const [products, meli] = await Promise.all([

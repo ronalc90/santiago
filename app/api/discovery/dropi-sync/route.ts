@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireApiUser } from '@/lib/auth/api';
+import { getErrorMessage } from '@/lib/errors';
 import { isDropiApiConfigured } from '@/lib/integrations/dropi';
 import { syncDropiCatalogFromApi } from '@/lib/services/dropi-catalog';
 
@@ -21,9 +22,9 @@ export async function POST() {
     const result = await syncDropiCatalogFromApi();
     return NextResponse.json(result);
   } catch (err) {
-    console.error('[dropi:sync]', err instanceof Error ? err.message : err);
+    console.error('[dropi:sync]', getErrorMessage(err));
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No se pudo sincronizar el catálogo de Dropi.' },
+      { error: getErrorMessage(err, 'No se pudo sincronizar el catálogo de Dropi.') },
       { status: 502 },
     );
   }

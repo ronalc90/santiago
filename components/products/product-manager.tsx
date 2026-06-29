@@ -11,9 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { formatMoney } from '@/lib/format';
-
-const STATUSES = ['DETECTADO', 'VALIDADO', 'LANDING_CREADA', 'LANZADO', 'ESCALANDO'];
-const DROPI = ['DISPONIBLE', 'NO_DISPONIBLE', 'A_IMPORTAR', 'DESCONOCIDO'];
+import { PRODUCT_STATUSES, DROPI_OPTIONS } from '@/lib/products/labels';
 
 interface ProductState {
   id: string;
@@ -58,10 +56,12 @@ export function ProductManager({ product }: { product: ProductState }) {
     placeholder: string,
     step?: string,
   ) {
+    const fieldId = `pf-${key}`;
     return (
       <div className="space-y-1.5">
-        <Label className="text-xs">{label}</Label>
+        <Label htmlFor={fieldId} className="text-xs">{label}</Label>
         <Input
+          id={fieldId}
           type="number"
           min={0}
           step={step}
@@ -96,17 +96,17 @@ export function ProductManager({ product }: { product: ProductState }) {
       <CardHeader><CardTitle className="text-base">Gestión {saving && <Loader2 className="inline h-3 w-3 animate-spin" />}</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-xs">Etapa del pipeline</Label>
+          <Label htmlFor="pf-status" className="text-xs">Etapa del pipeline</Label>
           <Select value={s.status} onValueChange={(v) => patch({ status: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{STATUSES.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+            <SelectTrigger id="pf-status"><SelectValue /></SelectTrigger>
+            <SelectContent>{PRODUCT_STATUSES.map((x) => <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Disponibilidad Dropi</Label>
+          <Label htmlFor="pf-dropi" className="text-xs">Disponibilidad Dropi</Label>
           <Select value={s.dropiAvailability} onValueChange={(v) => patch({ dropiAvailability: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{DROPI.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+            <SelectTrigger id="pf-dropi"><SelectValue /></SelectTrigger>
+            <SelectContent>{DROPI_OPTIONS.map((x) => <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         {numberField(`Precio de venta (${s.currency})`, 'salePrice', savedSalePrice, 'ej: 89900')}
@@ -123,8 +123,9 @@ export function ProductManager({ product }: { product: ProductState }) {
           (cancelaciones/rechazos), el flete de vuelta y la comisión de recaudo. Esos parámetros se ajustan en Ajustes.
         </p>
         <div className="space-y-1.5">
-          <Label className="text-xs">Keyword de saturación (MercadoLibre)</Label>
+          <Label htmlFor="pf-keyword" className="text-xs">Keyword de saturación (MercadoLibre)</Label>
           <Input
+            id="pf-keyword"
             value={s.saturationKeyword ?? ''}
             onChange={(e) => setS({ ...s, saturationKeyword: e.target.value === '' ? null : e.target.value })}
             onBlur={() => {
@@ -162,13 +163,14 @@ export function ProductManager({ product }: { product: ProductState }) {
               </Badge>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {numberField('ROAS real', 'realRoas', savedRoas, 'ej: 2.5', '0.1')}
             {numberField(`CPA real (${s.currency})`, 'realCpa', savedCpa, 'costo por venta')}
             {numberField('Unidades vendidas', 'realUnitsSold', savedUnits, 'ej: 120')}
             <div className="space-y-1.5">
-              <Label className="text-xs">No entrega real (%)</Label>
+              <Label htmlFor="pf-return" className="text-xs">No entrega real (%)</Label>
               <Input
+                id="pf-return"
                 type="number"
                 min={0}
                 max={100}
@@ -187,8 +189,8 @@ export function ProductManager({ product }: { product: ProductState }) {
           <p className="text-xs text-muted-foreground">La «no entrega real» reemplaza el default en el margen efectivo COD: el score aprende de tus números.</p>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Notas</Label>
-          <Textarea value={s.notes} onChange={(e) => setS({ ...s, notes: e.target.value })} onBlur={() => patch({ notes: s.notes })} className="min-h-[100px]" />
+          <Label htmlFor="pf-notes" className="text-xs">Notas</Label>
+          <Textarea id="pf-notes" value={s.notes} onChange={(e) => setS({ ...s, notes: e.target.value })} onBlur={() => patch({ notes: s.notes })} className="min-h-[100px]" />
         </div>
       </CardContent>
     </Card>

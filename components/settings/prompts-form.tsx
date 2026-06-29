@@ -59,7 +59,7 @@ export function PromptsForm({ initial }: { initial: PromptItem[] }) {
         {initial.map((p) => {
           const changed = (values[p.key] ?? '').trim() !== p.default.trim();
           return (
-            <div key={p.key} className="space-y-1.5">
+            <div key={p.key} id={`prompt-${p.key}`} className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-sm font-medium">{p.label}</Label>
                 <Button

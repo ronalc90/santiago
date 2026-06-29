@@ -1,7 +1,7 @@
 import 'server-only';
 import { getEnv } from '@/lib/config/env';
+import { APIFY_BASE } from '@/lib/config/constants';
 
-const APIFY_BASE = 'https://api.apify.com/v2';
 const TIMEOUT_MS = 90_000; // los scrapes tardan; el job corre en el worker
 
 /**

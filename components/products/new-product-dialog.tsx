@@ -16,13 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-
-const DROPI = [
-  { value: 'DESCONOCIDO', label: 'Desconocido' },
-  { value: 'DISPONIBLE', label: 'Disponible en Dropi' },
-  { value: 'NO_DISPONIBLE', label: 'No disponible' },
-  { value: 'A_IMPORTAR', label: 'A importar' },
-];
+import { DROPI_OPTIONS as DROPI } from '@/lib/products/labels';
 
 const EMPTY = {
   name: '',
@@ -105,9 +99,9 @@ export function NewProductDialog() {
               <Input id="np-currency" value={form.currency} onChange={(e) => set('currency', e.target.value)} maxLength={4} />
             </div>
             <div className="col-span-2 space-y-1.5 sm:col-span-1">
-              <Label className="text-xs">Dropi</Label>
+              <Label htmlFor="np-dropi" className="text-xs">Dropi</Label>
               <Select value={form.dropiAvailability} onValueChange={(v) => set('dropiAvailability', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="np-dropi"><SelectValue /></SelectTrigger>
                 <SelectContent>{DROPI.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>

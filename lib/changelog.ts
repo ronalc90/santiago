@@ -20,6 +20,7 @@ export interface Release {
 
 /** Explicación clara por commit (hash → título + detalle entendible). */
 const DETAILS: Record<string, { title: string; detail: string }> = {
+  '5bc1ca9': { title: 'Señales del anuncio en solo-lectura', detail: 'En el detalle del anuncio, «se vende en CO» y «creativo sin usar» dejan de ser editables (las deduce el sistema).' },
   ee7197c: { title: 'Store Replication (validado por el mercado)', detail: 'En el detalle del producto, cuántas tiendas distintas corren el mismo producto; con ≥3 aparece «validado por el mercado».' },
   c12366b: { title: 'Loop de validación con resultados reales', detail: 'Registras ROAS/CPA/ventas/no entrega real; la no entrega real realimenta el margen y un badge marca validado/marginal/pierde plata.' },
   '0b3fb24': { title: 'Serie temporal de anuncios (AdSnapshot) + Velocity', detail: 'Cada sincronización guarda una foto del anuncio; en el detalle aparece la tendencia (subiendo/estable/bajando) cuando hay serie suficiente.' },

@@ -134,7 +134,7 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
           <Label className="text-xs">Keywords / nichos (uno por línea)</Label>
           <Textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} className="min-h-[100px]" placeholder="masajeador cervical&#10;lampara de luna" />
         </div>
-        <Button onClick={saveCfg} disabled={savingCfg}>
+        <Button onClick={saveCfg} disabled={savingCfg} className="w-full sm:w-auto">
           {savingCfg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar configuración
         </Button>
 
@@ -144,7 +144,7 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
             Dropi no permite consumir su API directamente (su soporte lo confirmó). El camino automático es vía Shopify: Dropi ya alimenta tu
             tienda, así que WinSpy lee esos productos y los cruza con los candidatos. Trae solo lo que ya importaste (lo que puedes vender).
           </p>
-          <Button onClick={syncFromShopify} disabled={syncingShopify || !shopifyConfigured} title={shopifyConfigured ? 'Leer tus productos de Shopify (alimentados por Dropi)' : 'Conecta Shopify primero'}>
+          <Button onClick={syncFromShopify} disabled={syncingShopify || !shopifyConfigured} title={shopifyConfigured ? 'Leer tus productos de Shopify (alimentados por Dropi)' : 'Conecta Shopify primero'} className="w-full sm:w-auto">
             {syncingShopify ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sincronizar catálogo desde Shopify
           </Button>
           {!shopifyConfigured && <p className="text-xs text-muted-foreground">Conecta Shopify (arriba en Costos) para habilitarlo.</p>}
@@ -164,7 +164,7 @@ export function DiscoveryCard({ initial, dropiApiConfigured, shopifyConfigured }
           <details className="text-xs text-muted-foreground">
             <summary className="cursor-pointer">…o pegar el contenido</summary>
             <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} className="mt-2 min-h-[80px] font-mono text-xs" placeholder="name,sku,cost,stock&#10;Masajeador Cervical,SKU1,18000,50" />
-            <Button variant="outline" className="mt-2" onClick={importCsv} disabled={importing || !csv.trim()}>
+            <Button variant="outline" className="mt-2 w-full sm:w-auto" onClick={importCsv} disabled={importing || !csv.trim()}>
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar CSV pegado
             </Button>
           </details>

@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 
 const META: Record<string, { emoji: string; label: string; variant: 'red' | 'yellow' | 'green' | 'gray' }> = {
-  LANZAR: { emoji: '🔴', label: 'LANZAR', variant: 'red' },
+  LANZAR: { emoji: '🟢', label: 'LANZAR', variant: 'green' },
   CONSIDERAR: { emoji: '🟡', label: 'CONSIDERAR', variant: 'yellow' },
-  MONITOREAR: { emoji: '🟢', label: 'MONITOREAR', variant: 'green' },
-  SATURADO: { emoji: '⚪', label: 'SATURADO', variant: 'gray' },
+  MONITOREAR: { emoji: '⚪', label: 'MONITOREAR', variant: 'gray' },
+  SATURADO: { emoji: '🔴', label: 'SATURADO', variant: 'red' },
 };
 
 export function ClassificationBadge({ value }: { value: string }) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
+import { getErrorMessage } from '@/lib/errors';
 import { requireApiUser } from '@/lib/auth/api';
 import { normalizeIngestPayload } from '@/lib/validation/ads';
 import { ingestAds } from '@/lib/services/ads';
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     try {
       ads = normalizeIngestPayload(rows);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Datos inválidos';
+      const msg = getErrorMessage(err, 'Datos inválidos');
       return NextResponse.json({ error: msg }, { status: 422 });
     }
 

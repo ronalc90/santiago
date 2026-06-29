@@ -70,16 +70,16 @@ export function ImportDialog() {
           <DialogDescription>Pega el JSON/CSV del spy o sube un archivo (.json / .csv). La deduplicación es por ad_id.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant={format === 'json' ? 'default' : 'outline'} onClick={() => setFormat('json')}>JSON</Button>
             <Button size="sm" variant={format === 'csv' ? 'default' : 'outline'} onClick={() => setFormat('csv')}>CSV</Button>
-            <input type="file" accept=".json,.csv" onChange={onFile} className="ml-auto text-xs" />
+            <input type="file" accept=".json,.csv" onChange={onFile} className="text-xs" />
           </div>
           <Textarea
             value={data}
             onChange={(e) => setData(e.target.value)}
             placeholder={format === 'json' ? JSON_EXAMPLE : 'store_name,country,ad_id,ad_library_url,copy_text,days_active,estimated_spend,creative_url'}
-            className="min-h-[260px] font-mono text-xs"
+            className="min-h-[260px] whitespace-pre-wrap break-all font-mono text-xs"
           />
           <div className="flex justify-end">
             <Button onClick={submit} disabled={loading || !data.trim()}>

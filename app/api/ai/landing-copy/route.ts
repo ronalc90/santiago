@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
+import { getErrorMessage } from '@/lib/errors';
 import { landingCopy } from '@/lib/services/ai-copy';
 
 export const runtime = 'nodejs';
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ copy });
   } catch (err) {
     console.error('[ai:landing-copy]', err);
-    const message = err instanceof Error ? err.message : 'No se pudo generar el copy';
+    const message = getErrorMessage(err, 'No se pudo generar el copy');
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
