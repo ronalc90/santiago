@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
+import { dropiPanelSearchUrl } from '@/lib/integrations/dropi-panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { OpportunityBadge } from '@/components/shared/opportunity-badge';

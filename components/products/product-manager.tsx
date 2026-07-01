@@ -55,8 +55,10 @@ export function ProductManager({ product }: { product: ProductState }) {
     ref: typeof savedSalePrice,
     placeholder: string,
     step?: string,
+    money?: boolean,
   ) {
     const fieldId = `pf-${key}`;
+    const val = s[key];
     return (
       <div className="space-y-1.5">
         <Label htmlFor={fieldId} className="text-xs">{label}</Label>
@@ -65,7 +67,7 @@ export function ProductManager({ product }: { product: ProductState }) {
           type="number"
           min={0}
           step={step}
-          value={s[key] ?? ''}
+          value={val ?? ''}
           onChange={(e) => setS({ ...s, [key]: e.target.value === '' ? null : Number(e.target.value) })}
           onBlur={() => {
             if (s[key] !== ref.current) {
@@ -75,6 +77,9 @@ export function ProductManager({ product }: { product: ProductState }) {
           }}
           placeholder={placeholder}
         />
+        {money && val != null && val > 0 && (
+          <p className="text-xs text-muted-foreground">= {formatMoney(val, s.currency)}</p>
+        )}
       </div>
     );
   }
@@ -109,15 +114,15 @@ export function ProductManager({ product }: { product: ProductState }) {
             <SelectContent>{DROPI_OPTIONS.map((x) => <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        {numberField(`Precio de venta (${s.currency})`, 'salePrice', savedSalePrice, 'ej: 89900')}
+        {numberField(`Precio de venta (${s.currency})`, 'salePrice', savedSalePrice, 'ej: 89900', undefined, true)}
         {s.shopifyUnitCost != null ? (
           <p className="text-xs text-muted-foreground">
             Costo Shopify: <span className="font-medium">{formatMoney(s.shopifyUnitCost, s.currency)}</span> (sincronizado · se usa para el margen)
           </p>
         ) : (
-          numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify')
+          numberField(`Costo por artículo (${s.currency})`, 'manualCost', savedManualCost, 'manual; o sincroniza desde Shopify', undefined, true)
         )}
-        {numberField(`Costo de envío (${s.currency})`, 'shippingCost', savedShipping, 'opcional')}
+        {numberField(`Costo de envío (${s.currency})`, 'shippingCost', savedShipping, 'opcional', undefined, true)}
         <p className="text-xs text-muted-foreground">
           Precio, costo y envío alimentan el <span className="font-medium">margen efectivo COD</span>: descuenta la no entrega
           (cancelaciones/rechazos), el flete de vuelta y la comisión de recaudo. Esos parámetros se ajustan en Ajustes.

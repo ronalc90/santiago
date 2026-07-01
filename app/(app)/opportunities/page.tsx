@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
+import { dropiPanelSearchUrl } from '@/lib/integrations/dropi-panel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

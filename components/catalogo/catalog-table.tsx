@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { formatCop } from '@/lib/format';
-import { dropiPanelSearchUrl } from '@/lib/integrations/dropi';
+import { dropiPanelSearchUrl } from '@/lib/integrations/dropi-panel';
 import { DEFAULT_PAGE_SIZE } from '@/lib/config/constants';
 
 interface Item {
