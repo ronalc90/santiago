@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Telescope, Trophy, Package, Boxes, ImageIcon, Store, Settings, DollarSign, HelpCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Telescope, Package, Boxes, ImageIcon, Store, Settings, DollarSign, HelpCircle, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/layout/theme-switcher';
@@ -9,13 +9,13 @@ import type { Theme } from '@/lib/theme';
 
 /** Menú agrupado por etapa del flujo de trabajo, para que un usuario nuevo
  *  entienda el orden: descubrir → operar → admin. */
-export const NAV_SECTIONS: { title: string | null; items: { href: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
+export const NAV_SECTIONS: { title: string | null; items: { href: string; label: string; icon: typeof LayoutDashboard; match?: string[] }[] }[] = [
   { title: null, items: [{ href: '/', label: 'Dashboard', icon: LayoutDashboard }] },
   {
     title: 'Descubrir',
     items: [
-      { href: '/spy', label: 'Spy de anuncios', icon: Telescope },
-      { href: '/opportunities', label: 'Oportunidades', icon: Trophy },
+      // Punto de entrada único: anuncios ganadores + oportunidades en pestañas.
+      { href: '/descubrir', label: 'Descubrir productos', icon: Telescope, match: ['/spy', '/opportunities'] },
       { href: '/catalogo', label: 'Catálogo Dropi', icon: Boxes },
     ],
   },
@@ -66,7 +66,8 @@ export function SidebarNav({ userName, theme, onNavigate }: { userName: string; 
               <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{section.title}</p>
             )}
             {section.items.map((item) => {
-              const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              const prefixes = [item.href, ...(item.match ?? [])];
+              const active = item.href === '/' ? pathname === '/' : prefixes.some((p) => pathname.startsWith(p));
               const Icon = item.icon;
               return (
                 <Link

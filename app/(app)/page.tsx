@@ -53,9 +53,9 @@ export default async function DashboardPage() {
             <p className="mb-2 text-sm font-semibold">🚀 Primeros pasos</p>
             <ol className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
               <li>
-                <span className="font-medium text-foreground">1. Descubre productos:</span> trae anuncios reales en{' '}
-                <Link href="/spy" className="text-sky-500 hover:underline">Spy</Link> o candidatos en{' '}
-                <Link href="/opportunities" className="text-sky-500 hover:underline">Oportunidades</Link>.
+                <span className="font-medium text-foreground">1. Descubre productos:</span> en{' '}
+                <Link href="/descubrir" className="text-sky-500 hover:underline">Descubrir</Link> tienes los anuncios ganadores
+                y las oportunidades que te propone el sistema.
               </li>
               <li>
                 <span className="font-medium text-foreground">2. Conviértelos</span> en{' '}
