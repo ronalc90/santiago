@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Telescope, Trophy, Package, ImageIcon, Store, Settings, DollarSign, Sparkles,
+  LayoutDashboard, Telescope, Package, ImageIcon, Store, Settings, DollarSign, Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -22,21 +22,12 @@ const MODULES: ModuleDoc[] = [
     ],
   },
   {
-    icon: Telescope, title: 'Spy de anuncios',
-    para: 'Encontrar anuncios que ya están funcionando (productos con tracción).',
+    icon: Telescope, title: 'Descubrir productos',
+    para: 'Único lugar para encontrar tu próximo producto. Tiene dos pestañas según cómo quieras buscar.',
     hace: [
-      'Trae anuncios reales del Ad Library de Meta con «Buscar anuncios» (eliges país, término y cuántos) o «Importar resultados».',
-      'Ordena por Winner Score (señal de ganador) con semáforo de clasificación.',
-      'Filtros: días activos, “no se vende en CO”, “creativo extranjero sin usar”, etc. Desde el detalle creas un producto.',
-    ],
-  },
-  {
-    icon: Trophy, title: 'Oportunidades',
-    para: 'Descubrir productos candidatos de varias fuentes, sin partir de un anuncio.',
-    hace: [
-      'Pulsa «Buscar ahora» (corre en segundo plano con indicador de progreso) o espera al descubrimiento diario.',
-      'Fuentes: MercadoLibre (gratis), Google Trends (gratis), Meta/TikTok vía Apify (pago, opcional). Trae foto de cada candidato.',
-      'Cada candidato trae países, fuente, saturación CO, estado Dropi y score 4×25. Desde el detalle: galería + «Crear producto».',
+      'Pestaña «Anuncios ganadores»: anuncios reales del Ad Library de Meta («Buscar anuncios» o «Importar»), ordenados por Winner Score con semáforo. Parte de algo que YA se vende en ads. Filtros: días activos, «no se vende en CO», «creativo extranjero sin usar». Desde el detalle creas el producto.',
+      'Pestaña «Oportunidades»: el sistema te PROPONE candidatos de varias fuentes (MercadoLibre y Google Trends gratis; Meta/TikTok vía Apify, pago opcional). Pulsa «Buscar ahora» o espera al descubrimiento diario.',
+      'Cada oportunidad trae países, fuente, saturación CO, estado Dropi y score 4×25 (demanda, competencia, margen, creativos). Desde el detalle: galería + «Crear producto».',
     ],
   },
   {
@@ -90,7 +81,7 @@ export default function AyudaPage() {
           <CardTitle className="flex items-center gap-2 text-base"><Sparkles className="h-4 w-4 text-sky-400" /> El flujo en una línea</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          <b className="text-foreground">Descubrir</b> (Oportunidades / Spy) → <b className="text-foreground">Validar</b> (score 4×25:
+          <b className="text-foreground">Descubrir</b> (anuncios ganadores u oportunidades) → <b className="text-foreground">Validar</b> (score 4×25:
           demanda, competencia, margen, creativos) → <b className="text-foreground">Crear producto</b> → <b className="text-foreground">Landing</b> (9 imágenes IA) →
           <b className="text-foreground"> Publicar en Shopify</b> → conectar el producto en <b className="text-foreground">Dropi</b> → vender.
         </CardContent>

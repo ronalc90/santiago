@@ -120,14 +120,14 @@ export function SpyTable() {
           <Input type="number" min={0} placeholder="ej: 5" value={minDays} onChange={(e) => setMinDays(e.target.value)} className="w-full sm:w-24" />
         </div>
         <div className="flex items-center gap-2">
-          <Switch id="unused" checked={onlyUnusedForeign} onCheckedChange={setOnlyUnusedForeign} />
-          <Label htmlFor="unused" className="text-xs" title="Una imagen/video que ya funciona en otros países pero que nadie usa todavía en Colombia: un ángulo nuevo listo para que lo aproveches.">
+          <Switch id="spy-unused" checked={onlyUnusedForeign} onCheckedChange={setOnlyUnusedForeign} />
+          <Label htmlFor="spy-unused" className="text-xs" title="Una imagen/video que ya funciona en otros países pero que nadie usa todavía en Colombia: un ángulo nuevo listo para que lo aproveches.">
             Creativo extranjero sin usar en CO
           </Label>
         </div>
         <div className="flex items-center gap-2">
-          <Switch id="notco" checked={notInColombia} onCheckedChange={setNotInColombia} />
-          <Label htmlFor="notco" className="text-xs">No se vende en CO</Label>
+          <Switch id="spy-notco" checked={notInColombia} onCheckedChange={setNotInColombia} />
+          <Label htmlFor="spy-notco" className="text-xs">No se vende en CO</Label>
         </div>
         <div className="flex rounded-md border p-0.5 sm:ml-auto">
           <Button variant={view === 'all' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('all')}>Históricos</Button>
@@ -160,7 +160,7 @@ export function SpyTable() {
               </TableHead>
               <TableHead>Clasificación</TableHead>
               <TableHead>Señales</TableHead>
-              <TableHead></TableHead>
+              <TableHead aria-label="Acciones" />
             </TableRow>
           </TableHeader>
           <TableBody>

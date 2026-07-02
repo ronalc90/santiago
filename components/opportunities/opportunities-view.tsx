@@ -47,7 +47,8 @@ export async function OpportunitiesView({ searchParams }: { searchParams: Opport
   const paidActive = env.META_DISCOVERY === 'on' || env.TIKTOK_DISCOVERY === 'on';
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" aria-labelledby="descubrir-oportunidades">
+      <h2 id="descubrir-oportunidades" className="sr-only">Oportunidades propuestas por el sistema</h2>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <p className="max-w-2xl text-sm text-muted-foreground">
           El sistema <span className="font-medium text-foreground">te propone productos</span>: los busca en varias fuentes,
@@ -94,10 +95,10 @@ export async function OpportunitiesView({ searchParams }: { searchParams: Opport
                   <TableHead>Producto</TableHead>
                   <TableHead>Países</TableHead>
                   <TableHead>Fuentes</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>CO</TableHead>
-                  <TableHead>Dropi</TableHead>
-                  <TableHead>Creativos</TableHead>
+                  <TableHead title="Puntaje 4×25: demanda, competencia, margen y creativos">Score</TableHead>
+                  <TableHead title="¿Se vende actualmente en Colombia?">CO</TableHead>
+                  <TableHead title="¿Está en tu catálogo de Dropi para despacharlo?">Dropi</TableHead>
+                  <TableHead title="Imágenes o videos de campañas reales disponibles">Creativos</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

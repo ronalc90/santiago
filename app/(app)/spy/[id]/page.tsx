@@ -29,8 +29,8 @@ export default async function AdDetailPage({ params }: { params: { id: string } 
 
   return (
     <div className="space-y-6">
-      <Link href="/spy" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Volver al spy
+      <Link href="/descubrir?vista=anuncios" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Volver a Descubrir
       </Link>
 
       <div className="grid gap-6 md:grid-cols-3">

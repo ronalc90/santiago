@@ -19,6 +19,9 @@ export function OpportunityFilters() {
     const next = new URLSearchParams(sp.toString());
     if (value) next.set(key, value);
     else next.delete(key);
+    // Los filtros solo se muestran en la pestaña «Oportunidades» de /descubrir;
+    // preservamos ?vista para no perder la pestaña activa al filtrar.
+    if (pathname === '/descubrir') next.set('vista', sp.get('vista') ?? 'oportunidades');
     router.replace(next.toString() ? `${pathname}?${next.toString()}` : pathname);
   }
 

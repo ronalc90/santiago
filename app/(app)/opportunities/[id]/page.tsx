@@ -27,8 +27,8 @@ export default async function OpportunityDetail({ params }: { params: { id: stri
 
   return (
     <div className="space-y-6">
-      <Link href="/opportunities" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Volver a Oportunidades
+      <Link href="/descubrir?vista=oportunidades" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Volver a Descubrir
       </Link>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
