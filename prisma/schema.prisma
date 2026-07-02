@@ -479,6 +479,8 @@ model DropiCatalogItem {
   cost           Int? // costo por artículo (moneda del catálogo)
   stock          Int?
   imageUrl       String?
+  dropiId        String? // id del producto en Dropi (si el CSV lo trae) → ficha directa
+  dropiUrl       String? // URL directa a la ficha del producto en Dropi (si el CSV la trae)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       orderBy,
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: { id: true, name: true, sku: true, category: true, cost: true, stock: true, imageUrl: true },
+      select: { id: true, name: true, sku: true, category: true, cost: true, stock: true, imageUrl: true, dropiId: true, dropiUrl: true },
     }),
     prisma.dropiCatalogItem.count({ where }),
     prisma.dropiCatalogItem.count(),

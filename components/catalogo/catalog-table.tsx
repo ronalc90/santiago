@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { formatCop } from '@/lib/format';
-import { dropiPanelSearchUrl } from '@/lib/integrations/dropi-panel';
+import { dropiProductUrl } from '@/lib/integrations/dropi-panel';
 import { DEFAULT_PAGE_SIZE } from '@/lib/config/constants';
 
 interface Item {
@@ -18,6 +18,8 @@ interface Item {
   cost: number | null;
   stock: number | null;
   imageUrl: string | null;
+  dropiId: string | null;
+  dropiUrl: string | null;
 }
 
 export function CatalogTable() {
@@ -143,9 +145,20 @@ export function CatalogTable() {
                   <TableCell className="text-right font-medium">{it.cost != null ? formatCop(it.cost) : '—'}</TableCell>
                   <TableCell className="text-right">{it.stock ?? '—'}</TableCell>
                   <TableCell>
-                    <a href={dropiPanelSearchUrl(it.name)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-sky-500 hover:underline" title="Abrir en tu panel de Dropi">
-                      Dropi <ExternalLink className="h-3 w-3" />
-                    </a>
+                    {(() => {
+                      const directo = Boolean(it.dropiUrl || it.dropiId);
+                      return (
+                        <a
+                          href={dropiProductUrl(it)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-sky-500 hover:underline"
+                          title={directo ? 'Abrir la ficha del producto en Dropi' : 'Buscar este producto en tu panel de Dropi'}
+                        >
+                          {directo ? 'Ver ficha' : 'Buscar'} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      );
+                    })()}
                   </TableCell>
                 </TableRow>
               ))

@@ -77,6 +77,8 @@ export async function importDropiCsv(csv: string): Promise<DropiImportResult> {
       cost: toInt(pick(r, 'cost', 'costo', 'price', 'precio')),
       stock: toInt(pick(r, 'stock', 'inventario', 'existencias')),
       imageUrl: pick(r, 'image', 'imagen', 'imageurl', 'image_url', 'foto') || null,
+      dropiId: pick(r, 'id', 'dropi_id', 'dropiid', 'product_id', 'productid', 'id_producto') || null,
+      dropiUrl: pick(r, 'url', 'link', 'enlace', 'producturl', 'product_url', 'url_producto') || null,
     });
     if (ok) upserted += 1;
   }
@@ -91,11 +93,22 @@ async function upsertCatalogItem(p: {
   cost: number | null;
   stock: number | null;
   imageUrl: string | null;
+  dropiId?: string | null;
+  dropiUrl?: string | null;
 }): Promise<boolean> {
   const key = normalizeName(p.name);
   if (!key) return false;
   const data = { name: p.name, sku: p.sku, category: p.category, cost: p.cost, stock: p.stock, imageUrl: p.imageUrl };
-  await prisma.dropiCatalogItem.upsert({ where: { normalizedName: key }, create: { normalizedName: key, ...data }, update: data });
+  // El id/URL de Dropi solo se escriben cuando llegan (CSV). Las sincronizaciones
+  // por API/Shopify no los traen, así que en un update NO deben borrar lo ya guardado.
+  const links: { dropiId?: string; dropiUrl?: string } = {};
+  if (p.dropiId) links.dropiId = p.dropiId;
+  if (p.dropiUrl) links.dropiUrl = p.dropiUrl;
+  await prisma.dropiCatalogItem.upsert({
+    where: { normalizedName: key },
+    create: { normalizedName: key, ...data, ...links },
+    update: { ...data, ...links },
+  });
   return true;
 }
 
