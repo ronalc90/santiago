@@ -55,3 +55,6 @@ memory/
 # temporales de trabajo
 _*.txt
 .vercel
+
+# Registros locales del navegador de Playwright MCP (no se suben)
+.playwright-mcp/
