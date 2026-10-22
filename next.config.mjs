@@ -39,11 +39,16 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['sharp', 'bullmq', 'ioredis', 'archiver'],
   },
+  // La app no usa next/image: todas las imágenes se pintan con <img> plano y
+  // vienen de hosts dinámicos (bucket R2/S3 configurado por env, CDN firmado de
+  // Meta scontent-*.fbcdn.net, URLs de Dropi/CSV y Apify), así que no se pueden
+  // enumerar. En vez de un comodín abierto ('**'), se desactiva el optimizador:
+  // con `unoptimized` /_next/image responde 404, lo que elimina la superficie de
+  // la Image Optimization API (RCE con AVIF/SVG, SSRF y DoS sin parche en Next 14).
+  // `formats` se fija sin AVIF por si algún día se reactiva el optimizador.
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**' },
-      { protocol: 'http', hostname: 'localhost' },
-    ],
+    unoptimized: true,
+    formats: ['image/webp'],
   },
   async headers() {
     return [
