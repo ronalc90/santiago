@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import { deleteLanding } from '@/lib/services/landing';
 
 /** Estado del proyecto + imágenes + progreso del job (para polling de la UI). */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   const project = await prisma.landingProject.findUnique({
@@ -21,7 +22,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
  * el estado del producto si se queda sin landings completadas. Idempotente: si
  * ya no existe, responde 404.
  */
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 

@@ -14,7 +14,7 @@ Uso interno para 2 socios, pero el código está preparado para escalar a multiu
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS + shadcn/ui (modo oscuro) |
+| Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS + shadcn/ui (modo oscuro) |
 | Backend | Next.js API routes (route handlers) + TypeScript |
 | Base de datos | PostgreSQL + Prisma ORM (migraciones incluidas) |
 | Auth | email/password con sesiones en BD (cookie httpOnly), roles ADMIN/MEMBER |

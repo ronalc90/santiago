@@ -11,7 +11,8 @@ const schema = z.union([
 ]);
 
 /** Regenera una sola imagen (slot 1..9) o todas ({ all: true }). */
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   const parsed = schema.safeParse(await req.json());

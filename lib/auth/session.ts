@@ -18,7 +18,7 @@ export async function createSession(userId: string): Promise<void> {
   const token = newToken();
   const expiresAt = new Date(Date.now() + env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
   await prisma.session.create({ data: { token, userId, expiresAt } });
-  cookies().set(SESSION_COOKIE, token, {
+  (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: env.NODE_ENV === 'production',
@@ -29,11 +29,11 @@ export async function createSession(userId: string): Promise<void> {
 
 /** Destruye la sesión actual (BD + cookie). */
 export async function destroySession(): Promise<void> {
-  const token = cookies().get(SESSION_COOKIE)?.value;
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (token) {
     await prisma.session.deleteMany({ where: { token } });
   }
-  cookies().delete(SESSION_COOKIE);
+  (await cookies()).delete(SESSION_COOKIE);
 }
 
 export type SessionUser = {
@@ -49,7 +49,7 @@ export type SessionUser = {
  * comprueba expiración (limpia sesiones vencidas).
  */
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const token = cookies().get(SESSION_COOKIE)?.value;
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const session = await prisma.session.findUnique({ where: { token }, include: { user: true } });
   if (!session) return null;

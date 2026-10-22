@@ -12,7 +12,8 @@ const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
  * debe quedar pública, así que exigimos sesión antes de entregar nada.
  * middleware.ts excluye /api/files a propósito: la auth se hace aquí dentro.
  */
-export async function GET(_req: Request, { params }: { params: { path: string[] } }) {
+export async function GET(_req: Request, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 

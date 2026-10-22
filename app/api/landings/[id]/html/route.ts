@@ -11,7 +11,8 @@ export const runtime = 'nodejs';
  * Sirve la landing de ventas como HTML completo (capa de conversión + SEO).
  * Por defecto se muestra en el navegador; con ?download=1 se descarga como archivo.
  */
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 

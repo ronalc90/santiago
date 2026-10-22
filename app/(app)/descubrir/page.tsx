@@ -18,7 +18,8 @@ interface SP extends OpportunitiesSearchParams {
  *  - Oportunidades: lo que el sistema te PROPONE (score 4×25 + Dropi).
  * Cada explicación vive dentro de su propia pestaña; el header solo orienta.
  */
-export default function DescubrirPage({ searchParams }: { searchParams: SP }) {
+export default async function DescubrirPage(props: { searchParams: Promise<SP> }) {
+  const searchParams = await props.searchParams;
   const vista: DiscoverView = searchParams.vista === 'oportunidades' ? 'oportunidades' : 'anuncios';
 
   return (

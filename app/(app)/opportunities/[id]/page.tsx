@@ -10,7 +10,8 @@ import { ConvertButton } from '@/components/opportunities/convert-button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OpportunityDetail({ params }: { params: { id: string } }) {
+export default async function OpportunityDetail(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const c = await prisma.opportunityCandidate.findUnique({
     where: { id: params.id },
     include: { creatives: true },

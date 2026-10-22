@@ -8,7 +8,8 @@ import { getStorage } from '@/lib/storage';
 export const runtime = 'nodejs';
 
 /** Descarga las 9 imágenes WebP en un .zip. */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 

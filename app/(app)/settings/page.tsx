@@ -20,7 +20,8 @@ import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SettingsPage({ searchParams }: { searchParams: { meli?: string } }) {
+export default async function SettingsPage(props: { searchParams: Promise<{ meli?: string }> }) {
+  const searchParams = await props.searchParams;
   const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus, discoveryConfig, slotPrompts] = await Promise.all([
     getScoringRules(),
     getOpportunityRules(),
