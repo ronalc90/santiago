@@ -60,7 +60,7 @@
     "dotenv": "^16.4.7",
     "ioredis": "5.10.1",
     "lucide-react": "^0.469.0",
-    "next": "^14.2.33",
+    "next": "^14.2.35",
     "papaparse": "^5.4.1",
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
@@ -78,10 +78,16 @@
   },
   "devDependencies": {
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.33",
-    "vitest": "^2.1.8"
+    "eslint-config-next": "^14.2.35",
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "ioredis": "5.10.1"
+    "ioredis": "5.10.1",
+    "next": {
+      "postcss": "^8.5.31"
+    },
+    "@next/eslint-plugin-next": {
+      "glob": "^10.5.0"
+    }
   }
 }
