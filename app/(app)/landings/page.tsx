@@ -5,10 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LANDING_STATUS as STATUS } from '@/lib/landings/labels';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function LandingsPage() {
+  await requireUser();
   const landings = await prisma.landingProject.findMany({
     orderBy: { createdAt: 'desc' },
     include: { product: true, _count: { select: { images: true } } },

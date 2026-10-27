@@ -1,8 +1,10 @@
 import { CatalogTable } from '@/components/catalogo/catalog-table';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
-export default function CatalogoPage() {
+export default async function CatalogoPage() {
+  await requireUser();
   return (
     <div className="space-y-6">
       <div>

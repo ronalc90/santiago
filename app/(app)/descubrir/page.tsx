@@ -3,6 +3,7 @@ import { ImportDialog } from '@/components/spy/import-dialog';
 import { SyncDialog } from '@/components/spy/sync-dialog';
 import { DiscoverTabs, type DiscoverView } from '@/components/descubrir/discover-tabs';
 import { OpportunitiesView, type OpportunitiesSearchParams } from '@/components/opportunities/opportunities-view';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Descubrir' };
@@ -19,6 +20,7 @@ interface SP extends OpportunitiesSearchParams {
  * Cada explicación vive dentro de su propia pestaña; el header solo orienta.
  */
 export default async function DescubrirPage(props: { searchParams: Promise<SP> }) {
+  await requireUser();
   const searchParams = await props.searchParams;
   const vista: DiscoverView = searchParams.vista === 'oportunidades' ? 'oportunidades' : 'anuncios';
 

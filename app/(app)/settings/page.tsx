@@ -21,6 +21,7 @@ import { requireUser } from '@/lib/auth/guard';
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage(props: { searchParams: Promise<{ meli?: string }> }) {
+  const user = await requireUser();
   const searchParams = await props.searchParams;
   const [rules, opportunityRules, promptValues, costStatus, meliConnection, meliStatus, discoveryConfig, slotPrompts] = await Promise.all([
     getScoringRules(),
@@ -32,7 +33,6 @@ export default async function SettingsPage(props: { searchParams: Promise<{ meli
     getDiscoveryConfig(),
     getSlotPromptsForUI(),
   ]);
-  const user = await requireUser();
   const shopifyConfigured = isShopifyConfigured();
   const meliConfigured = isMeliConfigured();
   const prompts = PROMPT_DEFS.map((d) => ({

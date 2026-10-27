@@ -9,6 +9,7 @@ import { ClassificationBadge } from '@/components/shared/classification-badge';
 import { ProductManager } from '@/components/products/product-manager';
 import { OpportunityCard } from '@/components/products/opportunity-card';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,7 @@ const LANDING_STATUS: Record<string, string> = {
 };
 
 export default async function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const params = await props.params;
   const product = await prisma.product.findUnique({
     where: { id: params.id },

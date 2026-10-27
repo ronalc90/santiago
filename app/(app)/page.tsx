@@ -3,6 +3,7 @@ import { Telescope, Package, ImageIcon, Store, Rocket, TrendingUp } from 'lucide
 import { prisma } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClassificationBadge } from '@/components/shared/classification-badge';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ const PIPELINE_STAGES = [
 ];
 
 export default async function DashboardPage() {
+  await requireUser();
   const [adsDetected, adsNew, byStatus, landings, stores, byMarket, topAds] = await Promise.all([
     prisma.ad.count(),
     prisma.ad.count({ where: { isNew: true } }),

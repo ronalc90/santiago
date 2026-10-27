@@ -7,7 +7,8 @@ const SESSION_COOKIE = 'winspy_session';
  * Middleware de protección de rutas (edge). Solo comprueba la PRESENCIA de la
  * cookie de sesión para redirigir rápido; la validación real contra la BD se
  * hace en los Server Components / route handlers (requireUser / requireApiUser),
- * porque Prisma no corre en el runtime edge.
+ * porque Prisma no corre en el runtime edge. Una cookie inventada pasa este
+ * filtro, así que cada página debe validar la sesión por sí misma.
  */
 // /api/ads/sync y /api/ads/ingest validan sesión-ADMIN o x-ingest-token dentro
 // del handler, así que el middleware los deja pasar (no puede leer el token aquí).

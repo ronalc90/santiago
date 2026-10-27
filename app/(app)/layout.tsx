@@ -3,6 +3,11 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { Toaster } from '@/components/ui/toaster';
 
+// OJO: esta guarda NO protege las páginas hijas. Next renderiza layout y página
+// en paralelo (la página llega en el payload aunque el layout redirija) y, en
+// una petición RSC con `Next-Router-State-Tree`, ni siquiera ejecuta el layout.
+// Cada page.tsx debe llamar `await requireUser()` como primera instrucción
+// (lo comprueba tests/page-auth.test.ts).
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const userName = user.name ?? user.email;

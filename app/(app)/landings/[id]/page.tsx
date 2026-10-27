@@ -4,10 +4,12 @@ import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { LandingDetail } from '@/components/landings/landing-detail';
 import { shopifyAdminUrlFor, canPublishToShopify } from '@/lib/shopify/client';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function LandingDetailPage(props: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const params = await props.params;
   const project = await prisma.landingProject.findUnique({
     where: { id: params.id },
