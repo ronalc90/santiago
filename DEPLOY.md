@@ -71,6 +71,12 @@ DATABASE_URL="postgresql://...direct...?sslmode=require" npm run db:purge-demo
 
 1. Crea una base Redis en https://upstash.com (región cercana a Vercel/Railway).
 2. Copia la **URL TLS** (`rediss://default:...@...upstash.io:6379`) → `REDIS_URL`.
+3. El límite de intentos de login (10 por IP cada 10 min) vive en este Redis y
+   **falla cerrado**: si Upstash no responde, `/api/auth/login` devuelve 503 en vez
+   de dejar pasar intentos sin contar. Emergencia (Upstash caído y hay que entrar):
+   `LOGIN_RATE_LIMIT_FAIL_MODE=open` en Vercel + redeploy, y quitarlo después. En
+   local, con `REDIS_URL` en `localhost`, el login funciona aunque Redis no esté
+   levantado.
 
 ## 3) Almacenamiento — Cloudflare R2 (o S3)
 
