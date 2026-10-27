@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
+import { PUBLIC_USER_SELECT } from '@/lib/auth/public-user';
 import { prisma } from '@/lib/db';
 import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine';
 
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
   const products = await prisma.product.findMany({
     where,
     orderBy: { updatedAt: 'desc' },
-    include: { ads: true, landings: true, owner: true },
+    include: { ads: true, landings: true, owner: { select: PUBLIC_USER_SELECT } },
   });
   return NextResponse.json({ products });
 }

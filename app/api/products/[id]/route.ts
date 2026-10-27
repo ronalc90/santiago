@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { requireApiUser } from '@/lib/auth/api';
+import { PUBLIC_USER_SELECT } from '@/lib/auth/public-user';
 import { prisma } from '@/lib/db';
 import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine';
 
@@ -43,7 +44,7 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
   if (auth instanceof NextResponse) return auth;
   const product = await prisma.product.findUnique({
     where: { id: params.id },
-    include: { ads: { include: { store: true } }, landings: { include: { images: true } }, owner: true },
+    include: { ads: { include: { store: true } }, landings: { include: { images: true } }, owner: { select: PUBLIC_USER_SELECT } },
   });
   if (!product) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
   return NextResponse.json({ product });
