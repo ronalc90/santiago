@@ -8,10 +8,12 @@ import { NewProductDialog } from '@/components/products/new-product-dialog';
 import { MeliSaturationButton } from '@/components/products/meli-saturation-button';
 import { getMeliConnection } from '@/lib/services/meli';
 import { PRODUCT_STATUS_LABEL as STATUS_LABEL, DROPI_BADGE_LABEL as DROPI_LABEL } from '@/lib/products/labels';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProductsPage() {
+  await requireUser();
   const [products, meli] = await Promise.all([
     prisma.product.findMany({
       orderBy: { updatedAt: 'desc' },

@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Telescope, Package, ImageIcon, Store, Settings, DollarSign, Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,8 @@ const MODULES: ModuleDoc[] = [
   },
 ];
 
-export default function AyudaPage() {
+export default async function AyudaPage() {
+  await requireUser();
   return (
     <div className="space-y-6">
       <div>

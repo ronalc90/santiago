@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { OpportunityBadge } from '@/components/shared/opportunity-badge';
 import { ConvertButton } from '@/components/opportunities/convert-button';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OpportunityDetail(props: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const params = await props.params;
   const c = await prisma.opportunityCandidate.findUnique({
     where: { id: params.id },

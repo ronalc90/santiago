@@ -1,9 +1,11 @@
 import { prisma } from '@/lib/db';
 import { StoresManager } from '@/components/stores/stores-manager';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function StoresPage() {
+  await requireUser();
   const stores = await prisma.store.findMany({
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { ads: true } } },

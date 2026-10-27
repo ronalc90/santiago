@@ -11,10 +11,12 @@ import { formatDate } from '@/lib/utils';
 import { normalizeAdLibraryUrl } from '@/lib/ad-library';
 import { formatCop } from '@/lib/format';
 import { computeVelocity } from '@/lib/services/velocity';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdDetailPage(props: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const params = await props.params;
   const ad = await prisma.ad.findUnique({
     where: { id: params.id },

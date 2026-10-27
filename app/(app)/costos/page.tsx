@@ -2,6 +2,7 @@ import { computeCostReport } from '@/lib/services/costs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { requireUser } from '@/lib/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ function cop(value: number): string {
 }
 
 export default async function CostosPage() {
+  await requireUser();
   const report = await computeCostReport();
   const perAction = report.catalog.filter((c) => c.kind === 'per-action');
   const monthly = report.catalog.filter((c) => c.kind === 'monthly');
