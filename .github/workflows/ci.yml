@@ -25,7 +25,7 @@ jobs:
       INGEST_API_TOKEN: ci_placeholder_token
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
         uses: actions/setup-node@v5
