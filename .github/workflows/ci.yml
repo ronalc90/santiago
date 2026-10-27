@@ -1,7 +1,8 @@
 name: CI
 
 # Validación en Pull Requests y en ramas que NO son main.
-# No despliega ni toca la base de datos: solo comprueba que el código compila.
+# No despliega ni toca la base de datos: comprueba tipos, corre la suite de
+# vitest y que el código compila.
 
 on:
   pull_request:
@@ -14,11 +15,12 @@ env:
 
 jobs:
   validate:
-    name: Typecheck & build
+    name: Typecheck, tests & build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Variables ficticias: el build no se conecta a la BD (todas las páginas son
-    # `force-dynamic`), pero satisfacen la validación de entorno si llegara a correr.
+    # Variables ficticias: ni los tests ni el build se conectan a la BD ni a Redis
+    # (los tests simulan Prisma/ioredis/DNS y las páginas son `force-dynamic`),
+    # pero satisfacen la validación de entorno si llegara a correr.
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
       AUTH_SECRET: ci_placeholder_secret_0123456789
@@ -41,6 +43,10 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # Suite de vitest: sin servicios externos (Postgres/Redis/red van simulados).
+      - name: Tests (vitest)
+        run: npm test
 
       - name: Build
         run: npm run build
