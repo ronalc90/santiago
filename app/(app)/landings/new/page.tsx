@@ -3,7 +3,8 @@ import { LandingWizard } from '@/components/landings/landing-wizard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewLandingPage({ searchParams }: { searchParams: { productId?: string } }) {
+export default async function NewLandingPage(props: { searchParams: Promise<{ productId?: string }> }) {
+  const searchParams = await props.searchParams;
   const products = await prisma.product.findMany({ orderBy: { updatedAt: 'desc' }, select: { id: true, name: true, market: true, currency: true } });
   return (
     <div className="space-y-6">

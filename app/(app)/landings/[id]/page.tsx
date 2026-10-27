@@ -7,7 +7,8 @@ import { shopifyAdminUrlFor, canPublishToShopify } from '@/lib/shopify/client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function LandingDetailPage({ params }: { params: { id: string } }) {
+export default async function LandingDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const project = await prisma.landingProject.findUnique({
     where: { id: params.id },
     include: { images: { orderBy: { slot: 'asc' } }, product: true },

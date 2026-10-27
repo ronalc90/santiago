@@ -5,7 +5,8 @@ import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine'
 export const runtime = 'nodejs';
 
 /** Recalcula la oportunidad de un producto (consulta ML/Dropi puntualmente). */
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   try {

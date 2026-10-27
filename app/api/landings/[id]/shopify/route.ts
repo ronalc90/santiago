@@ -11,7 +11,8 @@ export const runtime = 'nodejs';
  * un producto con precio/oferta, las 9 imágenes en la galería y la página de
  * ventas (9 imágenes apiladas + copy) en la descripción. Se importa como borrador.
  */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 

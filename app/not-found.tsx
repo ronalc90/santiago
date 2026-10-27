@@ -15,6 +15,7 @@ export default function NotFound() {
     >
       <h1 style={{ fontSize: '2.25rem', fontWeight: 700 }}>404</h1>
       <p>La página que buscas no existe.</p>
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- <a> plano a propósito: el 404 no carga dependencias de cliente (ver comentario arriba). */}
       <a href="/" style={{ textDecoration: 'underline' }}>
         Volver al inicio
       </a>

@@ -16,7 +16,8 @@ const LANDING_STATUS: Record<string, string> = {
   DRAFT: 'Borrador', QUEUED: 'En cola', PROCESSING: 'Generando', COMPLETED: 'Completada', FAILED: 'Fallida',
 };
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
+export default async function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const product = await prisma.product.findUnique({
     where: { id: params.id },
     include: { ads: { include: { store: true } }, landings: { include: { _count: { select: { images: true } } }, orderBy: { createdAt: 'desc' } } },

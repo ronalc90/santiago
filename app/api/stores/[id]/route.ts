@@ -10,7 +10,8 @@ const updateSchema = z.object({
   notes: z.string().optional(),
 });
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   const parsed = updateSchema.safeParse(await req.json());
@@ -21,7 +22,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ store });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   await prisma.store.delete({ where: { id: params.id } });

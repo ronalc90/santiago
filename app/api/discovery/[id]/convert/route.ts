@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import { computeAndPersistOpportunity } from '@/lib/services/opportunity-engine';
 
 /** Convierte un candidato en Producto (entra al pipeline) y lo marca CONVERTIDO. */
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
 

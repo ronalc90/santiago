@@ -75,4 +75,4 @@ aparece en el *Summary* del run.
   **aditivas** (no destructivas) para que el código viejo y el nuevo convivan durante
   el corte. Crea migraciones con `npm run db:migrate` en local y commitéalas.
 - `workflow_dispatch` permite relanzar el despliegue a mano desde la pestaña Actions.
-- El job usa la versión de Node de `.nvmrc` (20).
+- El job usa la versión de Node de `.nvmrc` (22).

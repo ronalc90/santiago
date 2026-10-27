@@ -218,7 +218,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   const id = useId();
   // Asocia el label con el campo (htmlFor/id). Si hay un solo elemento, le inyecta
   // el id; si hay varios (campo + pista), el label queda visible sin asociar.
-  const child = isValidElement(children) ? cloneElement(children as ReactElement, { id }) : children;
+  const child = isValidElement(children) ? cloneElement(children as ReactElement<{ id?: string }>, { id }) : children;
   return <div className="space-y-1.5"><Label htmlFor={id}>{label}</Label>{child}</div>;
 }
 function Summary({ label, value }: { label: string; value: string }) {
