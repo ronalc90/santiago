@@ -11,6 +11,10 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
   REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+  // Qué hace el límite de intentos de login si Redis no responde. "auto": falla
+  // CERRADO (503) con un Redis remoto y ABIERTO con uno en localhost (desarrollo).
+  // "open"/"closed" fuerzan la política. Ver lib/auth/rate-limit.ts.
+  LOGIN_RATE_LIMIT_FAIL_MODE: z.enum(['auto', 'open', 'closed']).default('auto'),
 
   AUTH_SECRET: z.string().min(16, 'AUTH_SECRET debe tener al menos 16 caracteres'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
