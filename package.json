@@ -4,7 +4,7 @@
   "private": true,
   "description": "Plataforma interna de e-commerce/dropshipping: Spy de anuncios, generador de landings con IA y dashboard.",
   "engines": {
-    "node": ">=20.0.0 <21"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",

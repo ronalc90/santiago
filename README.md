@@ -44,7 +44,7 @@ La restricción clave del negocio se respeta: **el scraping en vivo de Meta lo h
 
 ## Requisitos
 
-- Node.js 20+ (probado en Node 22)
+- Node.js 22 (fijado en `.nvmrc` y `engines`)
 - Docker + Docker Compose (para Postgres y Redis)
 - npm
 
