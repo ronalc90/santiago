@@ -14,7 +14,8 @@ import { computeVelocity } from '@/lib/services/velocity';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdDetailPage({ params }: { params: { id: string } }) {
+export default async function AdDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const ad = await prisma.ad.findUnique({
     where: { id: params.id },
     include: { store: true, product: true, snapshots: { orderBy: { capturedAt: 'asc' }, take: 90 } },

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Plataforma interna de e-commerce/dropshipping: Spy de anuncios, generador de landings con IA y dashboard.",
   "engines": {
-    "node": ">=20.0.0 <21"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -48,8 +48,8 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.10",
     "@types/papaparse": "^5.3.15",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "archiver": "^7.0.1",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
@@ -60,15 +60,15 @@
     "dotenv": "^16.4.7",
     "ioredis": "5.10.1",
     "lucide-react": "^0.469.0",
-    "next": "^14.2.33",
+    "next": "^15.5.28",
     "papaparse": "^5.4.1",
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-hook-form": "^7.54.2",
     "server-only": "^0.0.1",
-    "sharp": "^0.33.5",
+    "sharp": "^0.35.5",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
@@ -78,10 +78,13 @@
   },
   "devDependencies": {
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.33",
-    "vitest": "^2.1.8"
+    "eslint-config-next": "^15.5.28",
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "ioredis": "5.10.1"
+    "ioredis": "5.10.1",
+    "next": {
+      "postcss": "^8.5.31"
+    }
   }
 }

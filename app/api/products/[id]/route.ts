@@ -37,7 +37,8 @@ const RESULT_FIELDS = ['realRoas', 'realCpa', 'realUnitsSold', 'realReturnRate']
  */
 const OPPORTUNITY_SIGNAL_FIELDS = ['name', 'saturationKeyword', 'salePrice', 'manualCost', 'shippingCost', 'dropiAvailability', 'realReturnRate'] as const;
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   const product = await prisma.product.findUnique({
@@ -48,7 +49,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   return NextResponse.json({ product });
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   const parsed = updateSchema.safeParse(await req.json());
@@ -74,7 +76,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ product });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const auth = await requireApiUser();
   if (auth instanceof NextResponse) return auth;
   await prisma.product.delete({ where: { id: params.id } });
